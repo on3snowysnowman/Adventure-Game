@@ -1,7 +1,6 @@
 #from chascurses import *
 from chascurses import *
 from character_classes import Player
-from MethodFiles import *
 
 import curses
 from math import ceil
@@ -356,8 +355,8 @@ def map_window_test(win):
     #player = Player()
     ground = Floor()
     wall = Wall()
-    enemy1 = RandomEnemy()
-    enemy2 = RandomEnemy()
+    enemy1 = Enemy()
+    enemy2 = Enemy()
 
     map_win.tilemap.fill(Floor)
     #map_win.tilemap.add(player, 0, 0)
@@ -462,8 +461,8 @@ def master_window_test(win):
     player = Player()
     ground = Floor()
     wall = Wall()
-    enemy1 = RandomEnemy()
-    enemy2 = RandomEnemy()
+    enemy1 = Enemy()
+    enemy2 = Enemy()
 
     map_win.tilemap.fill(Floor)
     map_win.tilemap.add(player, 0, 0)
@@ -487,7 +486,7 @@ def master_window_test(win):
     map_win.display()
 
 
-def master_window_options_test_(win):
+def master_window_options_test(win):
 
     # Tests the MasterWindow functionality.
 
@@ -530,8 +529,8 @@ def master_window_options_test_(win):
     player = Player()
     ground = Floor()
     wall = Wall()
-    enemy1 = RandomEnemy()
-    enemy2 = RandomEnemy()
+    enemy1 = Enemy()
+    enemy2 = Enemy()
 
     map_win.tilemap.fill(Floor)
     map_win.tilemap.add(player, 0, 0)
@@ -570,4 +569,4 @@ def all_tests(win):
         win.erase()
 
 
-curses.wrapper(master_window_options_test_)
+curses.wrapper(master_window_test)

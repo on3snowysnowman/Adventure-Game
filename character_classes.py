@@ -247,7 +247,7 @@ class Player(EntityCharacter):
                 self.tilemap.move(self, tile.x+1, tile.y)
 
 
-class RandomEnemy(EntityCharacter):
+class Enemy(EntityCharacter):
 
     """
     Enemy that randomly moves across the screen.
