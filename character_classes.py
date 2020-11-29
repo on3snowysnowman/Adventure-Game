@@ -323,20 +323,53 @@ class TrackerEnemy(EntityCharacter):
         xPos, yPos = enemyTile.x, enemyTile.y
         print(xPos, yPos)
 
-        pxPos, pyPos = playerTile.x. playerTile.y
+        pxPos = playerTile.get_x()
+        pyPos = playerTile.get_y()
+        print(pxPos, pyPos)
 
         moveOptions = self.tilemap.get_around(xPos, yPos)
         validCoords = []
         for x in moveOptions:
 
-            validCoords.append([x.x, x.y])
+            for j in x:
+                print([j.x, j.y])
+                validCoords.append([j.x, j.y])
 
         #Left Up
-        if pxPos < xPos and pyPos > yPos:
+        if pxPos < xPos and pyPos < yPos:
 
-            if [xPos - 1, yPos + 1] in validCoords:
+            if [xPos - 1, yPos - 1] in validCoords and self.check_next_tile(xPos - 1, yPos - 1):
 
-                self.tilemap.move(self, xPos, yPos)
+                self.tilemap.move(self, xPos - 1, yPos - 1)
+
+        #Left
+        elif pxPos < xPos and pyPos == yPos:
+
+            if [xPos - 1, yPos] in validCoords and self.check_next_tile(xPos - 1, yPos):
+
+                self.tilemap.move(self, xPos - 1, yPos)
+
+        #Left Down
+        elif pxPos < xPos and pyPos > yPos:
+
+            if [xPos - 1, yPos + 1] in validCoords and self.check_next_tile(xPos - 1, yPos + 1):
+
+                self.tilemap.move(self, xPos - 1, yPos + 1)
+
+        #Down
+        elif pyPos > yPos and pxPos == xPos:
+
+            if [xPos, yPos + 1] in validCoords and self.check_next_tile(xPos, yPos + 1):
+
+                self.tilemap.move(self, xPos, yPos + 1)
+
+        #Right Down
+        elif pxPos > xPos and pyPos > yPos:
+
+            if [xPos + 1, yPos + 1] in validCoords and self.check_next_tile(xPos + 1, yPos + 1):
+
+                self.tilemap.move(self, xPos + 1, yPos + 1)
+
 
 class Wall(BaseCharacter):
 
