@@ -5,9 +5,6 @@ Each class has some logic that allows it to interact,
 and interact with, the DisplayWindow.
 """
 
-# This has been added
-#This has also been added
-#This is a third comment
 import random
 import queue
 import time
@@ -318,7 +315,7 @@ class TrackerEnemy(EntityCharacter):
 
     def move(self):
 
-        enemyTile = self.tilemap.find_object_type(TrackerEnemy)
+        enemyTile = self.tilemap.find_object(self)
         playerTile = self.tilemap.find_object_type(Player)
         xPos, yPos = enemyTile.x, enemyTile.y
 
