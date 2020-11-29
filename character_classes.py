@@ -295,6 +295,28 @@ class Enemy(EntityCharacter):
             self.tilemap.move(self, choice[0], choice[1])
 
 
+class TrackerEnemy(EntityCharacter):
+
+    """
+    Enemy that follows the player
+    """
+
+    def start(self):
+
+        """
+        Sets our name and character
+        """
+
+        self.name = 'Enemy'
+        self.char = 'E'
+        self.attrib.append("red")
+        self.priority = 19
+
+    def move(self):
+
+        pass
+
+
 class Wall(BaseCharacter):
 
     """
