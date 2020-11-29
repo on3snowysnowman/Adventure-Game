@@ -487,6 +487,74 @@ def master_window_test(win):
     map_win.display()
 
 
+def master_window_options_test_(win):
+
+    # Tests the MasterWindow functionality.
+
+    master = MasterWindow(win)
+
+    # Create menus:
+
+    opt_win = OptionWindow.create_subwin_at_pos(master, 10, 50)
+    map_win = DisplayWindow.create_subwin_at_pos(master, 10, 20, position=DisplayWindow.TOP_RIGHT)
+
+    options = {"Boolean" : True}
+
+    # Populate the scroll menus:
+
+    content = []
+
+    for i in range(100):
+
+        content.append("This is value: {}".format(i))
+
+    # Add stuff to DisplayWindow:
+
+    map_win.add_callback('q', map_win.stop)
+
+    curses.curs_set(0)
+
+    # Create Colors
+    blue = Color(9, 1, "blue", 0, 300, 1000)
+    green = Color(10, 2, "green", 0, 1000, 300)
+    yellow = Color(11, 3, "yellow", 1000, 950, 0)
+    red = Color(12, 4, "red", 1000, 0, 300)
+
+    map_win.register_color("blue", blue)
+    map_win.register_color("green", green)
+    map_win.register_color("yellow", yellow)
+    map_win.register_color("red", red)
+
+    # Puts a player in top left corner of map:
+
+    player = Player()
+    ground = Floor()
+    wall = Wall()
+    enemy1 = RandomEnemy()
+    enemy2 = RandomEnemy()
+
+    map_win.tilemap.fill(Floor)
+    map_win.tilemap.add(player, 0, 0)
+    map_win.tilemap.add(wall, 0, 1)
+    map_win.tilemap.add(enemy1, 2, 2)
+    map_win.tilemap.add(enemy2, 3, 3)
+
+    # Add the scroll menus to the master window:
+
+    master.add_subwin(opt_win)
+    master.add_subwin(map_win)
+
+    # Start the two scroll widows:
+    opt_win.add_options(options)
+    opt_win.display()
+
+    # Start the master window:
+
+    master.start()
+
+    map_win.display()
+
+
 def all_tests(win):
 
     # Runs all tests
@@ -502,4 +570,4 @@ def all_tests(win):
         win.erase()
 
 
-curses.wrapper(master_window_test)
+curses.wrapper(master_window_options_test_)
