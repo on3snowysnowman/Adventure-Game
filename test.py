@@ -1,5 +1,5 @@
 #from chascurses import *
-from chascurses_temp import *
+from chascurses import *
 from character_classes import Player
 from MethodFiles import *
 

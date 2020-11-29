@@ -1,11 +1,13 @@
 import curses
 import curses.panel
 from math import ceil, floor
-import threading
-import queue
+#from Mapping import Character, Wall, Weapon, Enemy, character, goblin, skeleton, sword, wall
+import threading, random
 from inspect import isfunction
-from threading import Event
 import queue
+
+from character_classes import *
+from tilemaps import BaseTileMap
 
 """
 CHAS Curses wrappings.
@@ -17,7 +19,6 @@ act as the parent for all CHAS curses operations.
 
 
 class CHASWindow:
-
     """
     Custom CHAS Window.
     Handles the following actions:
@@ -48,9 +49,12 @@ class CHASWindow:
         self.win = win  # Curses window to do our operations on, provided to us
         self.color = False  # Value determining if we have color
         self._calls = {}  # List of callbacks to be called given a keypress
+        self._window_calls = {}
+
+        self.colorPairs = {}
 
         self.input_hand = False  # Value  determining if our input is handled
-        self.input_queue = queue.LifoQueue()  # Queue to store inputs
+        self.input_queue = queue.SimpleQueue()  # Queue to store inputs
 
         max_y, max_x = win.getmaxyx()
 
@@ -93,13 +97,8 @@ class CHASWindow:
 
         self.win.idlok(True)
 
-        # Checking for color capacities
-
-        if curses.has_colors():
-            # Terminal has colors, enabling
-
-            curses.start_color()
-            self.color = True
+        curses.start_color()
+        self.color = True
 
     @staticmethod
     def _get_start_cords(start, max_y, max_x, y_len, x_len):
@@ -176,11 +175,9 @@ class CHASWindow:
         """
 
         if args is None:
-
             args = []
 
         if pass_self:
-
             args = [self] + args
 
         # Convert key to string
@@ -286,8 +283,17 @@ class CHASWindow:
         """
 
         if attrib is None:
-
             attrib = []
+
+        for index, targ in enumerate(attrib):
+
+            if type(targ) == str:
+
+                attrib[index] = self.colorPairs[targ]
+
+            if isinstance(attrib[index], Color):
+
+                attrib[index] = attrib[index].resolvedColor
 
         if position != -1:
 
@@ -321,6 +327,10 @@ class CHASWindow:
         # Lets curses handle it, user doesn't care
 
         return self.win.addstr(content, *attrib)
+
+    def register_color(self, name, value):
+
+        self.colorPairs[name] = value
 
     def bkgd(self, val):
 
@@ -415,7 +425,7 @@ class CHASWindow:
         (By extension, the high level 'get_input' is affected, as it calls this same method).
         """
 
-        self.input_hand = False
+        self.input_hand = True
 
     def resume_input(self):
 
@@ -470,13 +480,11 @@ class CHASWindow:
             return False
 
         if ignore_special and key > 255:
-
             # Key is a special key that we don't care about:
 
             return False
 
         if return_ascii:
-
             return key
 
         return chr(key)
@@ -523,7 +531,6 @@ class CHASWindow:
 
 
 class MasterWindow(CHASWindow):
-
     """
     CHAS Master window.
 
@@ -560,13 +567,14 @@ class MasterWindow(CHASWindow):
         subwin.pause_input()
         self.extract_callback(subwin)
 
+        print("Callbacks: {}".format(self._calls))
+
     def pause_window(self):
 
         """
-        Pauses the input from both windows
+        Pauses the input from all windows
         """
         for x in self.subwins:
-
             x.pause_input()
 
     def extract_all_callbacks(self):
@@ -577,7 +585,6 @@ class MasterWindow(CHASWindow):
         """
 
         for win in self.subwins:
-
             self.extract_callback(win)
 
     def extract_callback(self, subwin):
@@ -609,6 +616,7 @@ class MasterWindow(CHASWindow):
 
         self.thread = threading.Thread(target=self._run)
         self.thread.daemon = True
+        self.thread.start()
 
     def _handle_input(self, key, win):
 
@@ -623,6 +631,8 @@ class MasterWindow(CHASWindow):
 
         # Add input to the child window
 
+        print("Sending input {} to subwindow {}".format(chr(key), win))
+
         win.add_input(key)
 
     def _run(self):
@@ -634,6 +644,124 @@ class MasterWindow(CHASWindow):
         while self.run:
 
             self.get_input()
+            self.refresh()
+
+
+class DisplayWindow(CHASWindow):
+
+    """
+    New display window for testing.
+
+    Supports modular character drawing and enhanced tilemaps.
+    """
+
+    def __init__(self, win):
+
+        super(DisplayWindow, self).__init__(win)
+
+        self.win = win  # CURSES window instance
+
+        self.tilemap = BaseTileMap(10, 15, self)  # Tilemap storing game info
+        self.run = True  # Value determining if we are running
+
+        self.thread = None  # Treading instance of the input loop
+
+    def _render(self):
+
+        """
+        Renders the tilemap content to our screen.
+        """
+
+        self.clear()
+
+        for x, y, z, obj in self.tilemap._iterate():
+
+            # Render the character at specified position. We don't care about secondary characters!
+
+            if z == 0:
+
+                self.addstr(obj.char, y, x, attrib = obj.attrib)
+
+            continue
+
+        # Refresh the window:
+
+        self.refresh()
+
+    def display(self):
+
+        """
+        Displays the tilemap to the screen,
+        refreshing it each loop.
+
+        This allows enemies and the player to move.
+        """
+
+        self.run = True
+
+        # Start our thread:
+
+        self.thread = threading.Thread(target=self._input_loop)
+        self.thread.daemon = True
+        self.thread.start()
+
+        self._render()
+
+        while self.run:
+
+            # Update the tilemap:
+
+            self.tilemap.update()
+
+            self._render()
+
+    def _add_key(self, key, obj):
+
+        """
+        Adds the key to the object.
+
+        :param key: Key to add
+        :type key; int
+        :param obj: Object to add the key to
+        :type obj: BaseCharacter
+        """
+
+        # Add the key to the object:
+
+        print("Adding input {} to class {}".format(key, obj))
+
+        obj.add_input(key)
+
+    def _input_loop(self):
+
+        """
+        Continuously accepts input from the queue,
+        adding keys to the relevant characters.
+        """
+
+        while self.run:
+
+            # Get a key and handle it:
+
+            inp = self.get_input()
+
+    def stop(self):
+
+        """
+        Stops the DisplayWindow event loop.
+        """
+
+        self.run = False
+
+        # Add a 'None' object to each input queue to clear the inputs
+
+        for key, call in self._calls.items():
+
+            if call['call'] == self._add_key:
+
+                # Add 'None' to the input queue:
+
+                call['args'][1].add_input(None)
 
 
 class InputWindow(CHASWindow):
@@ -786,7 +914,6 @@ class InputWindow(CHASWindow):
         # Check if we are moving past our text:
 
         if self.curs_x == len(self.inp) % self.max_x and self.curs_y == self._get_lines() - 1:
-
             # Going to be too big, do not increment!
 
             return
@@ -913,7 +1040,6 @@ class InputWindow(CHASWindow):
         """
 
         if len(self.inp) - self.prompt_len == 0:
-
             # Nothing left, return
 
             return
@@ -976,7 +1102,6 @@ class InputWindow(CHASWindow):
         out = self.inp[start:end]
 
         for ind, char in enumerate(out):
-
             # Calculating x and y values for current character
 
             y = floor(ind / self.max_x)
@@ -1172,7 +1297,6 @@ Type 'help' for more details
 
 
 class ScrollWindow(CHASWindow):
-
     """
     A curses window for handling content scrolling.
     """
@@ -1197,7 +1321,7 @@ class ScrollWindow(CHASWindow):
         self.add_callback(curses.KEY_DOWN, self._increment_scroll)
         self.add_callback(curses.KEY_UP, self._decrement_scroll)
         self.add_callback('r', self._render_content)
-        self.add_callback([curses.KEY_END, curses.KEY_EXIT, 'e', 'q'], self.stop)
+        self.add_callback([curses.KEY_END, curses.KEY_EXIT, 'e'], self.stop)
 
     def get_key(self, block=True, timeout=None):
 
@@ -1224,7 +1348,6 @@ class ScrollWindow(CHASWindow):
                 temp = self._split_content(i)
 
                 for v in temp:
-
                     self.content.append(v)
 
         else:
@@ -1277,7 +1400,6 @@ class ScrollWindow(CHASWindow):
         self.win.refresh()
 
         while self.running:
-
             # Get key and handle it:
 
             key = self.get_input()
@@ -1406,7 +1528,6 @@ class ScrollWindow(CHASWindow):
 
 
 class OptionWindow(CHASWindow):
-
     """
     Displays a list of options to the user.
     Support simple selection, boolean selection, and value selection.  
@@ -1464,7 +1585,6 @@ class OptionWindow(CHASWindow):
         # Render in header and border:
 
         if self.header is None and self.sub_header is None:
-
             self.border(header_len=1, sub_len=1)
 
         self.title = title
@@ -1476,7 +1596,6 @@ class OptionWindow(CHASWindow):
         self.run = True
 
         while self.run:
-
             # Getting key from user:
 
             self._render()
@@ -1486,13 +1605,11 @@ class OptionWindow(CHASWindow):
         self.options.pop(len(self.options) - 1)
 
         if no_return:
-
             # Return nothing, we are done here
 
             return
 
         if self.simple:
-
             # Simple selection, return selected value
 
             return self.selected
@@ -1523,7 +1640,6 @@ class OptionWindow(CHASWindow):
             value = [value, value[0]]
 
         if option_type == OptionWindow.SUB_MENU and type(value) is not OptionWindow:
-
             # We need to create an OptionWindow instance to work with:
 
             new = OptionWindow.create_subwin_at_pos(self.parent, self.parent.getmaxyx()[0], self.parent.getmaxyx[1])
@@ -1554,7 +1670,6 @@ class OptionWindow(CHASWindow):
             # Working with a list, make them all simple selection
 
             for opt in options:
-
                 self.add_option(opt, OptionWindow.SIMPLE_SELECT)
 
         if type(options) == dict:
@@ -1587,7 +1702,6 @@ class OptionWindow(CHASWindow):
                     self.add_option(opt, OptionWindow.TOGGLE_SELECT, value=val)
 
                 if type(val) == dict:
-
                     # Create a sub-menu
 
                     new = OptionWindow.create_subwin_at_pos(self.win, self.max_y - 1, self.max_x - 1)
@@ -1618,7 +1732,6 @@ class OptionWindow(CHASWindow):
         """
 
         if self.simple:
-
             # Simple selection, return selected
 
             return self.selected
@@ -1797,18 +1910,17 @@ class OptionWindow(CHASWindow):
         off = 0  # Offset to render numbers:
 
         for num, opt in enumerate(self.options[self.scroll_position * self.max_y:
-                                               (self.scroll_position + 1) * self.max_y]):
+        (self.scroll_position + 1) * self.max_y]):
 
             # Get shortened name(If necessary):
 
             if opt['type'] == OptionWindow.NULL_OPTION:
-
                 # Don't render an option number, it is a null option!
 
                 off = off + 1
 
             name = self._get_shortened_name(opt, num + 1 + (self.max_y * self.scroll_position) - off
-                                            if opt['type'] != OptionWindow.NULL_OPTION else -1)
+            if opt['type'] != OptionWindow.NULL_OPTION else -1)
 
             # Get type name:
 
@@ -1872,13 +1984,11 @@ class OptionWindow(CHASWindow):
             self._stop()
 
             if self.simple:
-
                 return self.options[0]['name']
 
             return opt
 
         if OptionWindow.SIMPLE_SELECT == opt_type:
-
             # Simple selection, return value selected:
 
             self.run = False
@@ -1888,7 +1998,6 @@ class OptionWindow(CHASWindow):
             return opt
 
         if OptionWindow.TOGGLE_SELECT == opt_type:
-
             # Toggle the option on/off, return opposite
 
             opt['value'] = not opt['value']
@@ -1896,7 +2005,6 @@ class OptionWindow(CHASWindow):
             return opt
 
         if OptionWindow.VALUE_SELECT == opt_type:
-
             # Have the user choose from a list of options:
 
             # Create a new Option Menu, should be overlayed on top of ours:
@@ -1936,7 +2044,6 @@ class OptionWindow(CHASWindow):
             return opt
 
         if OptionWindow.SUB_MENU == opt_type:
-
             # Open up the OptionWindow associated with the sub menu.
             # Don't return the content, we leave that to the converter.
 
@@ -1955,7 +2062,6 @@ class OptionWindow(CHASWindow):
             return opt
 
         if OptionWindow.RUN_OPTION == opt_type:
-
             opt['value']()
 
             return opt
@@ -1969,3 +2075,13 @@ class OptionWindow(CHASWindow):
 
         self.run = False
 
+
+class Color:
+
+    def __init__(self, colorNumber, colorPairNumber, name, r, g, b):
+
+        curses.init_color(colorNumber, r, g, b)
+        curses.init_pair(colorPairNumber, colorNumber, curses.COLOR_BLACK)
+
+        self.colorPairNumber = colorPairNumber
+        self.resolvedColor = curses.color_pair(colorPairNumber)
