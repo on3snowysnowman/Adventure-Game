@@ -472,18 +472,30 @@ def master_window_test(win):
 
     # Add the scroll menus to the master window:
 
-    master.add_subwin(scroll1)
-    master.add_subwin(map_win)
+    #master.add_subwin(scroll1)
+    #master.add_subwin(map_win)
 
     # Start the two scroll widows:
 
-    scroll1.run_display(content)
+    #scroll1.run_display(content)
 
     # Start the master window:
 
-    master.start()
+    #master.start()
 
-    map_win.display()
+    #map_win.display()
+
+    # Get information around player:
+
+    thing = map_win.tilemap.get_around(1, 1, radius=2)
+
+    print(thing)
+
+    for items in thing:
+
+        for item in items:
+
+            print("X: {} ; Y: {} ; Obj: {}".format(item.x, item.y, item.obj))
 
 
 def master_window_options_test(win):

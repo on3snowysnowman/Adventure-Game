@@ -332,6 +332,55 @@ class BaseTileMap(object):
 
         return listObjects
 
+    def get_around(self, x, y, radius=1):
+
+        """
+        Gets all positions around the X and Y cordnets given.
+
+        :param x: X cordnet to start at
+        :type x : int
+        :param y: Y corndet to start at
+        :type y: int
+        :param radius: Radius of objects around corndets
+        :return: List of Tiles around the
+        """
+
+        if not self._bound_check(x, y):
+
+            # Not a valid cordnet!
+
+            return False
+
+        # Calculate cords:
+
+        start_x = x - radius if x - radius >= 0 else 0
+        stop_x = x + radius if x + radius < len(self.tilemap[0]) else len(self.tilemap) - 1
+
+        start_y = y - radius if y - radius >= 0 else 0
+        stop_y = y + radius if y + radius < len(self.tilemap) else len(self.tilemap)
+
+        final = []
+
+        # Iterate over each value:
+
+        for cur_y in range(start_y, stop_y + 1):
+
+            for cur_x in range(start_x, stop_x + 1):
+
+                if cur_y == y and cur_x == x:
+
+                    # Ignore this tile, it is us!
+
+                    continue
+
+                # Get the Tile at this position:
+
+                tile = self.get(cur_x, cur_y)
+
+                final.append(tile)
+
+        return final
+
     def add(self, obj, x, y):
 
         """
