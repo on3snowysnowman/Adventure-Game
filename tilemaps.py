@@ -255,8 +255,9 @@ class BaseTileMap(object):
         stop_x = x + radius if x + radius < len(self.tilemap[0]) else len(self.tilemap) - 1
 
         start_y = y - radius if y - radius >= 0 else 0
-        stop_y = y + radius if y + radius < len(self.tilemap) else len(self.tilemap)
-
+        stop_y = y + radius if y + radius < len(self.tilemap) else len(self.tilemap) - 1
+        print(f"Limit : {len(self.tilemap)}")
+        print(f"Stop y : {stop_y}")
         final = []
 
         # Iterate over each value:
@@ -267,12 +268,12 @@ class BaseTileMap(object):
 
                 if cur_y == y and cur_x == x:
 
-                    # Ignore this tile, it is us!
+                    # Ignore thistest tile, it is us!
 
                     continue
 
                 # Get the Tile at this position:
-
+                print([cur_x, cur_y])
                 tile = self.get(cur_x, cur_y)
 
                 final.append(tile)
