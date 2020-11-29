@@ -195,7 +195,7 @@ class Player(EntityCharacter):
         self.priority = 0
         self.move_priority = 30
 
-        self.keys = ['w', 'a', 's', 'd']
+        self.keys = ['w', 'a', 's', 'd', 'q', 'e', 'z', 'c']
 
     def move(self):
 
@@ -246,6 +246,14 @@ class Player(EntityCharacter):
             if self.check_next_tile(tile.x + 1, tile.y):
 
                 self.tilemap.move(self, tile.x+1, tile.y)
+
+        elif inp == 'q':
+
+            # Move diagonal up left
+
+            if self.check_next_tile(tile.x - 1, tile.y - 1):
+
+                self.tilemap.move(self, tile.x - 1, tile.y - 1)
 
 
 class Enemy(EntityCharacter):
@@ -322,7 +330,6 @@ class TrackerEnemy(EntityCharacter):
         pxPos, pyPos = playerTile.x, playerTile.y
 
         moveOptions = self.tilemap.get_around(xPos, yPos)
-        print(self.tilemap.get_around(xPos, yPos))
         validCoords = []
         for x in moveOptions:
             for j in x:

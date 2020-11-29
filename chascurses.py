@@ -1670,7 +1670,7 @@ class OptionWindow(CHASWindow):
 
         if type(options) == dict:
 
-            # Working with dict, dynamically select the appropriate option for each value
+            # Working with dict, dynamically select the appropri1ate option for each value
 
             for opt in options:
 

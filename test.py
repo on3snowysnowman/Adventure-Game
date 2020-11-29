@@ -20,6 +20,7 @@ def init_colors(win):
     win.register_color("yellow", yellow)
     win.register_color("red", red)
 
+
 def dummy(win, test):
 
     win.win.addstr("This is a test! You should have pressed F1!")
@@ -537,7 +538,7 @@ def get_around_test(win):
     # Tests the 'get_around' method in the tilemap
 
     map_win = DisplayWindow.create_subwin_at_pos(win, 11, 16)
-    map_win.add_callback('q', map_win.stop)
+    map_win.add_callback('f', map_win.stop)
 
     curses.curs_set(0)
 
@@ -553,21 +554,17 @@ def get_around_test(win):
     player = Player()
 
     map_win.tilemap.fill(Floor)
-    map_win.tilemap.add(player, int(map_win.tilemap.width / 2), int(map_win.tilemap.height / 2) - 1)
+    map_win.tilemap.add(player, 0, 0)
+    #map_win.tilemap.add(wall, 2, 0)
+    #map_win.tilemap.add(wall, 2, 1)
+    #map_win.tilemap.add(wall, 2, 2)
+    #map_win.tilemap.add(wall, 1, 3)
+    #map_win.tilemap.add(wall, 0, 4)
+
     map_win.tilemap.add(TrackerEnemy(), 6, 3)
+    map_win.tilemap.add(TrackerEnemy(), 7, 3)
 
-    # Getting tiles around the TrackerEnemy:
-
-    tiles = map_win.tilemap.get_around(map_win.tilemap.width - 1, map_win.tilemap.height - 1)
-
-    print("Tiles: {}".format(tiles))
-
-    for tile in tiles:
-
-        for obj in tile:
-
-            print("Object @ X: {} Y: {} Z: {} ; Object: {}".format(obj.x, obj.y, obj.z, obj.obj))
-
+    map_win.display()
 
 def all_tests(win):
 
