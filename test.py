@@ -359,7 +359,7 @@ def map_window_test(win):
 
     # Puts a player in top left corner of map:
 
-    # player = Player()
+    player = Player()
     ground = Floor()
     wall = Wall()
     player = Player()
@@ -562,16 +562,7 @@ def get_around_test(win):
 
     map_win.tilemap.fill(Floor)
     map_win.tilemap.add(player, int(map_win.tilemap.width / 2), int(map_win.tilemap.height / 2) - 1)
-    map_win.tilemap.add(wall, 6, 3)
-
-    playerObject = map_win.tilemap.find_object_type(Player)
-
-    xPos, yPos = playerObject.x, playerObject.y
-    for x in map_win.tilemap.get_around(xPos, yPos):
-
-        for j in x:
-
-            print(j.obj, j.x, j.y)
+    map_win.tilemap.add(TrackerEnemy(), 6, 3)
 
     map_win.display()
 
@@ -591,4 +582,4 @@ def all_tests(win):
         win.erase()
 
 
-curses.wrapper(master_window_options_test)
+curses.wrapper(get_around_test)

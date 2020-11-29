@@ -322,9 +322,9 @@ class TrackerEnemy(EntityCharacter):
         pxPos, pyPos = playerTile.x, playerTile.y
 
         moveOptions = self.tilemap.get_around(xPos, yPos)
+        print(self.tilemap.get_around(xPos, yPos))
         validCoords = []
         for x in moveOptions:
-
             for j in x:
                 validCoords.append([j.x, j.y])
 
@@ -355,7 +355,6 @@ class TrackerEnemy(EntityCharacter):
 
         #Left
         elif pxPos < xPos and pyPos == yPos:
-
             if [xPos - 1, yPos] in validCoords and self.check_next_tile(xPos - 1, yPos):
 
                 self.tilemap.move(self, xPos - 1, yPos)
@@ -401,6 +400,7 @@ class TrackerEnemy(EntityCharacter):
             if [xPos, yPos - 1] in validCoords and self.check_next_tile(xPos, yPos - 1):
 
                 self.tilemap.move(self, xPos, yPos - 1)
+
 
 class Wall(BaseCharacter):
 

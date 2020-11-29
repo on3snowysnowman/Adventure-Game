@@ -244,7 +244,6 @@ class BaseTileMap(object):
         """
 
         if not self._bound_check(x, y):
-
             # Not a valid cordnet!
 
             return False
