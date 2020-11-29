@@ -318,8 +318,25 @@ class TrackerEnemy(EntityCharacter):
 
     def move(self):
 
-        pass
+        enemyTile = self.tilemap.find_object_type(TrackerEnemy)
+        playerTile = self.tilemap.find_object_type(Player)
+        xPos, yPos = enemyTile.x, enemyTile.y
+        print(xPos, yPos)
 
+        pxPos, pyPos = playerTile.x. playerTile.y
+
+        moveOptions = self.tilemap.get_around(xPos, yPos)
+        validCoords = []
+        for x in moveOptions:
+
+            validCoords.append([x.x, x.y])
+
+        #Left Up
+        if pxPos < xPos and pyPos > yPos:
+
+            if [xPos - 1, yPos + 1] in validCoords:
+
+                self.tilemap.move(self, xPos, yPos)
 
 class Wall(BaseCharacter):
 

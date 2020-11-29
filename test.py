@@ -355,34 +355,15 @@ def map_window_test(win):
     #player = Player()
     ground = Floor()
     wall = Wall()
-    enemy1 = Enemy()
-    enemy2 = Enemy()
+    player = Player()
 
     map_win.tilemap.fill(Floor)
-    #map_win.tilemap.add(player, 0, 0)
+    map_win.tilemap.add(player, 1, 1)
     map_win.tilemap.add(wall, 0, 1)
-    map_win.tilemap.add(enemy1, 2, 2)
-    map_win.tilemap.add(enemy2, 3, 3)
+    map_win.tilemap.add(TrackerEnemy(), 6, 4)
+
 
     map_win.display()
-    xPos, yPos, zPos = map_win.tilemap.find_object_type(Player)
-    count = 1
-
-    '''
-    for x in map_win.tilemap.get_all_positions(xPos, yPos):
-
-        if x is not None:
-            print("[", end = "")
-            for j in x:
-                if count != len(x):
-                    print(str(j.obj) + ", ", end = "")
-                else: print(j.obj, end = "")
-                count += 1
-            print("]")
-            count = 1
-
-        else: print(x)
-    '''
 
 
 def master_window_test_theory(win):
@@ -598,13 +579,14 @@ def get_around_test(win):
     playerObject = map_win.tilemap.find_object_type(Player)
 
     xPos, yPos = playerObject.x, playerObject.y
-    for x in map_win.tilemap.get_around(xPos, yPos, 2):
+    for x in map_win.tilemap.get_around(xPos, yPos):
 
         for j in x:
 
             print(j.obj, j.x, j.y)
 
     map_win.display()
+
 
 def all_tests(win):
 
@@ -621,4 +603,4 @@ def all_tests(win):
         win.erase()
 
 
-curses.wrapper(get_around_test)
+curses.wrapper(map_window_test)
