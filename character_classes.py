@@ -104,11 +104,17 @@ class BaseCharacter(object):
 
             pass
 
-        if not return_ascii and inp < 225:
+        try:
 
-            # input is valid string, return in string format:
+            if not return_ascii and inp < 225:
 
-            return chr(inp)
+                # input is valid string, return in string format:
+
+                return chr(inp)
+
+        except TypeError:
+
+            pass
 
         # Return ASCII code
 
@@ -207,8 +213,6 @@ class Player(EntityCharacter):
         #time.sleep(3)
 
         inp = self.get_input()
-
-        print("Got input: {} in player".format(inp))
 
         # Get our cordnets:
 

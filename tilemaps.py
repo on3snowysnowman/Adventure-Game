@@ -230,108 +230,6 @@ class BaseTileMap(object):
 
         self.tilemap[y][x].sort(key=self._get_priority)
 
-    def get_all_positions(self, x, y):
-
-        listObjects = []
-
-        for j in range(8):
-
-            listObjects.append([])
-
-        #UP
-        count = 0
-        if self._bound_check(x, y - 1):
-
-            for i in self.tilemap[y - 1][x]:
-
-                listObjects[0].append(Tile(x, y - 1, count, i))
-                count += 1
-
-        else:
-
-            listObjects[0] = None
-
-        #RIGHT UP
-        if self._bound_check(x + 1, y - 1):
-
-            count = 0
-            for i in self.tilemap[y - 1][x + 1]:
-                listObjects[1].append(Tile(x + 1, y - 1, count, i))
-                count += 1
-
-        else:
-
-            listObjects[1] = None
-
-        #RIGHT
-        if self._bound_check(x + 1, y):
-
-            count = 0
-            for i in self.tilemap[y][x + 1]:
-                listObjects[2].append(Tile(x + 1, y, count, i,))
-                count += 1
-
-        else:
-
-            listObjects[2] = None
-
-        #RIGHT DOWN
-        if self._bound_check(x + 1, y + 1):
-
-            count = 0
-            for i in self.tilemap[y + 1][x + 1]:
-                listObjects[3].append(Tile(x + 1, y + 1, count, i))
-                count += 1
-        else:
-
-            listObjects[3] = None
-
-        #DOWN
-        if self._bound_check(x, y + 1):
-
-            count = 0
-            for i in self.tilemap[y + 1][x]:
-                listObjects[4].append(Tile(x, y + 1, count, i))
-                count += 1
-        else:
-
-            listObjects[4] = None
-
-        #LEFT DOWN
-        if self._bound_check(x - 1, y + 1):
-
-            count = 0
-            for i in self.tilemap[y + 1][x - 1]:
-                listObjects[5].append(Tile(x - 1, y + 1, count, i))
-                count += 1
-        else:
-
-            listObjects[5] = None
-
-        #LEFT
-        if self._bound_check(x - 1, y):
-
-            count = 0
-            for i in self.tilemap[y][x - 1]:
-                listObjects[6].append(Tile(x - 1, y, count, i))
-                count += 1
-        else:
-
-            listObjects[6] = None
-
-        #LEFT UP
-        if self._bound_check(x - 1, y - 1):
-
-            count = 0
-            for i in self.tilemap[y - 1][x - 1]:
-                listObjects[7].append(Tile(x - 1, y - 1, count, i))
-                count += 1
-        else:
-
-            listObjects[7] = None
-
-        return listObjects
-
     def get_around(self, x, y, radius=1):
 
         """
@@ -360,6 +258,11 @@ class BaseTileMap(object):
         stop_y = y + radius if y + radius < len(self.tilemap) else len(self.tilemap)
 
         final = []
+
+        print(start_x)
+        print(stop_x)
+        print(start_y)
+        print(stop_y)
 
         # Iterate over each value:
 
@@ -406,8 +309,6 @@ class BaseTileMap(object):
 
             for key in obj.keys:
 
-                print("Adding key {} to obj {}".format(key, obj))
-
                 self.win.add_callback(key, self.win._add_key, args=[key if type(key) == int else ord(key), obj])
 
         # Adding object at cordnet:
@@ -430,11 +331,7 @@ class BaseTileMap(object):
 
         cords.sort(key=self._get_move_priority)
 
-        print("Cords: {}".format(cords))
-
         for cord in cords:
-
-            print("Spec. Cord: {}".format(cord))
 
             # Call the 'move' method:
 

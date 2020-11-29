@@ -566,6 +566,46 @@ def master_window_options_test(win):
     map_win.display()
 
 
+def get_around_test(win):
+
+    map_win = DisplayWindow.create_subwin_at_pos(win, 11, 16)
+    map_win.add_callback('q', map_win.stop)
+
+    curses.curs_set(0)
+
+    # Create Colors
+    blue = Color(9, 1, "blue", 0, 300, 1000)
+    green = Color(10, 2, "green", 0, 1000, 300)
+    yellow = Color(11, 3, "yellow", 1000, 950, 0)
+    red = Color(12, 4, "red", 1000, 0, 300)
+
+    map_win.register_color("blue", blue)
+    map_win.register_color("green", green)
+    map_win.register_color("yellow", yellow)
+    map_win.register_color("red", red)
+
+    # Puts a player in top left corner of map:
+
+    # player = Player()
+    ground = Floor()
+    wall = Wall()
+    player = Player()
+
+    map_win.tilemap.fill(Floor)
+    map_win.tilemap.add(player, int(map_win.tilemap.width / 2), int(map_win.tilemap.height / 2) - 1)
+    map_win.tilemap.add(wall, 6, 3)
+
+    playerObject = map_win.tilemap.find_object_type(Player)
+
+    xPos, yPos = playerObject.x, playerObject.y
+    for x in map_win.tilemap.get_around(xPos, yPos, 2):
+
+        for j in x:
+
+            print(j.obj, j.x, j.y)
+
+    map_win.display()
+
 def all_tests(win):
 
     # Runs all tests
@@ -581,4 +621,4 @@ def all_tests(win):
         win.erase()
 
 
-curses.wrapper(master_window_test)
+curses.wrapper(get_around_test)
