@@ -334,7 +334,25 @@ class TrackerEnemy(EntityCharacter):
         #Left Up
         if pxPos < xPos and pyPos < yPos:
 
-            if [xPos - 1, yPos - 1] in validCoords and self.check_next_tile(xPos - 1, yPos - 1):
+            #Checking if player is directly next to the player diagnonaly
+            if xPos - 1 == pxPos and yPos - 1 == pyPos:
+
+                secondaryValidCoords = []
+
+                if[xPos - 1, yPos] in validCoords and self.check_next_tile(xPos - 1, yPos):
+
+                       secondaryValidCoords.append([xPos - 1, yPos])
+
+                if [xPos, yPos - 1] in validCoords and self.check_next_tile(xPos, yPos - 1):
+
+                        secondaryValidCoords.append([xPos, yPos - 1])
+
+                if len(secondaryValidCoords) > 0:
+
+                    nextMove = random.choice(secondaryValidCoords)
+                    self.tilemap.move(self, nextMove[0], nextMove[1])
+
+            elif [xPos - 1, yPos - 1] in validCoords and self.check_next_tile(xPos - 1, yPos - 1):
 
                 self.tilemap.move(self, xPos - 1, yPos - 1)
 
@@ -386,7 +404,6 @@ class TrackerEnemy(EntityCharacter):
             if [xPos, yPos - 1] in validCoords and self.check_next_tile(xPos, yPos - 1):
 
                 self.tilemap.move(self, xPos, yPos - 1)
-
 
 class Wall(BaseCharacter):
 
