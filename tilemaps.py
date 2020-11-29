@@ -259,11 +259,6 @@ class BaseTileMap(object):
 
         final = []
 
-        print(start_x)
-        print(stop_x)
-        print(start_y)
-        print(stop_y)
-
         # Iterate over each value:
 
         for cur_y in range(start_y, stop_y + 1):
