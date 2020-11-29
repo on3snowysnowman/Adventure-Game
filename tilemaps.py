@@ -10,7 +10,7 @@ from character_classes import EntityCharacter
 import math
 
 
-class BaseTileMap(object):
+class BaseTile(object):
 
     """
     BaseTileMap object, all child tilemaps MUST inherit this class!
@@ -244,7 +244,7 @@ class BaseTileMap(object):
 
             for i in self.tilemap[y - 1][x]:
 
-                listObjects[0].append(TileMap(x, y - 1, count, i))
+                listObjects[0].append(Tile(x, y - 1, count, i))
                 count += 1
 
         else:
@@ -256,7 +256,7 @@ class BaseTileMap(object):
 
             count = 0
             for i in self.tilemap[y - 1][x + 1]:
-                listObjects[1].append(TileMap(x + 1, y - 1, count, i))
+                listObjects[1].append(Tile(x + 1, y - 1, count, i))
                 count += 1
 
         else:
@@ -268,7 +268,7 @@ class BaseTileMap(object):
 
             count = 0
             for i in self.tilemap[y][x + 1]:
-                listObjects[2].append(TileMap(x + 1, y, count, i,))
+                listObjects[2].append(Tile(x + 1, y, count, i,))
                 count += 1
 
         else:
@@ -280,7 +280,7 @@ class BaseTileMap(object):
 
             count = 0
             for i in self.tilemap[y + 1][x + 1]:
-                listObjects[3].append(TileMap(x + 1, y + 1, count, i))
+                listObjects[3].append(Tile(x + 1, y + 1, count, i))
                 count += 1
         else:
 
@@ -291,7 +291,7 @@ class BaseTileMap(object):
 
             count = 0
             for i in self.tilemap[y + 1][x]:
-                listObjects[4].append(TileMap(x, y + 1, count, i))
+                listObjects[4].append(Tile(x, y + 1, count, i))
                 count += 1
         else:
 
@@ -302,7 +302,7 @@ class BaseTileMap(object):
 
             count = 0
             for i in self.tilemap[y + 1][x - 1]:
-                listObjects[5].append(TileMap(x - 1, y + 1, count, i))
+                listObjects[5].append(Tile(x - 1, y + 1, count, i))
                 count += 1
         else:
 
@@ -313,7 +313,7 @@ class BaseTileMap(object):
 
             count = 0
             for i in self.tilemap[y][x - 1]:
-                listObjects[6].append(TileMap(x - 1, y, count, i))
+                listObjects[6].append(Tile(x - 1, y, count, i))
                 count += 1
         else:
 
@@ -324,7 +324,7 @@ class BaseTileMap(object):
 
             count = 0
             for i in self.tilemap[y - 1][x - 1]:
-                listObjects[7].append(TileMap(x - 1, y - 1, count, i))
+                listObjects[7].append(Tile(x - 1, y - 1, count, i))
                 count += 1
         else:
 
@@ -549,7 +549,7 @@ class Tile:
 
        pass
 
-#tile = TileMap(12, 2, 0, "object")
-#tile2 = TileMap(4, 10, 0, "object2")
+#tile = Tile(12, 2, 0, "object")
+#tile2 = Tile(4, 10, 0, "object2")
 
 #print(tile.calc_distance(tile, tile2))
