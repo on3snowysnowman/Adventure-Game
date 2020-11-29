@@ -10,7 +10,7 @@ from character_classes import EntityCharacter
 import math
 
 
-class BaseTile(object):
+class BaseTileMap(object):
 
     """
     BaseTileMap object, all child tilemaps MUST inherit this class!
