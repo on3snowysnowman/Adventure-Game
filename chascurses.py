@@ -1,8 +1,8 @@
 import curses
 import curses.panel
 from math import ceil, floor
-#from Mapping import Character, Wall, Weapon, Enemy, character, goblin, skeleton, sword, wall
-import threading, random
+import threading
+import random
 from inspect import isfunction
 import queue
 

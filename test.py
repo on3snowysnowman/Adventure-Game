@@ -369,7 +369,6 @@ def map_window_test(win):
     map_win.tilemap.add(wall, 0, 1)
     map_win.tilemap.add(TrackerEnemy(), 6, 4)
 
-
     map_win.display()
 
 
@@ -543,15 +542,8 @@ def get_around_test(win):
     curses.curs_set(0)
 
     # Create Colors
-    blue = Color(9, 1, "blue", 0, 300, 1000)
-    green = Color(10, 2, "green", 0, 1000, 300)
-    yellow = Color(11, 3, "yellow", 1000, 950, 0)
-    red = Color(12, 4, "red", 1000, 0, 300)
 
-    map_win.register_color("blue", blue)
-    map_win.register_color("green", green)
-    map_win.register_color("yellow", yellow)
-    map_win.register_color("red", red)
+    init_colors(map_win)
 
     # Puts a player in top left corner of map:
 
@@ -564,7 +556,17 @@ def get_around_test(win):
     map_win.tilemap.add(player, int(map_win.tilemap.width / 2), int(map_win.tilemap.height / 2) - 1)
     map_win.tilemap.add(TrackerEnemy(), 6, 3)
 
-    map_win.display()
+    # Getting tiles around the TrackerEnemy:
+
+    tiles = map_win.tilemap.get_around(map_win.tilemap.width - 1, map_win.tilemap.height - 1)
+
+    print("Tiles: {}".format(tiles))
+
+    for tile in tiles:
+
+        for obj in tile:
+
+            print("Object @ X: {} Y: {} Z: {} ; Object: {}".format(obj.x, obj.y, obj.z, obj.obj))
 
 
 def all_tests(win):

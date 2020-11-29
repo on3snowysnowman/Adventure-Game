@@ -244,6 +244,7 @@ class BaseTileMap(object):
         """
 
         if not self._bound_check(x, y):
+
             # Not a valid cordnet!
 
             return False
@@ -251,7 +252,7 @@ class BaseTileMap(object):
         # Calculate cords:
 
         start_x = x - radius if x - radius >= 0 else 0
-        stop_x = x + radius if x + radius < len(self.tilemap[0]) else len(self.tilemap) - 1
+        stop_x = x + radius if x + radius < len(self.tilemap[0]) else len(self.tilemap[0]) - 1
 
         start_y = y - radius if y - radius >= 0 else 0
         stop_y = y + radius if y + radius < len(self.tilemap) else len(self.tilemap) - 1
@@ -266,7 +267,7 @@ class BaseTileMap(object):
 
                 if cur_y == y and cur_x == x:
 
-                    # Ignore thistest tile, it is us!
+                    # Ignore this tile, it is us!
 
                     continue
 
