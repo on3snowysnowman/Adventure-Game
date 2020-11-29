@@ -322,8 +322,7 @@ class TrackerEnemy(EntityCharacter):
         playerTile = self.tilemap.find_object_type(Player)
         xPos, yPos = enemyTile.x, enemyTile.y
 
-        pxPos = playerTile.get_x()
-        pyPos = playerTile.get_y()
+        pxPos, pyPos = playerTile.x, playerTile.y
 
         moveOptions = self.tilemap.get_around(xPos, yPos)
         validCoords = []

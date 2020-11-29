@@ -567,7 +567,6 @@ class MasterWindow(CHASWindow):
         subwin.pause_input()
         self.extract_callback(subwin)
 
-        print("Callbacks: {}".format(self._calls))
 
     def pause_window(self):
 
@@ -631,7 +630,6 @@ class MasterWindow(CHASWindow):
 
         # Add input to the child window
 
-        print("Sending input {} to subwindow {}".format(chr(key), win))
 
         win.add_input(key)
 
@@ -727,8 +725,6 @@ class DisplayWindow(CHASWindow):
         """
 
         # Add the key to the object:
-
-        print("Adding input {} to class {}".format(key, obj))
 
         obj.add_input(key)
 

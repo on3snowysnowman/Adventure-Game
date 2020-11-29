@@ -256,8 +256,7 @@ class BaseTileMap(object):
 
         start_y = y - radius if y - radius >= 0 else 0
         stop_y = y + radius if y + radius < len(self.tilemap) else len(self.tilemap) - 1
-        print(f"Limit : {len(self.tilemap)}")
-        print(f"Stop y : {stop_y}")
+
         final = []
 
         # Iterate over each value:
@@ -273,7 +272,6 @@ class BaseTileMap(object):
                     continue
 
                 # Get the Tile at this position:
-                print([cur_x, cur_y])
                 tile = self.get(cur_x, cur_y)
 
                 final.append(tile)
@@ -490,8 +488,3 @@ class Tile:
     def _calc_fastest_route(self, targObj):
 
        pass
-
-#tile = Tile(12, 2, 0, "object")
-#tile2 = Tile(4, 10, 0, "object2")
-
-#print(tile.calc_distance(tile, tile2))
