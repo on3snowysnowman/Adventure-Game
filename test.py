@@ -6,6 +6,20 @@ import curses
 from math import ceil
 
 
+def init_colors(win):
+
+    # Registers the default colors to the CHASWindow
+
+    blue = Color(9, 1, "blue", 0, 300, 1000)
+    green = Color(10, 2, "green", 0, 1000, 300)
+    yellow = Color(11, 3, "yellow", 1000, 950, 0)
+    red = Color(12, 4, "red", 1000, 0, 300)
+
+    win.register_color("blue", blue)
+    win.register_color("green", green)
+    win.register_color("yellow", yellow)
+    win.register_color("red", red)
+
 def dummy(win, test):
 
     win.win.addstr("This is a test! You should have pressed F1!")
@@ -339,20 +353,13 @@ def map_window_test(win):
 
     curses.curs_set(0)
 
-    #Create Colors
-    blue = Color(9, 1, "blue", 0, 300, 1000)
-    green = Color(10, 2, "green", 0, 1000, 300)
-    yellow = Color(11, 3, "yellow", 1000, 950, 0)
-    red = Color(12, 4, "red", 1000, 0, 300)
+    # Create Colors
 
-    map_win.register_color("blue", blue)
-    map_win.register_color("green", green)
-    map_win.register_color("yellow", yellow)
-    map_win.register_color("red", red)
+    init_colors(win)
 
     # Puts a player in top left corner of map:
 
-    #player = Player()
+    # player = Player()
     ground = Floor()
     wall = Wall()
     player = Player()
@@ -427,15 +434,8 @@ def master_window_test(win):
     curses.curs_set(0)
 
     # Create Colors
-    blue = Color(9, 1, "blue", 0, 300, 1000)
-    green = Color(10, 2, "green", 0, 1000, 300)
-    yellow = Color(11, 3, "yellow", 1000, 950, 0)
-    red = Color(12, 4, "red", 1000, 0, 300)
 
-    map_win.register_color("blue", blue)
-    map_win.register_color("green", green)
-    map_win.register_color("yellow", yellow)
-    map_win.register_color("red", red)
+    init_colors(map_win)
 
     # Puts a player in top left corner of map:
 
@@ -453,30 +453,18 @@ def master_window_test(win):
 
     # Add the scroll menus to the master window:
 
-    #master.add_subwin(scroll1)
-    #master.add_subwin(map_win)
+    master.add_subwin(scroll1)
+    master.add_subwin(map_win)
 
     # Start the two scroll widows:
 
-    #scroll1.run_display(content)
+    scroll1.run_display(content)
 
     # Start the master window:
 
-    #master.start()
+    master.start()
 
-    #map_win.display()
-
-    # Get information around player:
-
-    thing = map_win.tilemap.get_around(1, 1, radius=2)
-
-    print(thing)
-
-    for items in thing:
-
-        for item in items:
-
-            print("X: {} ; Y: {} ; Obj: {}".format(item.x, item.y, item.obj))
+    map_win.display()
 
 
 def master_window_options_test(win):
@@ -487,18 +475,10 @@ def master_window_options_test(win):
 
     # Create menus:
 
-    opt_win = OptionWindow.create_subwin_at_pos(master, 10, 50)
+    opt_win = OptionWindow.create_subwin_at_pos(master, 10, 30)
     map_win = DisplayWindow.create_subwin_at_pos(master, 10, 20, position=DisplayWindow.TOP_RIGHT)
 
-    options = {"Boolean" : True}
-
-    # Populate the scroll menus:
-
-    content = []
-
-    for i in range(100):
-
-        content.append("This is value: {}".format(i))
+    options = {"Boolean": True}
 
     # Add stuff to DisplayWindow:
 
@@ -538,16 +518,24 @@ def master_window_options_test(win):
 
     # Start the two scroll widows:
     opt_win.add_options(options)
-    opt_win.display()
 
     # Start the master window:
 
     master.start()
 
+    # Create thread for option window:
+
+    opt_win_thread = threading.Thread(target=opt_win.display)
+    opt_win_thread.daemon = True
+    opt_win_thread.start()
+
     map_win.display()
+    opt_win_thread.join()
 
 
 def get_around_test(win):
+
+    # Tests the 'get_around' method in the tilemap
 
     map_win = DisplayWindow.create_subwin_at_pos(win, 11, 16)
     map_win.add_callback('q', map_win.stop)
@@ -603,4 +591,4 @@ def all_tests(win):
         win.erase()
 
 
-curses.wrapper(map_window_test)
+curses.wrapper(master_window_options_test)
