@@ -7,6 +7,7 @@ and interact with, the DisplayWindow.
 
 # This has been added
 #This has also been added
+#This is a third comment
 import random
 import queue
 import time
