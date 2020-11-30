@@ -10,7 +10,7 @@ def init_colors(win):
     # Registers the default colors to the CHASWindow
 
     blue = Color(9, 1, "blue", 0, 300, 1000)
-    green = Color(10, 2, "green", 0, 1000, 300)
+    green = Color(10, 2, "green", 0, 1000, 0)
     yellow = Color(11, 3, "yellow", 1000, 950, 0)
     red = Color(12, 4, "red", 1000, 0, 300)
 
@@ -554,6 +554,10 @@ def get_around_test(win):
 
     map_win.tilemap.fill(Floor)
     map_win.tilemap.add(player, 0, 0)
+    for x in range(map_win.tilemap.width - 1):
+
+        map_win.tilemap.add(wall, x, 1)
+
     #map_win.tilemap.add(wall, 2, 0)
     #map_win.tilemap.add(wall, 2, 1)
     #map_win.tilemap.add(wall, 2, 2)

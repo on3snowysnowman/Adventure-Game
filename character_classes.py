@@ -275,6 +275,7 @@ class Player(EntityCharacter):
             if self.check_next_tile(tile.x + 1, tile.y + 1):
                 self.tilemap.move(self, tile.x + 1, tile.y + 1)
 
+
 class Enemy(EntityCharacter):
 
     """
