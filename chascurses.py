@@ -17,7 +17,6 @@ The most important bit is the CHASWindow, which should
 act as the parent for all CHAS curses operations.
 """
 
-
 class CHASWindow:
     """
     Custom CHAS Window.

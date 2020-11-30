@@ -1,7 +1,6 @@
 #from chascurses import *
 from chascurses import *
 from character_classes import Player
-
 import curses
 from math import ceil
 
@@ -562,9 +561,63 @@ def get_around_test(win):
     #map_win.tilemap.add(wall, 0, 4)
 
     map_win.tilemap.add(TrackerEnemy(), 6, 3)
-    map_win.tilemap.add(TrackerEnemy(), 7, 3)
+    #map_win.tilemap.add(TrackerEnemy(), 7, 3)
 
     map_win.display()
+
+
+def master_window_options_test_two(win):
+
+    # Tests the MasterWindow functionality.
+
+    master = MasterWindow(win)
+
+    # Create menus:
+
+    opt_win = OptionWindow.create_subwin_at_pos(master, 10, 30)
+    map_win = DisplayWindow.create_subwin_at_pos(master, 10, 20, position=DisplayWindow.TOP_RIGHT)
+
+    # Add stuff to DisplayWindow:
+
+    map_win.add_callback('f', map_win.stop)
+
+    curses.curs_set(0)
+    options = {'Boolean': False}
+    # Create Colors
+    init_colors(map_win)
+
+    # Puts a player in top left corner of map:
+
+    player = Player()
+    ground = Floor()
+    wall = Wall()
+
+    map_win.tilemap.fill(Floor)
+    map_win.tilemap.add(player, 0, 0)
+    map_win.tilemap.add(wall, 0, 1)
+    map_win.tilemap.add(TrackerEnemy(), 2, 2)
+
+    # Add the scroll menus to the master window:
+
+    master.add_subwin(opt_win)
+    master.add_subwin(map_win)
+
+    # Start the two scroll widows:
+    opt_win.add_options(options)
+
+    # Start the master window:
+
+    master.start()
+
+    # Create thread for option window:
+
+    opt_win_thread = threading.Thread(target=opt_win.display)
+    opt_win_thread.daemon = True
+    opt_win_thread.start()
+
+    map_win.display()
+    opt_win_thread.join()
+
 
 def all_tests(win):
 

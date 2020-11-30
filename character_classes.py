@@ -9,7 +9,6 @@ import random
 import queue
 import time
 
-
 class BaseCharacter(object):
 
     """
@@ -255,6 +254,26 @@ class Player(EntityCharacter):
 
                 self.tilemap.move(self, tile.x - 1, tile.y - 1)
 
+        elif inp == 'e':
+
+            # Move diagonal up right
+
+            if self.check_next_tile(tile.x + 1, tile.y - 1):
+                self.tilemap.move(self, tile.x + 1, tile.y - 1)
+
+        elif inp == 'z':
+
+            # Move diagonal down left
+
+            if self.check_next_tile(tile.x - 1, tile.y + 1):
+                self.tilemap.move(self, tile.x - 1, tile.y + 1)
+
+        elif inp == 'c':
+
+            # Move diagonal down right
+
+            if self.check_next_tile(tile.x + 1, tile.y + 1):
+                self.tilemap.move(self, tile.x + 1, tile.y + 1)
 
 class Enemy(EntityCharacter):
 
@@ -369,6 +388,21 @@ class TrackerEnemy(EntityCharacter):
         #Left Down
         elif pxPos < xPos and pyPos > yPos:
 
+            # Checking if player is directly next to the player diagnonaly
+            if xPos - 1 == pxPos and yPos + 1 == pyPos:
+
+                secondaryValidCoords = []
+
+                if [xPos - 1, yPos] in validCoords and self.check_next_tile(xPos - 1, yPos):
+                    secondaryValidCoords.append([xPos - 1, yPos])
+
+                if [xPos, yPos + 1] in validCoords and self.check_next_tile(xPos, yPos + 1):
+                    secondaryValidCoords.append([xPos, yPos + 1])
+
+                if len(secondaryValidCoords) > 0:
+                    nextMove = random.choice(secondaryValidCoords)
+                    self.tilemap.move(self, nextMove[0], nextMove[1])
+
             if [xPos - 1, yPos + 1] in validCoords and self.check_next_tile(xPos - 1, yPos + 1):
 
                 self.tilemap.move(self, xPos - 1, yPos + 1)
@@ -383,6 +417,21 @@ class TrackerEnemy(EntityCharacter):
         #Right Down
         elif pxPos > xPos and pyPos > yPos:
 
+            # Checking if player is directly next to the player diagnonaly
+            if xPos + 1 == pxPos and yPos + 1 == pyPos:
+
+                secondaryValidCoords = []
+
+                if [xPos + 1, yPos] in validCoords and self.check_next_tile(xPos + 1, yPos):
+                    secondaryValidCoords.append([xPos + 1, yPos])
+
+                if [xPos, yPos + 1] in validCoords and self.check_next_tile(xPos, yPos + 1):
+                    secondaryValidCoords.append([xPos, yPos + 1])
+
+                if len(secondaryValidCoords) > 0:
+                    nextMove = random.choice(secondaryValidCoords)
+                    self.tilemap.move(self, nextMove[0], nextMove[1])
+
             if [xPos + 1, yPos + 1] in validCoords and self.check_next_tile(xPos + 1, yPos + 1):
 
                 self.tilemap.move(self, xPos + 1, yPos + 1)
@@ -396,6 +445,21 @@ class TrackerEnemy(EntityCharacter):
 
         #Right Up
         elif pxPos > xPos and pyPos < yPos:
+
+            # Checking if player is directly next to the player diagnonaly
+            if xPos + 1 == pxPos and yPos - 1 == pyPos:
+
+                secondaryValidCoords = []
+
+                if [xPos + 1, yPos] in validCoords and self.check_next_tile(xPos + 1, yPos):
+                    secondaryValidCoords.append([xPos + 1, yPos])
+
+                if [xPos, yPos - 1] in validCoords and self.check_next_tile(xPos, yPos - 1):
+                    secondaryValidCoords.append([xPos, yPos - 1])
+
+                if len(secondaryValidCoords) > 0:
+                    nextMove = random.choice(secondaryValidCoords)
+                    self.tilemap.move(self, nextMove[0], nextMove[1])
 
             if [xPos + 1, yPos - 1] in validCoords and self.check_next_tile(xPos + 1, yPos - 1):
 
