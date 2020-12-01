@@ -162,7 +162,14 @@ class EntityCharacter(BaseCharacter):
 
         pass
 
-    def check_next_tile(self, x, y):
+    def check_tile(self, x, y):
+
+        """
+        Checks if tile is in bounds, and traversable by cycling through the tile list
+        :param x: X coordinate
+        :param y: Y coordinate
+        :return: Boolean if the tile is traversable or not
+        """
 
         if (x >= self.tilemap.width or x < 0) or (y >= self.tilemap.height or y < 0):
 
@@ -218,7 +225,7 @@ class Player(EntityCharacter):
 
             # Move up:
 
-            if self.check_next_tile(tile.x, tile.y - 1):
+            if self.check_tile(tile.x, tile.y - 1):
 
                 self.tilemap.move(self, tile.x, tile.y-1)
 
@@ -226,7 +233,7 @@ class Player(EntityCharacter):
 
             # Move right
 
-            if self.check_next_tile(tile.x - 1, tile.y):
+            if self.check_tile(tile.x - 1, tile.y):
 
                 self.tilemap.move(self, tile.x-1, tile.y)
 
@@ -234,7 +241,7 @@ class Player(EntityCharacter):
 
             # Move down
 
-            if self.check_next_tile(tile.x, tile.y + 1):
+            if self.check_tile(tile.x, tile.y + 1):
 
                 self.tilemap.move(self, tile.x, tile.y+1)
 
@@ -242,7 +249,7 @@ class Player(EntityCharacter):
 
             # Move right
 
-            if self.check_next_tile(tile.x + 1, tile.y):
+            if self.check_tile(tile.x + 1, tile.y):
 
                 self.tilemap.move(self, tile.x+1, tile.y)
 
@@ -250,7 +257,7 @@ class Player(EntityCharacter):
 
             # Move diagonal up left
 
-            if self.check_next_tile(tile.x - 1, tile.y - 1):
+            if self.check_tile(tile.x - 1, tile.y - 1):
 
                 self.tilemap.move(self, tile.x - 1, tile.y - 1)
 
@@ -258,21 +265,21 @@ class Player(EntityCharacter):
 
             # Move diagonal up right
 
-            if self.check_next_tile(tile.x + 1, tile.y - 1):
+            if self.check_tile(tile.x + 1, tile.y - 1):
                 self.tilemap.move(self, tile.x + 1, tile.y - 1)
 
         elif inp == 'z':
 
             # Move diagonal down left
 
-            if self.check_next_tile(tile.x - 1, tile.y + 1):
+            if self.check_tile(tile.x - 1, tile.y + 1):
                 self.tilemap.move(self, tile.x - 1, tile.y + 1)
 
         elif inp == 'c':
 
             # Move diagonal down right
 
-            if self.check_next_tile(tile.x + 1, tile.y + 1):
+            if self.check_tile(tile.x + 1, tile.y + 1):
                 self.tilemap.move(self, tile.x + 1, tile.y + 1)
 
 
@@ -311,7 +318,7 @@ class Enemy(EntityCharacter):
 
         for targ in cords:
 
-            if self.check_next_tile(targ[0], targ[1]):
+            if self.check_tile(targ[0], targ[1]):
 
                 choices.append(targ)
 
@@ -345,159 +352,211 @@ class TrackerEnemy(EntityCharacter):
 
         enemyTile = self.tilemap.find_object(self)
         playerTile = self.tilemap.find_object_type(Player)
-        xPos, yPos = enemyTile.x, enemyTile.y
 
-        pxPos, pyPos = playerTile.x, playerTile.y
+        x, y = enemyTile.x, enemyTile.y
+        targX, targY = playerTile.x, playerTile.y
 
-        moveOptions = self.tilemap.get_around(xPos, yPos)
+        moveOptions = self.tilemap.get_around(x, y)
         validCoords = []
-        for x in moveOptions:
-            for j in x:
+        for i in moveOptions:
+            for j in i:
                 validCoords.append([j.x, j.y])
 
-        #Left Up
-        if pxPos < xPos and pyPos < yPos:
-
-            #Checking if player is directly next to the player diagnonaly
-            if xPos - 1 == pxPos and yPos - 1 == pyPos:
-
-                secondaryValidCoords = []
-
-                if[xPos - 1, yPos] in validCoords and self.check_next_tile(xPos - 1, yPos):
-
-                       secondaryValidCoords.append([xPos - 1, yPos])
-
-                if [xPos, yPos - 1] in validCoords and self.check_next_tile(xPos, yPos - 1):
-
-                        secondaryValidCoords.append([xPos, yPos - 1])
-
-                if len(secondaryValidCoords) > 0:
-
-                    nextMove = random.choice(secondaryValidCoords)
-                    self.tilemap.move(self, nextMove[0], nextMove[1])
-
-            elif [xPos - 1, yPos - 1] in validCoords and self.check_next_tile(xPos - 1, yPos - 1):
-
-                self.tilemap.move(self, xPos - 1, yPos - 1)
-
-            else: self.blocked_move("left_up")
-
-        #Left
-        elif pxPos < xPos and pyPos == yPos:
-
-            if [xPos - 1, yPos] in validCoords and self.check_next_tile(xPos - 1, yPos):
-
-                self.tilemap.move(self, xPos - 1, yPos)
-
-            else: self.blocked_move("left")
-
-        #Left Down
-        elif pxPos < xPos and pyPos > yPos:
+        # Left Up
+        if targX < x and targY < y:
 
             # Checking if player is directly next to the player diagnonaly
-            if xPos - 1 == pxPos and yPos + 1 == pyPos:
+            if x - 1 == targX and y - 1 == targY:
 
                 secondaryValidCoords = []
 
-                if [xPos - 1, yPos] in validCoords and self.check_next_tile(xPos - 1, yPos):
-                    secondaryValidCoords.append([xPos - 1, yPos])
+                if [x - 1, y] in validCoords and self.check_tile(x - 1, y):
+                    secondaryValidCoords.append([x - 1, y])
 
-                if [xPos, yPos + 1] in validCoords and self.check_next_tile(xPos, yPos + 1):
-                    secondaryValidCoords.append([xPos, yPos + 1])
+                if [x, y - 1] in validCoords and self.check_tile(x, y - 1):
+                    secondaryValidCoords.append([x, y - 1])
 
                 if len(secondaryValidCoords) > 0:
                     nextMove = random.choice(secondaryValidCoords)
                     self.tilemap.move(self, nextMove[0], nextMove[1])
 
-            if [xPos - 1, yPos + 1] in validCoords and self.check_next_tile(xPos - 1, yPos + 1):
+            elif [x - 1, y - 1] in validCoords and self.check_tile(x - 1, y - 1):
 
-                self.tilemap.move(self, xPos - 1, yPos + 1)
+                self.tilemap.move(self, x - 1, y - 1)
 
-            else: self.blocked_move("left_down")
+            else:
+                self.blocked_move("left_up")
 
-        #Down
-        elif pyPos > yPos and pxPos == xPos:
+        # Left
+        elif targX < x and targY == y:
 
-            if [xPos, yPos + 1] in validCoords and self.check_next_tile(xPos, yPos + 1):
+            if [x - 1, y] in validCoords and self.check_tile(x - 1, y):
 
-                self.tilemap.move(self, xPos, yPos + 1)
+                self.tilemap.move(self, x - 1, y)
 
-            else: self.blocked_move("down")
+            else:
+                self.blocked_move("left")
 
-        #Right Down
-        elif pxPos > xPos and pyPos > yPos:
+        # Left Down
+        elif targX < x and targY > y:
 
             # Checking if player is directly next to the player diagnonaly
-            if xPos + 1 == pxPos and yPos + 1 == pyPos:
+            if x - 1 == targX and y + 1 == targY:
 
                 secondaryValidCoords = []
 
-                if [xPos + 1, yPos] in validCoords and self.check_next_tile(xPos + 1, yPos):
-                    secondaryValidCoords.append([xPos + 1, yPos])
+                if [x - 1, y] in validCoords and self.check_tile(x - 1, y):
+                    secondaryValidCoords.append([x - 1, y])
 
-                if [xPos, yPos + 1] in validCoords and self.check_next_tile(xPos, yPos + 1):
-                    secondaryValidCoords.append([xPos, yPos + 1])
+                if [x, y + 1] in validCoords and self.check_tile(x, y + 1):
+                    secondaryValidCoords.append([x, y + 1])
 
                 if len(secondaryValidCoords) > 0:
                     nextMove = random.choice(secondaryValidCoords)
                     self.tilemap.move(self, nextMove[0], nextMove[1])
 
-            if [xPos + 1, yPos + 1] in validCoords and self.check_next_tile(xPos + 1, yPos + 1):
+            if [x - 1, y + 1] in validCoords and self.check_tile(x - 1, y + 1):
 
-                self.tilemap.move(self, xPos + 1, yPos + 1)
+                self.tilemap.move(self, x - 1, y + 1)
 
-            else: self.blocked_move("right_down")
+            else:
+                self.blocked_move("left_down")
 
-        #Right
-        elif pxPos > xPos and pyPos == yPos:
+        # Down
+        elif targY > y and targX == x:
 
-            if [xPos + 1, yPos] in validCoords and self.check_next_tile(xPos + 1, yPos):
+            if [x, y + 1] in validCoords and self.check_tile(x, y + 1):
 
-                self.tilemap.move(self, xPos + 1, yPos)
+                self.tilemap.move(self, x, y + 1)
 
-            else: self.blocked_move("right")
+            else:
+                self.blocked_move("down")
 
-        #Right Up
-        elif pxPos > xPos and pyPos < yPos:
+        # Right Down
+        elif targX > x and targY > y:
 
             # Checking if player is directly next to the player diagnonaly
-            if xPos + 1 == pxPos and yPos - 1 == pyPos:
+            if x + 1 == targX and y + 1 == targY:
 
                 secondaryValidCoords = []
 
-                if [xPos + 1, yPos] in validCoords and self.check_next_tile(xPos + 1, yPos):
-                    secondaryValidCoords.append([xPos + 1, yPos])
+                if [x + 1, y] in validCoords and self.check_tile(x + 1, y):
+                    secondaryValidCoords.append([x + 1, y])
 
-                if [xPos, yPos - 1] in validCoords and self.check_next_tile(xPos, yPos - 1):
-                    secondaryValidCoords.append([xPos, yPos - 1])
+                if [x, y + 1] in validCoords and self.check_tile(x, y + 1):
+                    secondaryValidCoords.append([x, y + 1])
 
                 if len(secondaryValidCoords) > 0:
                     nextMove = random.choice(secondaryValidCoords)
                     self.tilemap.move(self, nextMove[0], nextMove[1])
 
-            if [xPos + 1, yPos - 1] in validCoords and self.check_next_tile(xPos + 1, yPos - 1):
+            if [x + 1, y + 1] in validCoords and self.check_tile(x + 1, y + 1):
 
-                self.tilemap.move(self, xPos + 1, yPos - 1)
+                self.tilemap.move(self, x + 1, y + 1)
 
-            else: self.blocked_move("right_up")
+            else:
+                self.blocked_move("right_down")
 
-        #Up
-        elif pyPos < yPos and pxPos == xPos:
+        # Right
+        elif targX > x and targY == y:
 
-            if [xPos, yPos - 1] in validCoords and self.check_next_tile(xPos, yPos - 1):
+            if [x + 1, y] in validCoords and self.check_tile(x + 1, y):
 
-                self.tilemap.move(self, xPos, yPos - 1)
+                self.tilemap.move(self, x + 1, y)
 
-            else: self.blocked_move("up")
+            else:
+                self.blocked_move("right")
+
+        # Right Up
+        elif targX > x and targY < y:
+
+            # Checking if player is directly next to the player diagnonaly
+            if x + 1 == targX and y - 1 == targY:
+
+                secondaryValidCoords = []
+
+                if [x + 1, y] in validCoords and self.check_tile(x + 1, y):
+                    secondaryValidCoords.append([x + 1, y])
+
+                if [x, y - 1] in validCoords and self.check_tile(x, y - 1):
+                    secondaryValidCoords.append([x, y - 1])
+
+                if len(secondaryValidCoords) > 0:
+                    nextMove = random.choice(secondaryValidCoords)
+                    self.tilemap.move(self, nextMove[0], nextMove[1])
+
+            if [x + 1, y - 1] in validCoords and self.check_tile(x + 1, y - 1):
+
+                self.tilemap.move(self, x + 1, y - 1)
+
+            else:
+                self.blocked_move("right_up")
+
+        # Up
+        elif targY < y and targX == x:
+
+            if [x, y - 1] in validCoords and self.check_tile(x, y - 1):
+
+                self.tilemap.move(self, x, y - 1)
+
+            else:
+                self.blocked_move("up")
 
     def blocked_move(self, direction):
 
+        enemyTile = self.tilemap.find_object(self)
         playerTile = self.tilemap.find_object_type(Player)
-        enemyTile = self.tilemap.find_object_type(self)
+        x, y = enemyTile.x, enemyTile.y
 
         if direction == "left_up":
 
             validCoords = []
+            for j in range(x, -1, -1):
+
+                if self.check_tile(j, y - 1):
+
+                    validCoords.append([j, y - 1])
+
+            if len(validCoords) == 0:
+
+                for j in range(x, self.tilemap.width):
+
+                    if self.check_tile(j, y - 1):
+
+                        validCoords.append([j, y - 1])
+
+            if len(validCoords) != 0:
+
+                if len(validCoords) > 1:
+
+                    pass
+
+                else:
+
+
+                    nextMove = random.choice(validCoords)
+                    targX, targY = nextMove[0], nextMove[1]
+                    if x == targX:
+
+                        if self.check_tile(x, y - 1): self.tilemap.move(self, x, y - 1)
+
+
+                    elif targX > x:
+
+                        if x + 1 == targX:
+
+                            if self.check_tile(x + 1, y - 1): self.tilemap.move(self, x + 1, y - 1)
+
+                        elif self.check_tile(x + 1, y): self.tilemap.move(self, x + 1, y)
+
+                    else:
+
+                        if x - 1 == targX:
+
+                            if self.check_tile(x - 1, y - 1): self.tilemap.move(self, x - 1, y - 1)
+
+                        elif self.check_tile(x - 1, y): self.tilemap.move(self, x - 1, y)
+                
 
         elif direction == "left":
 

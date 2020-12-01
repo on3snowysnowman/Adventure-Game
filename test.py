@@ -532,7 +532,7 @@ def master_window_options_test(win):
     opt_win_thread.join()
 
 
-def get_around_test(win):
+def main_mapping_test(win):
 
     # Tests the 'get_around' method in the tilemap
 
@@ -638,4 +638,4 @@ def all_tests(win):
         win.erase()
 
 
-curses.wrapper(get_around_test)
+curses.wrapper(main_mapping_test)
