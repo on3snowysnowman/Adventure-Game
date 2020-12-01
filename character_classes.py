@@ -380,11 +380,16 @@ class TrackerEnemy(EntityCharacter):
 
                 self.tilemap.move(self, xPos - 1, yPos - 1)
 
+            else: self.blocked_move("left_up")
+
         #Left
         elif pxPos < xPos and pyPos == yPos:
+
             if [xPos - 1, yPos] in validCoords and self.check_next_tile(xPos - 1, yPos):
 
                 self.tilemap.move(self, xPos - 1, yPos)
+
+            else: self.blocked_move("left")
 
         #Left Down
         elif pxPos < xPos and pyPos > yPos:
@@ -408,12 +413,16 @@ class TrackerEnemy(EntityCharacter):
 
                 self.tilemap.move(self, xPos - 1, yPos + 1)
 
+            else: self.blocked_move("left_down")
+
         #Down
         elif pyPos > yPos and pxPos == xPos:
 
             if [xPos, yPos + 1] in validCoords and self.check_next_tile(xPos, yPos + 1):
 
                 self.tilemap.move(self, xPos, yPos + 1)
+
+            else: self.blocked_move("down")
 
         #Right Down
         elif pxPos > xPos and pyPos > yPos:
@@ -437,12 +446,16 @@ class TrackerEnemy(EntityCharacter):
 
                 self.tilemap.move(self, xPos + 1, yPos + 1)
 
+            else: self.blocked_move("right_down")
+
         #Right
         elif pxPos > xPos and pyPos == yPos:
 
             if [xPos + 1, yPos] in validCoords and self.check_next_tile(xPos + 1, yPos):
 
                 self.tilemap.move(self, xPos + 1, yPos)
+
+            else: self.blocked_move("right")
 
         #Right Up
         elif pxPos > xPos and pyPos < yPos:
@@ -466,6 +479,8 @@ class TrackerEnemy(EntityCharacter):
 
                 self.tilemap.move(self, xPos + 1, yPos - 1)
 
+            else: self.blocked_move("right_up")
+
         #Up
         elif pyPos < yPos and pxPos == xPos:
 
@@ -473,6 +488,46 @@ class TrackerEnemy(EntityCharacter):
 
                 self.tilemap.move(self, xPos, yPos - 1)
 
+            else: self.blocked_move("up")
+
+    def blocked_move(self, direction):
+
+        playerTile = self.tilemap.find_object_type(Player)
+        enemyTile = self.tilemap.find_object_type(self)
+
+        if direction == "left_up":
+
+            validCoords = []
+
+        elif direction == "left":
+
+            pass
+
+        elif direction == "left_down":
+
+            pass
+
+        elif direction == "down":
+
+            pass
+
+        elif direction == "right_down":
+
+            pass
+
+        elif direction == "right":
+
+            pass
+
+        elif direction == "right_up":
+
+            pass
+
+        elif direction == "up":
+
+            pass
+
+        pass
 
 class Wall(BaseCharacter):
 

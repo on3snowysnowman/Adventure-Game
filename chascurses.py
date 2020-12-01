@@ -14,7 +14,7 @@ CHAS Curses wrappings.
 Includes special curses operations,
 As well as custom curses windows to use.
 The most important bit is the CHASWindow, which should 
-act as the parent for all CHAS curses operations.
+actz as the parent for all CHAS curses operations.
 """
 
 class CHASWindow:
