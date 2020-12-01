@@ -503,7 +503,7 @@ class TrackerEnemy(EntityCharacter):
                 self.blocked_move("up")
 
     def blocked_move(self, direction):
-
+        print("true")
         enemyTile = self.tilemap.find_object(self)
         playerTile = self.tilemap.find_object_type(Player)
         x, y = enemyTile.x, enemyTile.y
@@ -536,7 +536,7 @@ class TrackerEnemy(EntityCharacter):
 
                     nextMove = random.choice(validCoords)
                     targX, targY = nextMove[0], nextMove[1]
-                    if x == targX:
+                    if x == targX and y - 1 == targY:
 
                         if self.check_tile(x, y - 1): self.tilemap.move(self, x, y - 1)
 
@@ -560,31 +560,82 @@ class TrackerEnemy(EntityCharacter):
 
         elif direction == "left":
 
-            pass
+            validCoords = []
+            for j in range(y, -1, -1):
+
+                if self.check_tile(x - 1, j):
+                    validCoords.append([x - 1, j])
+
+            if len(validCoords) == 0:
+
+                for j in range(y, self.tilemap.height):
+
+                    if self.check_tile(x - 1, j):
+                        validCoords.append([x - 1, j])
+
+            if len(validCoords) != 0:
+
+                if len(validCoords) > 1:
+
+                    pass
+
+                else:
+
+                    nextMove = random.choice(validCoords)
+                    targX, targY = nextMove[0], nextMove[1]
+                    if y == targY and x - 1 == targX:
+
+                        if self.check_tile(x - 1, y): self.tilemap.move(self, x - 1, y)
+
+                    elif targY > y:
+
+                        if y + 1 == targY:
+
+                            if self.check_tile(x - 1, y + 1): self.tilemap.move(self, x - 1, y + 1)
+
+                        elif self.check_tile(x, y + 1):
+
+                            self.tilemap.move(self, x, y + 1)
+
+                    else:
+
+                        if y - 1 == targY:
+
+                            if self.check_tile(x - 1, y - 1): self.tilemap.move(self, x - 1, y - 1)
+
+                        elif self.check_tile(x, y - 1):
+                            self.tilemap.move(self, x, y - 1)
+
 
         elif direction == "left_down":
 
             pass
 
+
         elif direction == "down":
 
             pass
+
 
         elif direction == "right_down":
 
             pass
 
+
         elif direction == "right":
 
             pass
+
 
         elif direction == "right_up":
 
             pass
 
+
         elif direction == "up":
 
             pass
+
 
         pass
 

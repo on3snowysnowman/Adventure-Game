@@ -554,15 +554,9 @@ def main_mapping_test(win):
 
     map_win.tilemap.fill(Floor)
     map_win.tilemap.add(player, 0, 0)
-    for x in range(map_win.tilemap.width - 1):
+    for x in range(map_win.tilemap.height - 1):
 
-        map_win.tilemap.add(wall, x, 1)
-
-    #map_win.tilemap.add(wall, 2, 0)
-    #map_win.tilemap.add(wall, 2, 1)
-    #map_win.tilemap.add(wall, 2, 2)
-    #map_win.tilemap.add(wall, 1, 3)
-    #map_win.tilemap.add(wall, 0, 4)
+        map_win.tilemap.add(wall, 1, x)
 
     map_win.tilemap.add(TrackerEnemy(), 6, 3)
     #map_win.tilemap.add(TrackerEnemy(), 7, 3)
