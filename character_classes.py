@@ -533,7 +533,6 @@ class TrackerEnemy(EntityCharacter):
 
                 else:
 
-
                     nextMove = random.choice(validCoords)
                     targX, targY = nextMove[0], nextMove[1]
                     if x == targX and y - 1 == targY:
@@ -556,7 +555,7 @@ class TrackerEnemy(EntityCharacter):
                             if self.check_tile(x - 1, y - 1): self.tilemap.move(self, x - 1, y - 1)
 
                         elif self.check_tile(x - 1, y): self.tilemap.move(self, x - 1, y)
-                
+
 
         elif direction == "left":
 
@@ -638,6 +637,7 @@ class TrackerEnemy(EntityCharacter):
 
 
         pass
+
 
 class Wall(BaseCharacter):
 
