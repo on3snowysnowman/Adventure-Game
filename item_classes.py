@@ -1,4 +1,5 @@
 
+
 class Item(object):
 
     """
@@ -54,10 +55,15 @@ class Armor(Item):
 
         super().__init__()
 
-        self.res = 0 # Amount of damage this piece of armor resists, divided by 10 for a percentage
+        self.res = 0 # Amount of damage this piece of armor resists, divided by 100 for a percentage
         self.durability = 0 # Amount of durability
         self.max_durability = 0 # Maximum amount of durability
         self.part = "" # What part of the body this covers
+        self.priority = 19
+
+        # Calling meta start method:
+
+        self._start()
 
     def block(self, amount):
 
@@ -97,7 +103,6 @@ class Weapon(Item):
 
         self._start()
 
-
     def attack(self, targObj):
 
         """
@@ -119,6 +124,8 @@ class Weapon(Item):
         pass
 
 
+# Custom Item Classes - probably wont live here
+
 class Sword(Weapon):
 
     def _start(self):
@@ -126,5 +133,56 @@ class Sword(Weapon):
         self.damage_min = 4
         self.damage_max = 8
         self.damage_type = "physical"
+        self.durability = 100
+        self.max_durability = 100
         self.value = 150
         self.size = 2
+
+
+class Helmet(Armor):
+
+    def _start(self):
+
+        self.res = 5
+        self.durability = 200
+        self.max_durability = 200
+        self.part = "head"
+        self.size = 3
+        self.value = 200
+
+
+class Chestplate(Armor):
+
+    def _start(self):
+
+        self.res = 10
+        self.durability = 500
+        self.max_durability = 500
+        self.part = "chest"
+        self.size = 5
+        self.value = 400
+
+
+class Chausses(Armor):
+
+    def _start(self):
+
+        self.res = 5
+        self.durability = 250
+        self.max_durability = 250
+        self.part = "legs"
+        self.size = 4
+        self.value = 250
+
+
+class Boots(Armor):
+
+    def _start(self):
+
+        self.res = 4
+        self.durability = 200
+        self.max_durability = 200
+        self.part = "boots"
+        self.size = 3
+        self.value = 200
+

@@ -302,7 +302,7 @@ class Enemy(EntityCharacter):
         self.name = 'Enemy'
         self.char = 'E'
         self.attrib.append("red")
-        self.priority = 19
+        self.priority = 18
 
     def move(self):
 
@@ -350,7 +350,7 @@ class TrackerEnemy(EntityCharacter):
         self.name = 'Enemy'
         self.char = 'E'
         self.attrib.append("red")
-        self.priority = 19
+        self.priority = 18
 
     def move(self):
 
@@ -507,7 +507,7 @@ class TrackerEnemy(EntityCharacter):
                 self.blocked_move("up")
 
     def blocked_move(self, direction):
-        print("true")
+
         enemyTile = self.tilemap.find_object(self)
         playerTile = self.tilemap.find_object_type(Player)
         x, y = enemyTile.x, enemyTile.y
