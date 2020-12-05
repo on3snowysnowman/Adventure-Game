@@ -297,13 +297,19 @@ class BaseTileMap(object):
 
         # Check if the object is expecting any keys:
 
-        if obj.keys:
+        try:
 
-            # Iterate over the keys and add them
+            if obj.keys:
 
-            for key in obj.keys:
+                # Iterate over the keys and add them
 
-                self.win.add_callback(key, self.win._add_key, args=[key if type(key) == int else ord(key), obj])
+                for key in obj.keys:
+
+                    self.win.add_callback(key, self.win._add_key, args=[key if type(key) == int else ord(key), obj])
+
+        except AttributeError:
+
+            pass
 
         # Adding object at cordnet:
 

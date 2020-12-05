@@ -1,6 +1,6 @@
 #from chascurses import *
 from chascurses import *
-from character_classes import Player
+from item_classes import *
 import curses
 from math import ceil
 
@@ -13,11 +13,14 @@ def init_colors(win):
     green = Color(10, 2, "green", 0, 1000, 0)
     yellow = Color(11, 3, "yellow", 1000, 950, 0)
     red = Color(12, 4, "red", 1000, 0, 300)
+    orange = Color(13, 5, "orange", 980, 533, 0)
+
 
     win.register_color("blue", blue)
     win.register_color("green", green)
     win.register_color("yellow", yellow)
     win.register_color("red", red)
+    win.register_color("orange", orange)
 
 
 def dummy(win, test):
@@ -554,15 +557,15 @@ def main_mapping_test(win):
 
     map_win.tilemap.fill(Floor)
     map_win.tilemap.add(player, 0, 0)
+    map_win.tilemap.add(Sword(), 5, 5)
+
     for x in range(map_win.tilemap.height - 1):
 
         map_win.tilemap.add(wall, 1, x)
 
     map_win.tilemap.add(TrackerEnemy(), 6, 3)
     #map_win.tilemap.add(TrackerEnemy(), 7, 3)
-
     map_win.display()
-
 
 def master_window_options_test_two(win):
 

@@ -282,6 +282,10 @@ class Player(EntityCharacter):
             if self.check_tile(tile.x + 1, tile.y + 1):
                 self.tilemap.move(self, tile.x + 1, tile.y + 1)
 
+    def pickup_item(self):
+
+        pass
+
 
 class Enemy(EntityCharacter):
 
