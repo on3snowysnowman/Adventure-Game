@@ -13,7 +13,7 @@ class Item(object):
         self.char = 'I'  # Character to draw
         self.contains_color = True
         self.attrib = ["orange"]
-        self.name = 'Item'  # Name of the character
+        self.name = ''  # Name of the character
         self.can_traverse = True  # Boolean determining if things can walk their
         self.can_player_pickup = True # Boolean determining if the player can pickup
         self.can_entity_pickup = False #Boolean determining if any other than player can pickup
@@ -130,6 +130,7 @@ class Sword(Weapon):
 
     def _start(self):
 
+        self.name = "Sword"
         self.damage_min = 4
         self.damage_max = 8
         self.damage_type = "physical"
@@ -143,6 +144,7 @@ class Helmet(Armor):
 
     def _start(self):
 
+        self.name = "Helmet"
         self.res = 5
         self.durability = 200
         self.max_durability = 200
@@ -155,6 +157,7 @@ class Chestplate(Armor):
 
     def _start(self):
 
+        self.name = "Chestplate"
         self.res = 10
         self.durability = 500
         self.max_durability = 500
@@ -167,6 +170,7 @@ class Chausses(Armor):
 
     def _start(self):
 
+        self.name = "Chausses"
         self.res = 5
         self.durability = 250
         self.max_durability = 250
@@ -179,6 +183,7 @@ class Boots(Armor):
 
     def _start(self):
 
+        self.name = "Boots"
         self.res = 4
         self.durability = 200
         self.max_durability = 200

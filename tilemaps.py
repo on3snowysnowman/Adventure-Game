@@ -319,6 +319,17 @@ class BaseTileMap(object):
 
         self.tilemap[y][x].sort(key=self._get_priority)
 
+    def remove(self, obj):
+
+        """
+        Removes the object from the tilemap
+        :param obj: Object to be removed
+        :return:
+        """
+
+        objTile = self.find_object(obj)
+        self.tilemap[objTile.y][objTile.x].remove(obj)
+
     def update(self):
 
         """

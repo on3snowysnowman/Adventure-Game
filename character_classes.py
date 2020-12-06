@@ -7,6 +7,7 @@ and interact with, the DisplayWindow.
 
 import random
 import queue
+from item_classes import Item
 import time
 
 class BaseCharacter(object):
@@ -186,14 +187,18 @@ class EntityCharacter(BaseCharacter):
 
 # Custom CharacterClasses - probably wont live here
 
-
 class Player(EntityCharacter):
 
     """
     Player class, moves and gets controlled by the user.
     """
 
-    def start(self):
+    def __init__(self):
+
+        super().__init__()
+
+        self.inventory = []
+        self.inventory_space = 30
 
         self.char = 'C'
         self.name = 'Player'
@@ -202,6 +207,7 @@ class Player(EntityCharacter):
         self.move_priority = 30
 
         self.keys = ['w', 'a', 's', 'd', 'q', 'e', 'z', 'c']
+
 
     def move(self):
 
@@ -282,7 +288,30 @@ class Player(EntityCharacter):
             if self.check_tile(tile.x + 1, tile.y + 1):
                 self.tilemap.move(self, tile.x + 1, tile.y + 1)
 
-    def pickup_item(self):
+    def check_inventory_bounds(self, obj):
+
+        pass
+
+    def pickup_item(self, obj):
+
+
+        """
+        Adds item to player inventory if there is enough space
+        :param obj: object being picked up
+        :return:
+        """
+
+        # Checks if the item is of Class Item
+
+        if isinstance(obj, Item):
+
+            # Checks if the object is allowed to be picked up
+
+            if obj.can_player_pickup:
+
+                if self.check_inventory_bounds(obj):
+
+                    self.inventory.append(obj)
 
         pass
 
