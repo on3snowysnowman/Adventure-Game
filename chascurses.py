@@ -280,7 +280,6 @@ class CHASWindow:
         :param attrib: Attributes to apply to the text
         :return: Normal curses returncodes
         """
-
         if attrib is None:
             attrib = []
 
@@ -765,13 +764,13 @@ class TextDisplayWindow(CHASWindow):
     def __init__(self, win):
 
         super(TextDisplayWindow, self).__init__(win)
-
+        self.attrib = ["light_blue"]
         self.win = win
         self.run = True
 
     def add_content(self, content, newLine = True):
 
-        self.addstr(content)
+        self.addstr(content, attrib = self.attrib)
 
         if newLine:
 

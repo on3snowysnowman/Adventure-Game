@@ -190,4 +190,3 @@ class Boots(Armor):
         self.part = "boots"
         self.size = 3
         self.value = 200
-

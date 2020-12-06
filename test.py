@@ -18,13 +18,16 @@ def init_colors(win):
     yellow = Color(11, 3, "yellow", 1000, 950, 0)
     red = Color(12, 4, "red", 1000, 0, 300)
     orange = Color(13, 5, "orange", 980, 533, 0)
-
+    light_blue = Color(14, 6, "light_blue", 0, 683, 937)
+    light_brown = Color(15, 7, "light_brown", 550, 350, 0)
 
     win.register_color("blue", blue)
     win.register_color("green", green)
     win.register_color("yellow", yellow)
     win.register_color("red", red)
     win.register_color("orange", orange)
+    win.register_color("light_blue", light_blue)
+    win.register_color("light_brown", light_brown)
 
 
 def dummy(win, test):
@@ -595,6 +598,7 @@ def master_window_options_test_two(win):
     curses.curs_set(0)
     # Create Colors
     init_colors(map_win)
+    init_colors(text_win)
 
     # Puts a player in top left corner of map:
 
@@ -609,6 +613,7 @@ def master_window_options_test_two(win):
     add(Sword(), 3, 3, map_win)
     add(Helmet(), 4, 3, map_win)
     add(Chestplate(), 6, 4, map_win)
+    add(Chest(), 7, 5, map_win)
 
 
     # Add the scroll menus to the master window:

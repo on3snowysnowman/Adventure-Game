@@ -6,7 +6,7 @@ tilemaps handle the logic of entity movement, and keeps everything organised.
 """
 
 
-from character_classes import EntityCharacter
+from character_classes import EntityCharacter, Player
 import math
 
 
@@ -329,6 +329,14 @@ class BaseTileMap(object):
 
         objTile = self.find_object(obj)
         self.tilemap[objTile.y][objTile.x].remove(obj)
+
+    def removeObj_by_coords(self, x, y, z = 0):
+
+        if isinstance(self.tilemap[y][x][z], Player):
+
+            z += 1
+
+        del self.tilemap[y][x][z]
 
     def update(self):
 

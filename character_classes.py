@@ -7,7 +7,7 @@ and interact with, the DisplayWindow.
 
 import random
 import queue
-from item_classes import Item
+from item_classes import *
 import time
 
 class BaseCharacter(object):
@@ -232,9 +232,17 @@ class Player(EntityCharacter):
 
             # Move up:
 
+            for x in self.tilemap.get(tile.x, tile.y - 1):
+
+                if isinstance(x.obj, Chest):
+
+                    self.pickup_item(x.obj.open_chest())
+                    self.tilemap.removeObj_by_coords(tile.x, tile.y - 1)
+                    return
+
             if self.check_tile(tile.x, tile.y - 1):
 
-                self.tilemap.move(self, tile.x, tile.y-1)
+                self.tilemap.move(self, tile.x, tile.y - 1)
 
         elif inp == 'a':
 
@@ -340,9 +348,35 @@ class Player(EntityCharacter):
 
         pass
 
-    def pickup_item(self, obj):
+    def pickup_item(self, targObj):
 
-        pass
+        if isinstance(targObj, Item):
+
+            # Checks if the object is allowed to be picked up
+
+            if targObj.can_player_pickup:
+
+                if self.check_inventory_bounds(targObj):
+
+                    self.inventory.append(targObj)
+                    self.inventory_space += targObj.size
+                    self.text_win.add_content(targObj.name + " added to inventory")
+
+    def get_item(self, targObj):
+
+        if isinstance(targObj, Item):
+
+            if not self.check_inventory_bounds(targObj):
+
+                playerPos = self.tilemap.get(self)
+                self.tilemap.add(targObj, playerPos.x, playerPos.y)
+                self.text_win.add_content(f"You don't have enough space for the {targObj.name}")
+
+            else:
+
+                self.inventory.append(targObj)
+                self.inventory_space += targObj.size
+                self.text_win.add_content(targObj.name + " added to inventory")
 
 
 class Enemy(EntityCharacter):
@@ -717,6 +751,30 @@ class Wall(BaseCharacter):
         # Disabling traversal mode:
 
         self.can_traverse = False
+
+
+class Chest(BaseCharacter):
+
+    def start(self):
+
+        self.char = 'C'
+        self.name = 'Chest'
+        self.attrib.append("light_brown")
+        self.priority = 19
+
+        #Disabling traversal mode
+
+        self.can_traverse = False
+
+    def open_chest(self):
+
+        contents = [Sword(), Chestplate()]
+        return random.choice(contents)
+
+
+class Opened_Chest:
+
+    pass
 
 
 class Floor(BaseCharacter):
