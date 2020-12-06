@@ -35,6 +35,7 @@ class BaseCharacter(object):
 
         self.tilemap = None  # Tilemap instance
         self.win = None  # DisplayWindow instance
+        self.text_win = None
 
         # Calling meta start method:
 
@@ -207,7 +208,7 @@ class Player(EntityCharacter):
         self.priority = 0
         self.move_priority = 30
 
-        self.keys = ['w', 'a', 's', 'd', 'q', 'e', 'z', 'c', 'p']
+        self.keys = ['w', 'a', 's', 'd', 'q', 'e', 'z', 'c', 'p', 'i']
 
     def move(self):
 
@@ -292,6 +293,17 @@ class Player(EntityCharacter):
 
             self.pickup_first_item()
 
+        elif inp == 'i':
+
+            self.text_win.add_content("Inventory: ")
+
+            for x in self.inventory:
+
+                if isinstance(x, Item):
+
+                    self.text_win.add_content(x.name)
+            self.text_win.add_content("")
+
     def check_inventory_bounds(self, obj):
 
         if self.inventory_space + obj.size > self.inventory_space_max:
@@ -308,21 +320,23 @@ class Player(EntityCharacter):
         """
 
         playerObj = self.tilemap.find_object_type(Player)
-        obj = self.tilemap.get(playerObj.x, playerObj.y, 1).obj
+        targObj = self.tilemap.get(playerObj.x, playerObj.y, 1).obj
 
         # Checks if the item is of Class Item
 
-        if isinstance(obj, Item):
+        if isinstance(targObj, Item):
 
             # Checks if the object is allowed to be picked up
 
-            if obj.can_player_pickup:
+            if targObj.can_player_pickup:
 
-                if self.check_inventory_bounds(obj):
+                if self.check_inventory_bounds(targObj):
 
-                    self.inventory.append(obj)
-                    self.inventory_space += obj.size
-                    self.tilemap.removeObj(obj)
+                    self.inventory.append(targObj)
+                    self.inventory_space += targObj.size
+                    self.tilemap.removeObj(targObj)
+                    self.text_win.add_content(targObj.name + " added to inventory")
+
 
         pass
 

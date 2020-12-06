@@ -759,6 +759,27 @@ class DisplayWindow(CHASWindow):
                 call['args'][1].add_input(None)
 
 
+class TextDisplayWindow(CHASWindow):
+
+
+    def __init__(self, win):
+
+        super(TextDisplayWindow, self).__init__(win)
+
+        self.win = win
+        self.run = True
+
+    def add_content(self, content, newLine = True):
+
+        self.addstr(content)
+
+        if newLine:
+
+            self.addstr("\n")
+
+        self.refresh()
+
+
 class InputWindow(CHASWindow):
 
     """
