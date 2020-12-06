@@ -19,7 +19,8 @@ def init_colors(win):
     red = Color(12, 4, "red", 1000, 0, 300)
     orange = Color(13, 5, "orange", 980, 533, 0)
     light_blue = Color(14, 6, "light_blue", 0, 683, 937)
-    light_brown = Color(15, 7, "light_brown", 550, 350, 0)
+    brown = Color(15, 7, "brown", 550, 350, 0)
+    light_brown = Color(16, 8, "light_brown", 527, 492, 425)
 
     win.register_color("blue", blue)
     win.register_color("green", green)
@@ -27,6 +28,7 @@ def init_colors(win):
     win.register_color("red", red)
     win.register_color("orange", orange)
     win.register_color("light_blue", light_blue)
+    win.register_color("brown", brown)
     win.register_color("light_brown", light_brown)
 
 

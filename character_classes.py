@@ -237,6 +237,7 @@ class Player(EntityCharacter):
                 if isinstance(x.obj, Chest):
 
                     self.pickup_item(x.obj.open_chest())
+                    for j in self.tilemap.get(tile.x, tile.y - 1): print(x.obj)
                     self.tilemap.removeObj_by_coords(tile.x, tile.y - 1)
                     return
 
@@ -759,7 +760,7 @@ class Chest(BaseCharacter):
 
         self.char = 'C'
         self.name = 'Chest'
-        self.attrib.append("light_brown")
+        self.attrib.append("brown")
         self.priority = 19
 
         #Disabling traversal mode
@@ -768,13 +769,25 @@ class Chest(BaseCharacter):
 
     def open_chest(self):
 
+        posTile = self.tilemap.find_object(self)
         contents = [Sword(), Chestplate()]
+        self.tilemap.add(Enemy(), posTile.x, posTile.y)
+        self.tilemap.removeObj(self)
         return random.choice(contents)
 
 
-class Opened_Chest:
+class OpenedChest(BaseCharacter):
 
-    pass
+    def start(self):
+
+        self.char = "C"
+        self.name = "Opened Chest"
+        self.attrib.append("light_brown")
+        self.priority = 19
+
+        # Disabling traversal mode
+
+        self.can_traverse = False
 
 
 class Floor(BaseCharacter):
