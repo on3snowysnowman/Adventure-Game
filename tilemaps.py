@@ -319,7 +319,7 @@ class BaseTileMap(object):
 
         self.tilemap[y][x].sort(key=self._get_priority)
 
-    def remove(self, obj):
+    def removeObj(self, obj):
 
         """
         Removes the object from the tilemap

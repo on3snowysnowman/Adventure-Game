@@ -560,13 +560,17 @@ def main_mapping_test(win):
     map_win.tilemap.add(Sword(), 5, 5)
     map_win.tilemap.add(Chestplate(), 5, 7)
 
-    for x in range(map_win.tilemap.width - 1):
+    #for x in range(map_win.tilemap.width - 1):
 
-        map_win.tilemap.add(wall, x, 2)
+        #map_win.tilemap.add(wall, x, 2)
 
     map_win.tilemap.add(TrackerEnemy(), 6, 3)
     map_win.tilemap.add(Enemy(), 7, 3)
     map_win.display()
+
+    for x in player.inventory:
+
+        print(x.name)
 
 
 def master_window_options_test_two(win):

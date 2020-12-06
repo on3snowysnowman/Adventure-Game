@@ -198,7 +198,8 @@ class Player(EntityCharacter):
         super().__init__()
 
         self.inventory = []
-        self.inventory_space = 30
+        self.inventory_space = 0
+        self.inventory_space_max = 30
 
         self.char = 'C'
         self.name = 'Player'
@@ -206,13 +207,12 @@ class Player(EntityCharacter):
         self.priority = 0
         self.move_priority = 30
 
-        self.keys = ['w', 'a', 's', 'd', 'q', 'e', 'z', 'c']
-
+        self.keys = ['w', 'a', 's', 'd', 'q', 'e', 'z', 'c', 'p']
 
     def move(self):
 
         """
-        Moves the character across the screen.
+        Moves the character across the screen, or executes choices the player wants to make
 
         We accept input from the DisplayWindow here.
         """
@@ -288,18 +288,27 @@ class Player(EntityCharacter):
             if self.check_tile(tile.x + 1, tile.y + 1):
                 self.tilemap.move(self, tile.x + 1, tile.y + 1)
 
+        elif inp == 'p':
+
+            self.pickup_first_item()
+
     def check_inventory_bounds(self, obj):
 
-        pass
+        if self.inventory_space + obj.size > self.inventory_space_max:
 
-    def pickup_item(self, obj):
+            return False
 
+        return True
+
+    def pickup_first_item(self):
 
         """
-        Adds item to player inventory if there is enough space
-        :param obj: object being picked up
+        Adds the first item in the tile list to player inventory if there is enough space
         :return:
         """
+
+        playerObj = self.tilemap.find_object_type(Player)
+        obj = self.tilemap.get(playerObj.x, playerObj.y, 1).obj
 
         # Checks if the item is of Class Item
 
@@ -312,6 +321,12 @@ class Player(EntityCharacter):
                 if self.check_inventory_bounds(obj):
 
                     self.inventory.append(obj)
+                    self.inventory_space += obj.size
+                    self.tilemap.removeObj(obj)
+
+        pass
+
+    def pickup_item(self, obj):
 
         pass
 
