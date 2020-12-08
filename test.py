@@ -18,7 +18,7 @@ def init_colors(win):
     yellow = Color(11, 3, "yellow", 1000, 950, 0)
     red = Color(12, 4, "red", 1000, 0, 300)
     orange = Color(13, 5, "orange", 980, 533, 0)
-    light_blue = Color(14, 6, "light_blue", 0, 683, 937)
+    light_blue = Color(14, 6, "light_blue", 0, 446, 1000)
     brown = Color(15, 7, "brown", 550, 350, 0)
     light_brown = Color(16, 8, "light_brown", 527, 492, 425)
 
@@ -593,6 +593,8 @@ def master_window_options_test_two(win):
     text_win = TextDisplayWindow.create_subwin_at_pos(master, 30, 30)
     map_win = DisplayWindow.create_subwin_at_pos(master, 20, 20, position=DisplayWindow.TOP_RIGHT)
 
+    map_win.tilemap.get_all()
+
     # Add stuff to DisplayWindow:
 
     map_win.add_callback('f', map_win.stop)
@@ -627,8 +629,11 @@ def master_window_options_test_two(win):
     master.start()
     map_win.display()
 
+    playerTile = map_win.tilemap.find_object(player)
+    print(playerTile.x, playerTile.y)
+    for x in map_win.tilemap.get(playerTile.x, playerTile.y):
 
-
+        print(x.obj)
 
 def all_tests(win):
 

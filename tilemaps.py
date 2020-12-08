@@ -112,6 +112,16 @@ class BaseTileMap(object):
 
         return final
 
+    def get_all(self):
+
+        tiles = []
+
+        for x, y, z, obj in self._iterate():
+
+            tiles.append(Tile(x, y, z, obj))
+
+        return tiles
+
     def find_object(self, obj, findall=False):
 
         """
@@ -513,3 +523,4 @@ class Tile:
     def _calc_fastest_route(self, targObj):
 
        pass
+
