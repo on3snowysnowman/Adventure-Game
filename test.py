@@ -629,11 +629,7 @@ def master_window_options_test_two(win):
     master.start()
     map_win.display()
 
-    playerTile = map_win.tilemap.find_object(player)
-    print(playerTile.x, playerTile.y)
-    for x in map_win.tilemap.get(playerTile.x, playerTile.y):
 
-        print(x.obj)
 
 def all_tests(win):
 

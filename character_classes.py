@@ -226,77 +226,79 @@ class Player(EntityCharacter):
 
         # Get our cordnets:
 
-        tile = self.tilemap.find_object(self)
+        playerTile = self.tilemap.find_object(self)
 
         if inp == 'w':
 
             # Move up:
 
-            for x in self.tilemap.get(tile.x, tile.y - 1):
+            for i in self.tilemap.get(playerTile.x, playerTile.y - 1):
 
-                if isinstance(x.obj, Chest):
+                if isinstance(i.obj, Chest):
 
-                    self.pickup_item(x.obj.open_chest())
-                    for j in self.tilemap.get(tile.x, tile.y - 1): print(x.obj)
-                    self.tilemap.removeObj_by_coords(tile.x, tile.y - 1)
+                    item = i.obj.open_chest()
+                    self.pickup_item(item)
+                    self.text_win.add_content(f"You found a {item} in a chest! ")
+                    self.tilemap.removeObj_by_coords(playerTile.x, playerTile.y - 1)
+                    self.tilemap.add(OpenedChest(), playerTile.x, playerTile.y - 1)
                     return
 
-            if self.check_tile(tile.x, tile.y - 1):
+            if self.check_tile(playerTile.x, playerTile.y - 1):
 
-                self.tilemap.move(self, tile.x, tile.y - 1)
+                self.tilemap.move(self, playerTile.x, playerTile.y - 1)
 
         elif inp == 'a':
 
             # Move right
 
-            if self.check_tile(tile.x - 1, tile.y):
+            if self.check_tile(playerTile.x - 1, playerTile.y):
 
-                self.tilemap.move(self, tile.x-1, tile.y)
+                self.tilemap.move(self, playerTile.x-1, playerTile.y)
 
         elif inp == 's':
 
             # Move down
 
-            if self.check_tile(tile.x, tile.y + 1):
+            if self.check_tile(playerTile.x, playerTile.y + 1):
 
-                self.tilemap.move(self, tile.x, tile.y+1)
+                self.tilemap.move(self, playerTile.x, playerTile.y+1)
 
         elif inp == 'd':
 
             # Move right
 
-            if self.check_tile(tile.x + 1, tile.y):
+            if self.check_tile(playerTile.x + 1, playerTile.y):
 
-                self.tilemap.move(self, tile.x+1, tile.y)
+                self.tilemap.move(self, playerTile.x+1, playerTile.y)
 
         elif inp == 'q':
 
             # Move diagonal up left
 
-            if self.check_tile(tile.x - 1, tile.y - 1):
+            if self.check_tile(playerTile.x - 1, playerTile.y - 1):
 
-                self.tilemap.move(self, tile.x - 1, tile.y - 1)
+                self.tilemap.move(self, playerTile.x - 1, playerTile.y - 1)
 
         elif inp == 'e':
 
             # Move diagonal up right
 
-            if self.check_tile(tile.x + 1, tile.y - 1):
-                self.tilemap.move(self, tile.x + 1, tile.y - 1)
+            if self.check_tile(playerTile.x + 1, playerTile.y - 1):
+                self.tilemap.move(self, playerTile.x + 1, playerTile.y - 1)
 
         elif inp == 'z':
 
             # Move diagonal down left
 
-            if self.check_tile(tile.x - 1, tile.y + 1):
-                self.tilemap.move(self, tile.x - 1, tile.y + 1)
+            if self.check_tile(playerTile.x - 1, playerTile.y + 1):
+                self.tilemap.move(self, playerTile.x - 1, playerTile.y + 1)
 
         elif inp == 'c':
 
             # Move diagonal down right
 
-            if self.check_tile(tile.x + 1, tile.y + 1):
-                self.tilemap.move(self, tile.x + 1, tile.y + 1)
+            if self.check_tile(playerTile.x + 1, playerTile.y + 1):
+                self.tilemap.move(self, playerTile.x + 1, playerTile.y + 1)
 
         elif inp == 'p':
 
