@@ -7,7 +7,7 @@ from inspect import isfunction
 import queue
 
 from character_classes import *
-from tilemaps import BaseTileMap
+from tilemaps import BaseTileMap, Tile
 
 """
 CHAS Curses wrappings.
@@ -657,7 +657,7 @@ class DisplayWindow(CHASWindow):
 
         self.win = win  # CURSES window instance
 
-        self.tilemap = BaseTileMap(10, 15, self)  # Tilemap storing game info
+        self.tilemap = BaseTileMap(15, 15, self)  # Tilemap storing game info
         self.run = True  # Value determining if we are running
 
         self.thread = None  # Treading instance of the input loop
@@ -764,13 +764,48 @@ class TextDisplayWindow(CHASWindow):
     def __init__(self, win):
 
         super(TextDisplayWindow, self).__init__(win)
-        self.attrib = ["light_blue"]
+        self.attrib = []
         self.win = win
         self.run = True
 
-    def add_content(self, content, newLine = True):
+    def add_content(self, content, attrib = "light_blue", newLine = True):
 
-        self.addstr(content, attrib = self.attrib)
+        self.attrib = [attrib]
+
+        if type(content) == str:
+
+            self.addstr(str(content), attrib = self.attrib)
+
+            if newLine:
+                self.addstr("\n")
+
+        if type(content) == list:
+
+            if len(content) == 1:
+
+                if isinstance(content[0], Tile):
+
+                    self.addstr(str(content[0].obj.name) + ", " + str(content[0].x) + ", " + str(content[0].y), attrib=self.attrib)
+                    self.addstr("\n")
+
+                else:
+
+                    self.addstr(str(content[0]), attrib = self.attrib)
+                    self.addstr("\n")
+
+            elif len(content) > 0:
+
+                for x in content:
+
+                    if isinstance(x, Tile):
+
+                        self.addstr(str(x.obj.name) + ", " + str(x.x) + ", " + str(x.y), attrib = self.attrib)
+                        self.addstr("\n")
+
+                    else:
+
+                        self.addstr(str(x), attrib = self.attrib)
+                        self.addstr("\n")
 
         if newLine:
 

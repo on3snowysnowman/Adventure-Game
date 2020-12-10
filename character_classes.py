@@ -198,6 +198,8 @@ class Player(EntityCharacter):
 
         super().__init__()
 
+        self.see_list = (Item, Enemy, TrackerEnemy, Chest, OpenedChest)
+
         self.inventory = []
         self.inventory_space = 0
         self.inventory_space_max = 30
@@ -208,7 +210,7 @@ class Player(EntityCharacter):
         self.priority = 0
         self.move_priority = 30
 
-        self.keys = ['w', 'a', 's', 'd', 'q', 'e', 'z', 'c', 'p', 'i']
+        self.keys = ['w', 'a', 's', 'd', 'q', 'e', 'z', 'c', 'p', 'i', 'l']
 
     def move(self):
 
@@ -237,11 +239,14 @@ class Player(EntityCharacter):
                 if isinstance(i.obj, Chest):
 
                     item = i.obj.open_chest()
-                    self.pickup_item(item)
-                    self.text_win.add_content(f"You found a {item} in a chest! ")
-                    self.tilemap.removeObj_by_coords(playerTile.x, playerTile.y - 1)
-                    self.tilemap.add(OpenedChest(), playerTile.x, playerTile.y - 1)
-                    return
+
+                    if isinstance(item, Item):
+
+                        self.text_win.add_content(f"You found a {item.name} in a chest! ")
+                        self.pickup_item(item)
+                        self.tilemap.removeObj_by_coords(playerTile.x, playerTile.y - 1)
+                        self.tilemap.add(OpenedChest(), playerTile.x, playerTile.y - 1)
+                        return
 
             if self.check_tile(playerTile.x, playerTile.y - 1):
 
@@ -306,14 +311,18 @@ class Player(EntityCharacter):
 
         elif inp == 'i':
 
-            self.text_win.add_content("Inventory: ")
+            self.text_win.add_content("Inventory: ", attrib = "white")
 
             for x in self.inventory:
 
                 if isinstance(x, Item):
 
                     self.text_win.add_content(x.name)
-            self.text_win.add_content("")
+
+        elif inp == 'l':
+
+            self.text_win.add_content("Things you see in this room: ", "white")
+            self.text_win.add_content(self.look())
 
     def check_inventory_bounds(self, obj):
 
@@ -381,6 +390,21 @@ class Player(EntityCharacter):
                 self.inventory_space += targObj.size
                 self.text_win.add_content(targObj.name + " added to inventory")
 
+    def look(self):
+
+        objects = []
+
+        playerTile = self.tilemap.find_object(self)
+
+        for x in self.tilemap.get_around(playerTile.x, playerTile.y, 5):
+
+            for j in x:
+
+                if isinstance(j.obj, self.see_list):
+
+                    objects.append(j)
+
+        return objects
 
 class Enemy(EntityCharacter):
 

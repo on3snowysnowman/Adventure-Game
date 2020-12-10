@@ -21,6 +21,7 @@ def init_colors(win):
     light_blue = Color(14, 6, "light_blue", 0, 446, 1000)
     brown = Color(15, 7, "brown", 550, 350, 0)
     light_brown = Color(16, 8, "light_brown", 527, 492, 425)
+    white = Color(17, 8, "white", 1000, 1000, 1000)
 
     win.register_color("blue", blue)
     win.register_color("green", green)
@@ -30,6 +31,7 @@ def init_colors(win):
     win.register_color("light_blue", light_blue)
     win.register_color("brown", brown)
     win.register_color("light_brown", light_brown)
+    win.register_color("white", white)
 
 
 def dummy(win, test):
@@ -544,45 +546,7 @@ def master_window_options_test(win):
     opt_win_thread.join()
 
 
-def main_mapping_test(win):
-
-    # Tests the 'get_around' method in the tilemap
-
-    map_win = DisplayWindow.create_subwin_at_pos(win, 11, 16)
-    map_win.add_callback('f', map_win.stop)
-
-    curses.curs_set(0)
-
-    # Create Colors
-
-    init_colors(map_win)
-
-    # Puts a player in top left corner of map:
-
-    # player = Player()
-    ground = Floor()
-    wall = Wall()
-    player = Player()
-
-    map_win.tilemap.fill(Floor)
-    map_win.tilemap.add(player, 0, 0)
-    map_win.tilemap.add(Sword(), 5, 5)
-    map_win.tilemap.add(Chestplate(), 5, 7)
-
-    #for x in range(map_win.tilemap.width - 1):
-
-        #map_win.tilemap.add(wall, x, 2)
-
-    map_win.tilemap.add(TrackerEnemy(), 6, 3)
-    map_win.tilemap.add(Enemy(), 7, 3)
-    map_win.display()
-
-    for x in player.inventory:
-
-        print(x.name)
-
-
-def master_window_options_test_two(win):
+def mapping_text(win):
 
     # Tests the MasterWindow functionality.
 
@@ -590,8 +554,8 @@ def master_window_options_test_two(win):
 
     # Create menus:
 
-    text_win = TextDisplayWindow.create_subwin_at_pos(master, 30, 30)
-    map_win = DisplayWindow.create_subwin_at_pos(master, 20, 20, position=DisplayWindow.TOP_RIGHT)
+    text_win = TextDisplayWindow.create_subwin_at_pos(master, 35, 40)
+    map_win = DisplayWindow.create_subwin_at_pos(master, 35, 20, position=DisplayWindow.TOP_RIGHT)
 
     map_win.tilemap.get_all()
 
@@ -619,7 +583,6 @@ def master_window_options_test_two(win):
     add(Chestplate(), 6, 4, map_win)
     add(Chest(), 7, 5, map_win)
 
-
     # Add the scroll menus to the master window:
 
     master.add_subwin(text_win)
@@ -628,7 +591,6 @@ def master_window_options_test_two(win):
     # Start the master window:
     master.start()
     map_win.display()
-
 
 
 def all_tests(win):
@@ -646,4 +608,4 @@ def all_tests(win):
         win.erase()
 
 
-curses.wrapper(master_window_options_test_two)
+curses.wrapper(mapping_text)
