@@ -9,31 +9,6 @@ def add(obj, x, y, win):
     win.tilemap.add(obj, x, y)
 
 
-def init_colors(win):
-
-    # Registers the default colors to the CHASWindow
-
-    blue = Color(9, 1, "blue", 0, 300, 1000)
-    green = Color(10, 2, "green", 0, 1000, 0)
-    yellow = Color(11, 3, "yellow", 1000, 950, 0)
-    red = Color(12, 4, "red", 1000, 0, 300)
-    orange = Color(13, 5, "orange", 980, 533, 0)
-    light_blue = Color(14, 6, "light_blue", 0, 446, 1000)
-    brown = Color(15, 7, "brown", 550, 350, 0)
-    light_brown = Color(16, 8, "light_brown", 527, 492, 425)
-    white = Color(17, 8, "white", 1000, 1000, 1000)
-
-    win.register_color("blue", blue)
-    win.register_color("green", green)
-    win.register_color("yellow", yellow)
-    win.register_color("red", red)
-    win.register_color("orange", orange)
-    win.register_color("light_blue", light_blue)
-    win.register_color("brown", brown)
-    win.register_color("light_brown", light_brown)
-    win.register_color("white", white)
-
-
 def dummy(win, test):
 
     win.win.addstr("This is a test! You should have pressed F1!")
@@ -369,7 +344,7 @@ def map_window_test(win):
 
     # Create Colors
 
-    init_colors(win)
+    map_win.init_colors()
 
     # Puts a player in top left corner of map:
 
@@ -448,7 +423,7 @@ def master_window_test(win):
 
     # Create Colors
 
-    init_colors(map_win)
+    map_win.init_colors()
 
     # Puts a player in top left corner of map:
 
@@ -565,8 +540,8 @@ def mapping_text(win):
 
     curses.curs_set(0)
     # Create Colors
-    init_colors(map_win)
-    init_colors(text_win)
+    map_win.init_colors()
+    text_win.init_colors()
 
     # Puts a player in top left corner of map:
 
@@ -582,6 +557,10 @@ def mapping_text(win):
     add(Helmet(), 4, 3, map_win)
     add(Chestplate(), 6, 4, map_win)
     add(Chest(), 7, 5, map_win)
+
+    for x in range(6):
+
+        add(Wall(), x + 1, 2, map_win)
 
     # Add the scroll menus to the master window:
 

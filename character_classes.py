@@ -210,7 +210,7 @@ class Player(EntityCharacter):
         self.priority = 0
         self.move_priority = 30
 
-        self.keys = ['w', 'a', 's', 'd', 'q', 'e', 'z', 'c', 'p', 'i', 'l']
+        self.keys = ['w', 'a', 's', 'd', 'q', 'e', 'z', 'c', 'p', 'i', 'l', 'o']
 
     def move(self):
 
@@ -226,7 +226,7 @@ class Player(EntityCharacter):
 
         inp = self.get_input()
 
-        # Get our cordnets:
+        # Get our coordnates:
 
         playerTile = self.tilemap.find_object(self)
 
@@ -234,19 +234,8 @@ class Player(EntityCharacter):
 
             # Move up:
 
-            for i in self.tilemap.get(playerTile.x, playerTile.y - 1):
-
-                if isinstance(i.obj, Chest):
-
-                    item = i.obj.open_chest()
-
-                    if isinstance(item, Item):
-
-                        self.text_win.add_content(f"You found a {item.name} in a chest! ")
-                        self.pickup_item(item)
-                        self.tilemap.removeObj_by_coords(playerTile.x, playerTile.y - 1)
-                        self.tilemap.add(OpenedChest(), playerTile.x, playerTile.y - 1)
-                        return
+            #Checks if the player is moving into a tile with a chest. If so, open it
+            self.check_chest(playerTile.x, playerTile.y - 1)
 
             if self.check_tile(playerTile.x, playerTile.y - 1):
 
@@ -256,6 +245,9 @@ class Player(EntityCharacter):
 
             # Move right
 
+            # Checks if the player is moving into a tile with a chest. If so, open it
+            self.check_chest(playerTile.x - 1, playerTile.y)
+
             if self.check_tile(playerTile.x - 1, playerTile.y):
 
                 self.tilemap.move(self, playerTile.x-1, playerTile.y)
@@ -264,6 +256,9 @@ class Player(EntityCharacter):
 
             # Move down
 
+            # Checks if the player is moving into a tile with a chest. If so, open it
+            self.check_chest(playerTile.x, playerTile.y + 1)
+
             if self.check_tile(playerTile.x, playerTile.y + 1):
 
                 self.tilemap.move(self, playerTile.x, playerTile.y+1)
@@ -271,6 +266,9 @@ class Player(EntityCharacter):
         elif inp == 'd':
 
             # Move right
+
+            # Checks if the player is moving into a tile with a chest. If so, open it
+            self.check_chest(playerTile.x + 1, playerTile.y)
 
             if self.check_tile(playerTile.x + 1, playerTile.y):
 
@@ -287,6 +285,7 @@ class Player(EntityCharacter):
         elif inp == 'e':
 
             # Move diagonal up right
+
 
             if self.check_tile(playerTile.x + 1, playerTile.y - 1):
                 self.tilemap.move(self, playerTile.x + 1, playerTile.y - 1)
@@ -321,8 +320,33 @@ class Player(EntityCharacter):
 
         elif inp == 'l':
 
-            self.text_win.add_content("Things you see in this room: ", "white")
-            self.text_win.add_content(self.look())
+            if len(self.look()) > 0:
+
+                self.text_win.add_content("Things you see in this room: ", "white")
+                self.text_win.add_content(self.look())
+
+            else: self.text_win.add_content("You don't see any objects in this room", "white")
+
+        elif inp == 'o':
+
+            groundContents = []
+
+            for x in self.tilemap.get(playerTile.x, playerTile.y):
+
+
+                if not isinstance(x.obj, Player) and not isinstance(x.obj, Floor):
+
+                    groundContents.append(x)
+
+            if len(groundContents) > 0:
+
+                self.text_win.add_content("Things on the ground: ", "white")
+
+                for x in groundContents:
+
+                    if not isinstance(x.obj, Player):
+
+                        self.text_win.add_content(x.obj.name)
 
     def check_inventory_bounds(self, obj):
 
@@ -405,6 +429,21 @@ class Player(EntityCharacter):
                     objects.append(j)
 
         return objects
+
+    def check_chest(self, xPos, yPos):
+
+        for i in self.tilemap.get(xPos, yPos):
+
+            if isinstance(i.obj, Chest):
+
+                item = i.obj.open_chest()
+
+                if isinstance(item, Item):
+                    self.text_win.add_content(f"You found a {item.name} in a chest! ")
+                    self.pickup_item(item)
+                    self.tilemap.removeObj_by_coords(xPos, yPos)
+                    self.tilemap.add(OpenedChest(), xPos, yPos)
+
 
 class Enemy(EntityCharacter):
 
@@ -826,5 +865,5 @@ class Floor(BaseCharacter):
 
         self.char = '0'
         self.name = 'Floor'
-        self.attrib.append("blue")
+        self.attrib.append("gray_blue")
 

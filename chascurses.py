@@ -487,6 +487,32 @@ class CHASWindow:
 
         return chr(key)
 
+    def init_colors(self):
+
+        # Registers the default colors to the CHASWindow
+
+        blue = Color(9, 1, "blue", 0, 300, 1000)
+        green = Color(10, 2, "green", 0, 1000, 0)
+        yellow = Color(11, 3, "yellow", 1000, 950, 0)
+        red = Color(12, 4, "red", 1000, 0, 300)
+        orange = Color(13, 5, "orange", 980, 533, 0)
+        light_blue = Color(14, 6, "light_blue", 0, 446, 1000)
+        brown = Color(15, 7, "brown", 550, 350, 0)
+        light_brown = Color(16, 8, "light_brown", 527, 492, 425)
+        white = Color(17, 8, "white", 1000, 1000, 1000)
+        gray_blue = Color(18, 9, "gray_blue", 371, 496, 858)
+
+        self.register_color("blue", blue)
+        self.register_color("green", green)
+        self.register_color("yellow", yellow)
+        self.register_color("red", red)
+        self.register_color("orange", orange)
+        self.register_color("light_blue", light_blue)
+        self.register_color("brown", brown)
+        self.register_color("light_brown", light_brown)
+        self.register_color("white", white)
+        self.register_color("gray_blue", gray_blue)
+
     @classmethod
     def create_subwin_at_pos(cls, win, y_len, x_len, position=0):
 
@@ -776,9 +802,6 @@ class TextDisplayWindow(CHASWindow):
 
             self.addstr(str(content), attrib = self.attrib)
 
-            if newLine:
-                self.addstr("\n")
-
         if type(content) == list:
 
             if len(content) == 1:
@@ -786,12 +809,10 @@ class TextDisplayWindow(CHASWindow):
                 if isinstance(content[0], Tile):
 
                     self.addstr(str(content[0].obj.name) + ", " + str(content[0].x) + ", " + str(content[0].y), attrib=self.attrib)
-                    self.addstr("\n")
 
                 else:
 
                     self.addstr(str(content[0]), attrib = self.attrib)
-                    self.addstr("\n")
 
             elif len(content) > 0:
 
