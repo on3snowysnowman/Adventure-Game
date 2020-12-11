@@ -499,8 +499,8 @@ class CHASWindow:
         light_blue = Color(14, 6, "light_blue", 0, 446, 1000)
         brown = Color(15, 7, "brown", 550, 350, 0)
         light_brown = Color(16, 8, "light_brown", 527, 492, 425)
-        white = Color(17, 8, "white", 1000, 1000, 1000)
-        gray_blue = Color(18, 9, "gray_blue", 371, 496, 858)
+        white = Color(17, 9, "white", 1000, 1000, 1000)
+        gray_blue = Color(18, 10, "gray_blue", 371, 496, 858)
 
         self.register_color("blue", blue)
         self.register_color("green", green)

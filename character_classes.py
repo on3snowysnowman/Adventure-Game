@@ -320,10 +320,13 @@ class Player(EntityCharacter):
 
         elif inp == 'l':
 
-            if len(self.look()) > 0:
+            objects = self.look()
+
+            if len(objects) > 0:
 
                 self.text_win.add_content("Things you see in this room: ", "white")
-                self.text_win.add_content(self.look())
+                self.text_win.add_content(objects)
+                self.text_win.add_content("\n" * 0)
 
             else: self.text_win.add_content("You don't see any objects in this room", "white")
 
@@ -332,7 +335,6 @@ class Player(EntityCharacter):
             groundContents = []
 
             for x in self.tilemap.get(playerTile.x, playerTile.y):
-
 
                 if not isinstance(x.obj, Player) and not isinstance(x.obj, Floor):
 
@@ -347,6 +349,8 @@ class Player(EntityCharacter):
                     if not isinstance(x.obj, Player):
 
                         self.text_win.add_content(x.obj.name)
+
+                self.text_win.add_content("\n" * 0)
 
     def check_inventory_bounds(self, obj):
 
@@ -380,9 +384,6 @@ class Player(EntityCharacter):
                     self.inventory_space += targObj.size
                     self.tilemap.removeObj(targObj)
                     self.text_win.add_content(targObj.name + " added to inventory")
-
-
-        pass
 
     def pickup_item(self, targObj):
 
@@ -419,30 +420,54 @@ class Player(EntityCharacter):
         objects = []
 
         playerTile = self.tilemap.find_object(self)
-
         for x in self.tilemap.get_around(playerTile.x, playerTile.y, 5):
 
             for j in x:
 
                 if isinstance(j.obj, self.see_list):
 
-                    objects.append(j)
+                    objPos = [j.x, j.y]
+                    startPos = [playerTile.x, playerTile.y]
+
+                    isWall = False
+
+                    # Check Above
+                    if j.y < playerTile.y:
+
+                        #While the starting position of player does not equal the targeted object's position
+                        while startPos[1] != objPos[1]:
+
+                            print(startPos[1], objPos[1])
+
+                            #Cycling through the tile list of our value startPos
+                            for i in self.tilemap.get(startPos[0], startPos[1]):
+
+                                if isinstance(i.obj, Wall):
+
+                                    isWall = True
+                                    break
+
+                            startPos[1] -= 1
+
+                    if not isWall: objects.append(j.obj.name)
 
         return objects
 
     def check_chest(self, xPos, yPos):
 
-        for i in self.tilemap.get(xPos, yPos):
+        if self.tilemap._bound_check(xPos, yPos):
 
-            if isinstance(i.obj, Chest):
+            for i in self.tilemap.get(xPos, yPos):
 
-                item = i.obj.open_chest()
+                if isinstance(i.obj, Chest):
 
-                if isinstance(item, Item):
-                    self.text_win.add_content(f"You found a {item.name} in a chest! ")
-                    self.pickup_item(item)
-                    self.tilemap.removeObj_by_coords(xPos, yPos)
-                    self.tilemap.add(OpenedChest(), xPos, yPos)
+                    item = i.obj.open_chest()
+
+                    if isinstance(item, Item):
+                        self.text_win.add_content(f"You found a {item.name} in a chest! ")
+                        self.pickup_item(item)
+                        self.tilemap.removeObj_by_coords(xPos, yPos)
+                        self.tilemap.add(OpenedChest(), xPos, yPos)
 
 
 class Enemy(EntityCharacter):
