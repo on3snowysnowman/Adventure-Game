@@ -94,6 +94,7 @@ class Weapon(Item):
 
         self.damage_min = 0 # Minimum amount of damage this weapon can deal
         self.damage_max = 0 # Maximum amount of damage this weapon can deal
+        self.speed = "Normal" # Determines whether the weapon has a chance to attack twice in one turn, or the enemy can attack twice
         self.damage_type = "" #Type of damage dealt when attacking
         self.durability = 0  # Amount of durability
         self.max_durability = 0  # Maximum amount of durability

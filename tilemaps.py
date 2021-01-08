@@ -122,6 +122,19 @@ class BaseTileMap(object):
 
         return tiles
 
+    def get_width(self, y):
+
+        """
+        Gets the width of the list in the tilemap of the passed y value
+
+        :param y: List index to be evaluated
+        :return Width of list indexed from y value
+        """
+
+        return len(self.tilemap[y])
+
+        pass
+
     def find_object(self, obj, findall=False):
 
         """

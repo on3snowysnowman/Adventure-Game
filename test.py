@@ -557,6 +557,7 @@ def mapping_text(win):
     #add(Helmet(), 4, 3, map_win)
     #add(Chestplate(), 6, 4, map_win)
     #add(Chest(), 7, 5, map_win)
+    add(TrackerEnemy(), 5, 4, map_win)
 
     for x in range(6):
 

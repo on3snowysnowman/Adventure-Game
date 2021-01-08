@@ -164,6 +164,42 @@ class EntityCharacter(BaseCharacter):
 
         pass
 
+    def look(self, obj, targs):
+
+        objects = []
+
+        objTile = self.tilemap.find_object(self)
+        for x in self.tilemap.get_around(objTile.x, objTile.y, 5):
+
+            for j in x:
+
+                if isinstance(j.obj, targs):
+
+                    objPos = [j.x, j.y]
+                    startPos = [objTile.x, objTile.y]
+
+                    isWall = False
+
+                    # Check Above
+                    if j.y < objTile.y:
+
+                        #While the starting position of player does not equal the targeted object's position
+                        while startPos[1] != objPos[1]:
+
+                            #Cycling through the tile list of our value startPos
+                            for i in self.tilemap.get(startPos[0], startPos[1]):
+
+                                if isinstance(i.obj, Wall):
+
+                                    isWall = True
+                                    break
+
+                            startPos[1] -= 1
+
+                    if not isWall: objects.append(j.obj.name)
+
+        return objects
+
     def check_tile(self, x, y):
 
         """
@@ -310,17 +346,25 @@ class Player(EntityCharacter):
 
         elif inp == 'i':
 
-            self.text_win.add_content("Inventory: ", attrib = "white")
+            if len(self.inventory) == 0:
 
-            for x in self.inventory:
+                self.text_win.add_content("Your inventory is empty", attrib="white")
 
-                if isinstance(x, Item):
+            else:
 
-                    self.text_win.add_content(x.name)
+                self.text_win.add_content("Inventory: ", attrib = "white")
+
+                for x in self.inventory:
+
+                    if isinstance(x, Item):
+
+                        self.text_win.add_content(x.name)
+
+                self.text_win.add_content("\n" * 0)
 
         elif inp == 'l':
 
-            objects = self.look()
+            objects = self.look(self, self.see_list)
 
             if len(objects) > 0:
 
@@ -414,44 +458,6 @@ class Player(EntityCharacter):
                 self.inventory.append(targObj)
                 self.inventory_space += targObj.size
                 self.text_win.add_content(targObj.name + " added to inventory")
-
-    def look(self):
-
-        objects = []
-
-        playerTile = self.tilemap.find_object(self)
-        for x in self.tilemap.get_around(playerTile.x, playerTile.y, 5):
-
-            for j in x:
-
-                if isinstance(j.obj, self.see_list):
-
-                    objPos = [j.x, j.y]
-                    startPos = [playerTile.x, playerTile.y]
-
-                    isWall = False
-
-                    # Check Above
-                    if j.y < playerTile.y:
-
-                        #While the starting position of player does not equal the targeted object's position
-                        while startPos[1] != objPos[1]:
-
-                            print(startPos[1], objPos[1])
-
-                            #Cycling through the tile list of our value startPos
-                            for i in self.tilemap.get(startPos[0], startPos[1]):
-
-                                if isinstance(i.obj, Wall):
-
-                                    isWall = True
-                                    break
-
-                            startPos[1] -= 1
-
-                    if not isWall: objects.append(j.obj.name)
-
-        return objects
 
     def check_chest(self, xPos, yPos):
 
@@ -552,7 +558,7 @@ class TrackerEnemy(EntityCharacter):
         # Left Up
         if targX < x and targY < y:
 
-            # Checking if player is directly next to the player diagnonaly
+            # Checking if player is directly next to the enemy diagnonaly
             if x - 1 == targX and y - 1 == targY:
 
                 secondaryValidCoords = []
@@ -698,50 +704,66 @@ class TrackerEnemy(EntityCharacter):
         if direction == "left_up":
 
             validCoords = []
-            for j in range(x, -1, -1):
+            for j in range(x, -1, - 1):
 
                 if self.check_tile(j, y - 1):
 
                     validCoords.append([j, y - 1])
+                    break
 
-            if len(validCoords) == 0:
+            for j in range(x, self.tilemap.get_width(y + 1)):
 
-                for j in range(x, self.tilemap.width):
+                if self.check_tile(j, y - 1):
 
-                    if self.check_tile(j, y - 1):
+                    validCoords.append([j, y - 1])
+                    break
 
-                        validCoords.append([j, y - 1])
+            print(validCoords)
 
             if len(validCoords) != 0:
 
-                if len(validCoords) > 1:
+                #Closest available X value that the Enemy can move to, default is 0
+                closestX = 0
 
-                    pass
+                #Target that the Enemy will move to, default is the first index
+                nextMove = validCoords[0]
+
+                for j in range(1, len(validCoords)):
+
+                    """
+                    if validCoords[j][0] == playerTile.x:
+
+                        nextMove = validCoords[j]
+                        break
+                    """
+                    if validCoords[j][0] > closestX:
+
+                        closestX = validCoords[j][0]
+                        nextMove = validCoords[j]
+
+
+                targX, targY = nextMove[0], nextMove[1]
+
+                #Checking if the Enemy is right below the target
+                if x == targX and y - 1 == targY:
+
+                    if self.check_tile(x, y - 1): self.tilemap.move(self, x, y - 1)
+
+                elif targX > x:
+
+                    if x + 1 == targX:
+
+                        if self.check_tile(x + 1, y - 1): self.tilemap.move(self, x + 1, y - 1)
+
+                    elif self.check_tile(x + 1, y): self.tilemap.move(self, x + 1, y)
 
                 else:
 
-                    nextMove = random.choice(validCoords)
-                    targX, targY = nextMove[0], nextMove[1]
-                    if x == targX and y - 1 == targY:
+                    if x - 1 == targX:
 
-                        if self.check_tile(x, y - 1): self.tilemap.move(self, x, y - 1)
+                        if self.check_tile(x - 1, y - 1): self.tilemap.move(self, x - 1, y - 1)
 
-
-                    elif targX > x:
-
-                        if x + 1 == targX:
-
-                            if self.check_tile(x + 1, y - 1): self.tilemap.move(self, x + 1, y - 1)
-
-                        elif self.check_tile(x + 1, y): self.tilemap.move(self, x + 1, y)
-
-                    else:
-
-                        if x - 1 == targX:
-
-                            if self.check_tile(x - 1, y - 1): self.tilemap.move(self, x - 1, y - 1)
-
-                        elif self.check_tile(x - 1, y): self.tilemap.move(self, x - 1, y)
+                    elif self.check_tile(x - 1, y): self.tilemap.move(self, x - 1, y)
 
 
         elif direction == "left":
