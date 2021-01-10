@@ -703,8 +703,12 @@ class TrackerEnemy(EntityCharacter):
 
         if direction == "left_up":
 
+            breakTwice = False
+
             validCoords = []
             for j in range(x, -1, - 1):
+
+
 
                 if self.check_tile(j, y - 1):
 
@@ -718,8 +722,6 @@ class TrackerEnemy(EntityCharacter):
                     validCoords.append([j, y - 1])
                     break
 
-            print(validCoords)
-
             if len(validCoords) != 0:
 
                 #Closest available X value that the Enemy can move to, default is 0
@@ -730,12 +732,18 @@ class TrackerEnemy(EntityCharacter):
 
                 for j in range(1, len(validCoords)):
 
-                    """
-                    if validCoords[j][0] == playerTile.x:
+                    for l in self.tilemap.get(j, y + 1):
 
-                        nextMove = validCoords[j]
+                            if isinstance(l.obj, Player):
+
+                                nextMove = validCoords[j]
+                                breakTwice = True
+                                break
+                            
+                    if breakTwice:
+
                         break
-                    """
+
                     if validCoords[j][0] > closestX:
 
                         closestX = validCoords[j][0]

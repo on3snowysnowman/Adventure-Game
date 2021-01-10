@@ -591,7 +591,6 @@ class MasterWindow(CHASWindow):
         subwin.pause_input()
         self.extract_callback(subwin)
 
-
     def pause_window(self):
 
         """

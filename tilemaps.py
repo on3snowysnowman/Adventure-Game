@@ -5,7 +5,6 @@ tielmaps contain characters drawn at certain positions on the screen.
 tilemaps handle the logic of entity movement, and keeps everything organised.
 """
 
-
 from character_classes import EntityCharacter, Player
 import math
 
