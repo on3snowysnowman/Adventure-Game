@@ -558,13 +558,13 @@ def mapping_text(win):
     #add(Chestplate(), 6, 4, map_win)
     #add(Chest(), 7, 5, map_win)
     add(TrackerEnemy(), 5, 4, map_win)
+    add(Wall(), 5, 3, map_win)
 
     for x in range(6):
 
-        add(Wall(), x + 1, 2, map_win)
+        add(Wall(), x, 2, map_win)
 
     # Add the scroll menus to the master window:
-
     master.add_subwin(text_win)
     master.add_subwin(map_win)
 

@@ -532,7 +532,4 @@ class Tile:
 
         return math.sqrt(math.pow(targObj.xPos - self.x, 2) + math.pow(targObj.yPos - self.y, 2))
 
-    def _calc_fastest_route(self, targObj):
-
-       pass
 

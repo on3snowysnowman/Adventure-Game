@@ -578,7 +578,7 @@ class TrackerEnemy(EntityCharacter):
                 self.tilemap.move(self, x - 1, y - 1)
 
             else:
-                self.blocked_move("left_up")
+                self.blocked()
 
         # Left
         elif targX < x and targY == y:
@@ -588,7 +588,7 @@ class TrackerEnemy(EntityCharacter):
                 self.tilemap.move(self, x - 1, y)
 
             else:
-                self.blocked_move("left")
+                self.blocked()
 
         # Left Down
         elif targX < x and targY > y:
@@ -613,7 +613,7 @@ class TrackerEnemy(EntityCharacter):
                 self.tilemap.move(self, x - 1, y + 1)
 
             else:
-                self.blocked_move("left_down")
+                self.blocked()
 
         # Down
         elif targY > y and targX == x:
@@ -623,7 +623,7 @@ class TrackerEnemy(EntityCharacter):
                 self.tilemap.move(self, x, y + 1)
 
             else:
-                self.blocked_move("down")
+                self.blocked()
 
         # Right Down
         elif targX > x and targY > y:
@@ -648,7 +648,7 @@ class TrackerEnemy(EntityCharacter):
                 self.tilemap.move(self, x + 1, y + 1)
 
             else:
-                self.blocked_move("right_down")
+                self.blocked()
 
         # Right
         elif targX > x and targY == y:
@@ -658,7 +658,7 @@ class TrackerEnemy(EntityCharacter):
                 self.tilemap.move(self, x + 1, y)
 
             else:
-                self.blocked_move("right")
+                self.blocked()
 
         # Right Up
         elif targX > x and targY < y:
@@ -683,7 +683,7 @@ class TrackerEnemy(EntityCharacter):
                 self.tilemap.move(self, x + 1, y - 1)
 
             else:
-                self.blocked_move("right_up")
+                self.blocked()
 
         # Up
         elif targY < y and targX == x:
@@ -693,168 +693,149 @@ class TrackerEnemy(EntityCharacter):
                 self.tilemap.move(self, x, y - 1)
 
             else:
-                self.blocked_move("up")
+                self.blocked()
 
-    def blocked_move(self, direction):
+    def blocked(self):
 
         enemyTile = self.tilemap.find_object(self)
         playerTile = self.tilemap.find_object_type(Player)
         x, y = enemyTile.x, enemyTile.y
 
-        if direction == "left_up":
+        surroundingTiles = self.tilemap.get_around(x, y)
 
-            breakTwice = False
+        direction = "horizontal"
 
-            validCoords = []
-            for j in range(x, -1, - 1):
+        if direction == "horizontal":
 
+            #Checking if the target is below the enemy
+            if playerTile.y > y:
 
+               self.horizontal_blocked_move("down")
 
-                if self.check_tile(j, y - 1):
+            elif playerTile.y < y:
 
-                    validCoords.append([j, y - 1])
-                    break
+               self.horizontal_blocked_move("up")
 
-            for j in range(x, self.tilemap.get_width(y + 1)):
-
-                if self.check_tile(j, y - 1):
-
-                    validCoords.append([j, y - 1])
-                    break
-
-            if len(validCoords) != 0:
-
-                #Closest available X value that the Enemy can move to, default is 0
-                closestX = 0
-
-                #Target that the Enemy will move to, default is the first index
-                nextMove = validCoords[0]
-
-                for j in range(1, len(validCoords)):
-
-                    for l in self.tilemap.get(j, y + 1):
-
-                            if isinstance(l.obj, Player):
-
-                                nextMove = validCoords[j]
-                                breakTwice = True
-                                break
-                            
-                    if breakTwice:
-
-                        break
-
-                    if validCoords[j][0] > closestX:
-
-                        closestX = validCoords[j][0]
-                        nextMove = validCoords[j]
-
-
-                targX, targY = nextMove[0], nextMove[1]
-
-                #Checking if the Enemy is right below the target
-                if x == targX and y - 1 == targY:
-
-                    if self.check_tile(x, y - 1): self.tilemap.move(self, x, y - 1)
-
-                elif targX > x:
-
-                    if x + 1 == targX:
-
-                        if self.check_tile(x + 1, y - 1): self.tilemap.move(self, x + 1, y - 1)
-
-                    elif self.check_tile(x + 1, y): self.tilemap.move(self, x + 1, y)
-
-                else:
-
-                    if x - 1 == targX:
-
-                        if self.check_tile(x - 1, y - 1): self.tilemap.move(self, x - 1, y - 1)
-
-                    elif self.check_tile(x - 1, y): self.tilemap.move(self, x - 1, y)
-
-
-        elif direction == "left":
-
-            validCoords = []
-            for j in range(y, -1, -1):
-
-                if self.check_tile(x - 1, j):
-                    validCoords.append([x - 1, j])
-
-            if len(validCoords) == 0:
-
-                for j in range(y, self.tilemap.height):
-
-                    if self.check_tile(x - 1, j):
-                        validCoords.append([x - 1, j])
-
-            if len(validCoords) != 0:
-
-                if len(validCoords) > 1:
-
-                    pass
-
-                else:
-
-                    nextMove = random.choice(validCoords)
-                    targX, targY = nextMove[0], nextMove[1]
-                    if y == targY and x - 1 == targX:
-
-                        if self.check_tile(x - 1, y): self.tilemap.move(self, x - 1, y)
-
-                    elif targY > y:
-
-                        if y + 1 == targY:
-
-                            if self.check_tile(x - 1, y + 1): self.tilemap.move(self, x - 1, y + 1)
-
-                        elif self.check_tile(x, y + 1):
-
-                            self.tilemap.move(self, x, y + 1)
-
-                    else:
-
-                        if y - 1 == targY:
-
-                            if self.check_tile(x - 1, y - 1): self.tilemap.move(self, x - 1, y - 1)
-
-                        elif self.check_tile(x, y - 1):
-                            self.tilemap.move(self, x, y - 1)
-
-
-        elif direction == "left_down":
+        elif direction == "vertical":
 
             pass
 
-
-        elif direction == "down":
-
-            pass
-
-
-        elif direction == "right_down":
+        elif direction == "both":
 
             pass
 
+    def horizontal_blocked_move(self, direction):
 
-        elif direction == "right":
+        enemyTile = self.tilemap.find_object(self)
+        playerTile = self.tilemap.find_object_type(Player)
+        x, y = enemyTile.x, enemyTile.y
 
-            pass
+        playerFound = False
+        playerIndex = 0
 
+        increment = 1
 
-        elif direction == "right_up":
+        if direction == "up": increment = - 1
 
-            pass
+        validCoords = []
+        for j in range(x, -1, - 1):
 
+            for l in self.tilemap.get(j, y + increment):
 
-        elif direction == "up":
+                if isinstance(l.obj, Player):
 
-            pass
+                    playerFound = True
+                    validCoords.append([j, y + increment])
+                    playerIndex = len(validCoords) - 1
 
+            if self.check_tile(j, y + increment):
 
-        pass
+                validCoords.append([j, increment])
+                break
 
+        for j in range(x, self.tilemap.get_width(y + increment)):
+
+            for l in self.tilemap.get(j, y + increment):
+
+                if isinstance(l.obj, Player):
+
+                    playerFound = True
+                    validCoords.append([j, y + increment])
+                    playerIndex = len(validCoords) - 1
+
+            if self.check_tile(j, y + increment):
+
+                validCoords.append([j, y + increment])
+                break
+
+        if playerFound:
+
+            nextMove = validCoords[playerIndex]
+            targX, targY = nextMove[0], nextMove[1]
+
+            # Checking if the Enemy is right below the target
+            if x == targX and y + increment == targY:
+
+                if self.check_tile(x, y + increment): self.tilemap.move(self, x, y + increment)
+
+            elif targX > x:
+
+                if x + 1 == targX:
+
+                    if self.check_tile(x + 1, y + increment): self.tilemap.move(self, x + 1, y + increment)
+
+                elif self.check_tile(x + 1, y):
+
+                    self.tilemap.move(self, x + 1, y)
+
+            else:
+
+                if x - 1 == targX:
+
+                    if self.check_tile(x - 1, y + increment): self.tilemap.move(self, x - 1, y + increment)
+
+                elif self.check_tile(x - 1, y):
+
+                    self.tilemap.move(self, x - 1, y)
+
+        elif len(validCoords) != 0:
+
+            # Closest available X value that the Enemy can move to, default is 0
+            closestX = 0
+
+            # Target that the Enemy will move to, default is the first index
+            nextMove = validCoords[0]
+
+            for j in range(1, len(validCoords)):
+
+                if validCoords[j][0] > closestX:
+                    closestX = validCoords[j][0]
+                    nextMove = validCoords[j]
+
+            targX, targY = nextMove[0], nextMove[1]
+
+            # Checking if the Enemy is right next to the target
+            if x == targX and y + increment == targY:
+
+                if self.check_tile(x, y + increment): self.tilemap.move(self, x, y + increment)
+
+            elif targX > x:
+
+                if x + 1 == targX:
+
+                    if self.check_tile(x + 1, y + increment): self.tilemap.move(self, x + 1, y + increment)
+
+                elif self.check_tile(x + 1, y):
+                    self.tilemap.move(self, x + 1, y)
+
+            else:
+
+                if x - 1 == targX:
+
+                    if self.check_tile(x - 1, y + increment): self.tilemap.move(self, x - 1, y + increment)
+
+                elif self.check_tile(x - 1, y):
+                    self.tilemap.move(self, x - 1, y)
 
 class Wall(BaseCharacter):
 
