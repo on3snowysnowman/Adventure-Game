@@ -573,6 +573,41 @@ def mapping_text(win):
     map_win.display()
 
 
+def path_finding_test(win):
+
+    map_win = DisplayWindow.create_subwin_at_pos(win, 50, 50, CHASWindow.TOP_LEFT)
+
+    map_win.add_callback('f', map_win.stop)
+    curses.curs_set(0)
+
+    map_win.init_colors()
+
+    map_win.tilemap.fill(Floor)
+
+    player = Player()
+    add(player, 3, 1, map_win)
+    add(TrackerEnemy(), 6, 6, map_win)
+    add(Wall(), 8, 0, map_win)
+    add(Wall(), 7, 1, map_win)
+    add(Wall(), 6, 2, map_win)
+    add(Wall(), 5, 3, map_win)
+    add(Wall(), 4, 4, map_win)
+    add(Wall(), 3, 5, map_win)
+    add(Wall(), 2, 6, map_win)
+    add(Wall(), 1, 7, map_win)
+    add(Wall(), 0, 8, map_win)
+    add(Wall(), 2, 1, map_win)
+    add(Wall(), 3, 0, map_win)
+    add(Wall(), 4, 1, map_win)
+    add(Wall(), 3, 2, map_win)
+    add(Wall(), 4, 6, map_win)
+    add(Wall(), 5, 6, map_win)
+    add(Wall(), 5, 5, map_win)
+    add(Wall(), 6, 5, map_win)
+    add(Wall(), 7, 5, map_win)
+    map_win.display()
+
+
 def all_tests(win):
 
     # Runs all tests
@@ -587,5 +622,4 @@ def all_tests(win):
 
         win.erase()
 
-
-curses.wrapper(mapping_text)
+curses.wrapper(path_finding_test)

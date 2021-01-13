@@ -134,6 +134,18 @@ class BaseTileMap(object):
 
         pass
 
+    def get_height(self):
+
+        """
+        Gets the height of the list in the tilemap
+
+        :return Height of tilemap list
+        """
+
+        return len(self.tilemap)
+
+        pass
+
     def find_object(self, obj, findall=False):
 
         """

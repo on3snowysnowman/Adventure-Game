@@ -682,7 +682,7 @@ class DisplayWindow(CHASWindow):
 
         self.win = win  # CURSES window instance
 
-        self.tilemap = BaseTileMap(15, 15, self)  # Tilemap storing game info
+        self.tilemap = BaseTileMap(10, 10, self)  # Tilemap storing game info
         self.run = True  # Value determining if we are running
 
         self.thread = None  # Treading instance of the input loop
