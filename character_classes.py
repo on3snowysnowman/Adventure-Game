@@ -29,6 +29,8 @@ class BaseCharacter(object):
         self.can_move = False
         self.move_priority = 20
 
+        self.debug_move = False
+
         self.keys = []  # List of keys we care about
         self.inp = queue.SimpleQueue()  # Input queue
 
@@ -387,9 +389,9 @@ class Player(EntityCharacter):
         self.name = 'Player'
         self.attrib.append("green")
         self.priority = 0
-        self.move_priority = 30
+        self.move_priority = 18
 
-        self.keys = ['w', 'a', 's', 'd', 'q', 'e', 'z', 'c', 'p', 'i', 'l', 'o']
+        self.keys = ['w', 'a', 's', 'd', 'q', 'e', 'z', 'c', 'p', 'i', 'l', 'o', 'y']
 
     def move(self):
 
@@ -539,6 +541,10 @@ class Player(EntityCharacter):
 
                 self.text_win.add_content("\n" * 0)
 
+        elif inp == 'y':
+            
+            self.tilemap.toggle_enemy_movement()
+
     def check_inventory_bounds(self, obj):
 
         if self.inventory_space + obj.size > self.inventory_space_max:
@@ -683,135 +689,148 @@ class TrackerEnemy(EntityCharacter):
         self.char = 'E'
         self.attrib.append("red")
         self.priority = 18
+        self.move_priority = 19
 
     def move(self):
 
-        numberTileMap = self.find_quickest_path(self.tilemap.find_object_type(Player))
-        selfTile = self.tilemap.find_object(self)
 
-        posX = selfTile.x
-        posY = selfTile.y
+        if self.debug_move:
 
-        final = []
+            numberTileMap = self.find_quickest_path(self.tilemap.find_object_type(Player))
+            selfTile = self.tilemap.find_object(self)
 
-        for x in range(8):
+            posX = selfTile.x
+            posY = selfTile.y
 
-            final.append(-1)
+            final = []
 
-        index = 0
+            for x in range(8):
 
-        # Iterate over each value:
+                final.append(-1)
 
-        for cur_y in range(posY - 1, posY + 2):
+            index = 0
 
-            for cur_x in range(posX - 1, posX + 2):
+            # Iterate over each value:
 
-                # Self Tile
-                if cur_y == posY and cur_x == posX:
+            for cur_y in range(posY - 1, posY + 2):
 
-                    continue
+                for cur_x in range(posX - 1, posX + 2):
 
-                else:
+                    # Self Tile
+                    if cur_y == posY and cur_x == posX:
 
-                    if self.check_tile(cur_x, cur_y):
+                        continue
 
-                        final[index] = (numberTileMap[cur_y][cur_x])
+                    else:
+
+                        if self.check_tile(cur_x, cur_y):
+
+                            final[index] = (numberTileMap[cur_y][cur_x])
+
+                    index += 1
+
+            leastNum = float('inf')
+            count = 0
+            index = 0
+
+            for num in final:
+
+                if num != -1 and num < leastNum:
+
+                    leastNum = num
+                    count = index
 
                 index += 1
 
-        leastNum = float('inf')
-        count = 0
-        index = 0
+            surroundingTiles = self.tilemap.get_around(posX, posY)
 
-        for num in final:
+            shouldMove = True
 
-            if num != -1 and num < leastNum:
+            for tileList in surroundingTiles:
 
-                leastNum = num
-                count = index
+                for tile in tileList:
 
-            index += 1
+                   if isinstance(tile.obj, Player):
 
-        surroundingTiles = self.tilemap.get_around(posX, posY)
+                       shouldMove = False
 
-        shouldMove = True
+            if shouldMove:
 
-        for tileList in surroundingTiles:
+                #Left Up
+                if count == 0:
 
-            for tile in tileList:
+                    if self.check_tile(posX - 1, posY - 1): self.tilemap.move(self, posX - 1, posY - 1)
 
-               if isinstance(tile.obj, Player):
+                #Up
+                elif count == 1:
 
-                   shouldMove = False
+                    if self.check_tile(posX, posY - 1): self.tilemap.move(self, posX, posY - 1)
 
-        if shouldMove:
+                #Right Up
+                elif count == 2:
 
-            #Left Up
-            if count == 0:
+                    if self.check_tile(posX + 1, posY - 1): self.tilemap.move(self, posX + 1, posY - 1)
 
-                if self.check_tile(posX - 1, posY - 1): self.tilemap.move(self, posX - 1, posY - 1)
+                #Right
+                elif count == 4:
 
-            #Up
-            elif count == 1:
+                    if self.check_tile(posX + 1, posY): self.tilemap.move(self, posX + 1, posY)
 
-                if self.check_tile(posX, posY - 1): self.tilemap.move(self, posX, posY - 1)
+                #Right Down
+                elif count == 7:
 
-            #Right Up
-            elif count == 2:
+                    if self.check_tile(posX + 1, posY + 1): self.tilemap.move(self, posX + 1, posY + 1)
 
-                if self.check_tile(posX + 1, posY - 1): self.tilemap.move(self, posX + 1, posY - 1)
+                #Down
+                elif count == 6:
 
-            #Right
-            elif count == 4:
+                    if self.check_tile(posX, posY + 1): self.tilemap.move(self, posX, posY + 1)
 
-                if self.check_tile(posX + 1, posY): self.tilemap.move(self, posX + 1, posY)
+                #Left Down
+                elif count == 5:
 
-            #Right Down
-            elif count == 7:
+                    if self.check_tile(posX - 1, posY + 1): self.tilemap.move(self, posX - 1, posY + 1)
 
-                if self.check_tile(posX + 1, posY + 1): self.tilemap.move(self, posX + 1, posY + 1)
+                #Left
+                elif count == 3:
 
-            #Down
-            elif count == 6:
-
-                if self.check_tile(posX, posY + 1): self.tilemap.move(self, posX, posY + 1)
-
-            #Left Down
-            elif count == 5:
-
-                if self.check_tile(posX - 1, posY + 1): self.tilemap.move(self, posX - 1, posY + 1)
-
-            #Left
-            elif count == 3:
-
-                if self.check_tile(posX - 1, posY): self.tilemap.move(self, posX - 1, posY)
+                    if self.check_tile(posX - 1, posY): self.tilemap.move(self, posX - 1, posY)
 
 
-        playerTile = self.tilemap.find_object_type(Player)
+            playerTile = self.tilemap.find_object_type(Player)
 
-        xPos = 0
-        yPos = 0
-
-        '''
-        print("\n" * 2)
-        for line in numberTileMap:
-
-            for col in line:
-
-                if xPos == playerTile.x and yPos == playerTile.y:
-                    print(" C", end="")
-                elif xPos == selfTile.x and yPos == selfTile.y:
-                    print(" E", end="")
-                elif col != -1:
-                    print(" " + str(col), end="")
-                else:
-                    print(col, end="")
-                xPos += 1
-
-            yPos += 1
             xPos = 0
-            print("\n")
-        '''
+            yPos = 0
+
+            '''
+            print("\n" * 2)
+            for line in numberTileMap:
+    
+                for col in line:
+    
+                    if xPos == playerTile.x and yPos == playerTile.y:
+                        print(" C", end="")
+                    elif xPos == selfTile.x and yPos == selfTile.y:
+                        print(" E", end="")
+                    elif col != -1:
+                        print(" " + str(col), end="")
+                    else:
+                        print(col, end="")
+                    xPos += 1
+    
+                yPos += 1
+                xPos = 0
+                print("\n")
+            '''
+
+    def debug_move_toggle(self):
+
+        if self.debug_move:
+
+            self.debug_move = False
+
+        else: self.debug_move = True
+
 
 class Wall(BaseCharacter):
 

@@ -5,7 +5,7 @@ tielmaps contain characters drawn at certain positions on the screen.
 tilemaps handle the logic of entity movement, and keeps everything organised.
 """
 
-from character_classes import EntityCharacter, Player
+from character_classes import EntityCharacter, Player, TrackerEnemy
 import math
 
 
@@ -117,7 +117,7 @@ class BaseTileMap(object):
 
         for x, y, z, obj in self._iterate():
 
-            tiles.append(Tile(x, y, z, obj))
+            tiles.append(Tile(x, y, z, obj, self.tilemap[y][x]))
 
         return tiles
 
@@ -420,7 +420,7 @@ class BaseTileMap(object):
         """
         Checks if any of the coordinates are too big.
 
-        We raise an exception if the thing is out of bounds.
+        We raise an exception if the coordinates are out of bounds.
 
         :param x: X cordnet
         :type x: int
@@ -478,6 +478,14 @@ class BaseTileMap(object):
         """
 
         return tile.obj.move_priority
+
+    def toggle_enemy_movement(self):
+
+        for tile in self.get_all():
+
+            if isinstance(tile.obj, TrackerEnemy):
+
+                tile.obj.debug_move_toggle()
 
 
 class Tile:

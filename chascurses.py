@@ -9,6 +9,8 @@ import queue
 from character_classes import *
 from tilemaps import BaseTileMap, Tile
 
+from time import sleep
+
 """
 CHAS Curses wrappings.
 Includes special curses operations,
@@ -682,7 +684,7 @@ class DisplayWindow(CHASWindow):
 
         self.win = win  # CURSES window instance
 
-        self.tilemap = BaseTileMap(10, 10, self)  # Tilemap storing game info
+        self.tilemap = BaseTileMap(40, 40, self)  # Tilemap storing game info
         self.run = True  # Value determining if we are running
 
         self.thread = None  # Treading instance of the input loop
@@ -735,6 +737,7 @@ class DisplayWindow(CHASWindow):
             self.tilemap.update()
 
             self._render()
+            sleep(.01)
 
     def _add_key(self, key, obj):
 

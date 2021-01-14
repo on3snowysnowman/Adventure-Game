@@ -587,6 +587,30 @@ def path_finding_test(win):
     player = Player()
     add(player, 3, 1, map_win)
     add(TrackerEnemy(), 6, 6, map_win)
+
+    usedCoords = [[3, 1], [6, 6]]
+
+
+    for x in range(map_win.tilemap.get_height()):
+
+        fillBool = random.choice([True, False])
+
+        if fillBool:
+
+            numWalls = random.randrange(2, map_win.tilemap.get_width(x) / 2)
+            yCoord = x
+            xCoord = random.randrange(0, map_win.tilemap.get_height())
+
+            for i in range(numWalls):
+
+                if map_win.tilemap._bound_check(xCoord, yCoord):
+
+                    add(Wall(), xCoord, yCoord, map_win)
+                    xCoord += 1
+
+
+    #Creating random walls on the x axis
+    '''
     add(Wall(), 8, 0, map_win)
     add(Wall(), 7, 1, map_win)
     add(Wall(), 6, 2, map_win)
@@ -605,6 +629,7 @@ def path_finding_test(win):
     add(Wall(), 5, 5, map_win)
     add(Wall(), 6, 5, map_win)
     add(Wall(), 7, 5, map_win)
+    '''
     map_win.display()
 
 
