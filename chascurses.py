@@ -316,7 +316,7 @@ class CHASWindow:
                 self.win.addstr(ystart, xstart - 1, content, *attrib)
 
                 return self.win.insstr(ystart, xstart - 1, " ")
-
+            attrib = None
             return self.win.addstr(ystart, xstart, content, *attrib)
 
         if ystart != -1 and xstart != -1:
@@ -433,7 +433,7 @@ class CHASWindow:
         Resumes the input system, allowing '_get_input' to work correctly.
         """
 
-        # CLear the input queue:
+        # Clear the input queue:
 
         self.input_hand = False
 
@@ -684,7 +684,7 @@ class DisplayWindow(CHASWindow):
 
         self.win = win  # CURSES window instance
 
-        self.tilemap = BaseTileMap(40, 40, self)  # Tilemap storing game info
+        self.tilemap = BaseTileMap(20, 20, self)  # Tilemap storing game info
         self.run = True  # Value determining if we are running
 
         self.thread = None  # Treading instance of the input loop
@@ -737,7 +737,7 @@ class DisplayWindow(CHASWindow):
             self.tilemap.update()
 
             self._render()
-            sleep(.01)
+            curses.delay_output(1)
 
     def _add_key(self, key, obj):
 

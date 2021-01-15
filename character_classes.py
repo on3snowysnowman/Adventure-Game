@@ -165,39 +165,65 @@ class EntityCharacter(BaseCharacter):
 
         pass
 
-    def look(self, obj, targs):
 
-        objects = []
+    def look(self, targs, radius):
 
-        objTile = self.tilemap.find_object(self)
-        for x in self.tilemap.get_around(objTile.x, objTile.y, 5):
+        selfTile = self.tilemap.find_object(self)
+        posX, posY = selfTile.x, selfTile.y
 
-            for j in x:
+        objects = self.tilemap.get_around(posX, posY, radius)
+        booleanTileMap = [[]]
 
-                if isinstance(j.obj, targs):
+        objects.insert(int(len(objects)/ 2), ["C"])
 
-                    objPos = [j.x, j.y]
-                    startPos = [objTile.x, objTile.y]
+        #Index of object list
+        index = 0
 
-                    isWall = False
+        #Index of boolean list
+        count = 0
 
-                    # Check Above
-                    if j.y < objTile.y:
+        newLineCount = 1
 
-                        #While the starting position of player does not equal the targeted object's position
-                        while startPos[1] != objPos[1]:
+        while index < len(objects):
 
-                            #Cycling through the tile list of our value startPos
-                            for i in self.tilemap.get(startPos[0], startPos[1]):
+            if objects[index][0] != "C":
 
-                                if isinstance(i.obj, Wall):
+                booleanTileMap[count].append(True)
 
-                                    isWall = True
-                                    break
+            else: booleanTileMap[count].append("C")
 
-                            startPos[1] -= 1
+            if newLineCount == 1 + (2 * radius) and index + 1 < len(objects):
 
-                    if not isWall: objects.append(j.obj.name)
+                index += 1
+                booleanTileMap.append([])
+                newLineCount = 1
+                count += 1
+                continue
+
+            else:
+
+                index += 1
+                newLineCount += 1
+
+
+        #Printing out tilemap
+        print("\n" * 2)
+        for line in booleanTileMap:
+
+            for col in line:
+
+                if col == "C":
+
+                    print(" C ", end = "")
+
+                elif col:
+
+                    print(" T ", end = "")
+
+                elif not col: print(" F ", end = "")
+
+            print("\n")
+
 
         return objects
 
@@ -280,8 +306,58 @@ class EntityCharacter(BaseCharacter):
 
         while currentNum < numMoves:
 
+            # TODO: Change arrangement of creating numbers based on the enemies movement
+
+            # Check Up
+            if self.check_tile(currentX, currentY - 1) and booleanTileMap[currentY - 1][currentX]:
+
+                numberTileMap[currentY - 1][currentX] = nextNum
+                numberCoords[nextNum] = [currentX, currentY - 1]
+                booleanTileMap[currentY - 1][currentX] = False
+                nextNum += 1
+
+            # Check Left Up
+            elif self.check_tile(currentX - 1, currentY - 1) and booleanTileMap[currentY - 1][currentX - 1]:
+
+                numberTileMap[currentY - 1][currentX - 1] = nextNum
+                numberCoords[nextNum] = [currentX - 1, currentY - 1]
+                booleanTileMap[currentY - 1][currentX - 1] = False
+                nextNum += 1
+
+            # Check Left
+            elif self.check_tile(currentX - 1, currentY) and booleanTileMap[currentY][currentX - 1]:
+
+                numberTileMap[currentY][currentX - 1] = nextNum
+                numberCoords[nextNum] = [currentX - 1, currentY]
+                booleanTileMap[currentY][currentX - 1] = False
+                nextNum += 1
+
+            # Check Down Left
+            elif self.check_tile(currentX - 1, currentY + 1) and booleanTileMap[currentY + 1][currentX - 1]:
+
+                numberTileMap[currentY + 1][currentX - 1] = nextNum
+                numberCoords[nextNum] = [currentX - 1, currentY + 1]
+                booleanTileMap[currentY + 1][currentX - 1] = False
+                nextNum += 1
+
+            # Check Down
+            elif self.check_tile(currentX, currentY + 1) and booleanTileMap[currentY + 1][currentX]:
+
+                numberTileMap[currentY + 1][currentX] = nextNum
+                numberCoords[nextNum] = [currentX, currentY + 1]
+                booleanTileMap[currentY + 1][currentX] = False
+                nextNum += 1
+
+            # Check Down Right
+            elif self.check_tile(currentX + 1, currentY + 1) and booleanTileMap[currentY + 1][currentX + 1]:
+
+                numberTileMap[currentY + 1][currentX + 1] = nextNum
+                numberCoords[nextNum] = [currentX + 1, currentY + 1]
+                booleanTileMap[currentY + 1][currentX + 1] = False
+                nextNum += 1
+
             #Check Right
-            if self.check_tile(currentX + 1, currentY) and booleanTileMap[currentY][currentX + 1]:
+            elif self.check_tile(currentX + 1, currentY) and booleanTileMap[currentY][currentX + 1]:
 
                 numberTileMap[currentY][currentX + 1] = nextNum
                 numberCoords[nextNum] = [currentX + 1, currentY]
@@ -294,54 +370,6 @@ class EntityCharacter(BaseCharacter):
                 numberTileMap[currentY - 1][currentX + 1] = nextNum
                 numberCoords[nextNum] = [currentX + 1, currentY - 1]
                 booleanTileMap[currentY - 1][currentX + 1] = False
-                nextNum += 1
-
-            #Check Up
-            elif self.check_tile(currentX, currentY - 1) and booleanTileMap[currentY - 1][currentX]:
-
-                numberTileMap[currentY - 1][currentX] = nextNum
-                numberCoords[nextNum] = [currentX, currentY - 1]
-                booleanTileMap[currentY - 1][currentX] = False
-                nextNum += 1
-
-            #Check Left Up
-            elif self.check_tile(currentX - 1, currentY - 1) and booleanTileMap[currentY - 1][currentX - 1]:
-
-                numberTileMap[currentY - 1][currentX - 1] = nextNum
-                numberCoords[nextNum] = [currentX - 1, currentY - 1]
-                booleanTileMap[currentY - 1][currentX - 1] = False
-                nextNum += 1
-
-            #Check Left
-            elif self.check_tile(currentX - 1, currentY) and booleanTileMap[currentY][currentX - 1]:
-
-                numberTileMap[currentY][currentX - 1] = nextNum
-                numberCoords[nextNum] = [currentX - 1, currentY]
-                booleanTileMap[currentY][currentX - 1] = False
-                nextNum += 1
-
-            #Check Down Left
-            elif self.check_tile(currentX - 1, currentY + 1) and booleanTileMap[currentY + 1][currentX - 1]:
-
-                numberTileMap[currentY + 1][currentX - 1] = nextNum
-                numberCoords[nextNum] = [currentX - 1, currentY + 1]
-                booleanTileMap[currentY + 1][currentX - 1] = False
-                nextNum += 1
-
-            #Check Down
-            elif self.check_tile(currentX, currentY + 1) and booleanTileMap[currentY + 1][currentX]:
-
-                numberTileMap[currentY + 1][currentX] = nextNum
-                numberCoords[nextNum] = [currentX, currentY + 1]
-                booleanTileMap[currentY + 1][currentX] = False
-                nextNum += 1
-
-            #Check Down Right
-            elif self.check_tile(currentX + 1, currentY + 1) and booleanTileMap[currentY + 1][currentX + 1]:
-
-                numberTileMap[currentY + 1][currentX + 1] = nextNum
-                numberCoords[nextNum] = [currentX + 1, currentY + 1]
-                booleanTileMap[currentY + 1][currentX + 1] = False
                 nextNum += 1
 
             else:
@@ -491,9 +519,11 @@ class Player(EntityCharacter):
 
         elif inp == 'i':
 
-            if len(self.inventory) == 0:
+            if self.text_win is not None:
 
-                self.text_win.add_content("Your inventory is empty", attrib="white")
+                if len(self.inventory) == 0:
+
+                    self.text_win.add_content("Your inventory is empty", attrib="white")
 
             else:
 
@@ -509,15 +539,9 @@ class Player(EntityCharacter):
 
         elif inp == 'l':
 
-            objects = self.look(self, self.see_list)
+            self.look(self.see_list, 4)
 
-            if len(objects) > 0:
-
-                self.text_win.add_content("Things you see in this room: ", "white")
-                self.text_win.add_content(objects)
-                self.text_win.add_content("\n" * 0)
-
-            else: self.text_win.add_content("You don't see any objects in this room", "white")
+            #self.text_win.add_content("You don't see any objects in this room", "white")
 
         elif inp == 'o':
 
@@ -805,23 +829,37 @@ class TrackerEnemy(EntityCharacter):
             '''
             print("\n" * 2)
             for line in numberTileMap:
-    
+
                 for col in line:
-    
+
+
                     if xPos == playerTile.x and yPos == playerTile.y:
-                        print(" C", end="")
+
+                        print(" C  ", end="")
+
                     elif xPos == selfTile.x and yPos == selfTile.y:
-                        print(" E", end="")
-                    elif col != -1:
-                        print(" " + str(col), end="")
+
+                        print(" E  ", end="")
+
+                    elif len(str(col)) == 2:
+
+                        print(" " + str(col) + " ", end="")
+
+                    elif len(str(col)) == 3:
+
+                        print(str(col) + " ", end="")
+
                     else:
-                        print(col, end="")
+
+                        print(" " + str(col) + "  ", end="")
+
+
                     xPos += 1
     
                 yPos += 1
                 xPos = 0
                 print("\n")
-            '''
+                '''
 
     def debug_move_toggle(self):
 
