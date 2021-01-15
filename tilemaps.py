@@ -129,7 +129,7 @@ class BaseTileMap(object):
 
         return tiles
 
-    def get_width(self, y):
+    def get_width(self, y = 0):
 
         """
         Gets the width of the list in the tilemap of the passed y value
@@ -268,7 +268,7 @@ class BaseTileMap(object):
 
         self.tilemap[y][x].sort(key=self._get_priority)
 
-    def get_around(self, x, y, radius=1):
+    def get_around(self, x, y, radius=1, getSelf = False):
 
         """
         Gets all positions around the X and Y cordnets given.
@@ -278,6 +278,8 @@ class BaseTileMap(object):
         :param y: Y corndet to start at
         :type y: int
         :param radius: Radius of objects around corndets
+        :param getSelf: Determining if we return the self character in the list
+        :type getSelf: Boolean
         :return: List of Tiles around the
         """
 
@@ -303,7 +305,7 @@ class BaseTileMap(object):
 
             for cur_x in range(start_x, stop_x + 1):
 
-                if cur_y == y and cur_x == x:
+                if (cur_y == y and cur_x == x) and not getSelf:
 
                     # Ignore this tile, it is us!
 
