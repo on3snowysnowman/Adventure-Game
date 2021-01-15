@@ -68,6 +68,12 @@ class BaseTileMap(object):
 
     def fill(self, obj):
 
+        """
+        Adds the given object to each position in the tilemap.
+
+        :param obj: Object to add to each position
+        """
+
         for y, lines in enumerate(self.tilemap):
 
             for x, columns in enumerate(lines):
@@ -80,6 +86,8 @@ class BaseTileMap(object):
         Gets the list of objects in the tilemap at cordents.
 
         Or, if Z is specified, gets the object at those cordnets.
+
+        We return a 'Tile' object representing that position.
 
         :param x: X Cordnet to get
         :type x: int
@@ -132,8 +140,6 @@ class BaseTileMap(object):
 
         return len(self.tilemap[y])
 
-        pass
-
     def get_height(self):
 
         """
@@ -143,8 +149,6 @@ class BaseTileMap(object):
         """
 
         return len(self.tilemap)
-
-        pass
 
     def find_object(self, obj, findall=False):
 

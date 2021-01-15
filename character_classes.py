@@ -9,6 +9,7 @@ import random
 import queue
 from item_classes import *
 
+
 class BaseCharacter(object):
 
     """
@@ -20,14 +21,14 @@ class BaseCharacter(object):
     def __init__(self):
 
         self.char = ''  # Character to draw
-        self.contains_color = True
-        self.color = ""
-        self.attrib = []
+        self.contains_color = True  # Determines if this character has color attributes
+        self.color = ""  # Color of this object
+        self.attrib = []  # Color/terminal attributes to draw this character with
         self.name = 'BaseCharacter'   # Name of the character
-        self.can_traverse = True  # Boolean determining if things can walk their
+        self.can_traverse = True  # Boolean determining if other characters can move on our position
         self.priority = 20  # Value determining object stacking priority
-        self.can_move = False
-        self.move_priority = 20
+        self.can_move = False  # Determines if this character can move
+        self.move_priority = 20  # Determines order of movement
 
         self.debug_move = False
 
@@ -65,6 +66,12 @@ class BaseCharacter(object):
 
         """
         Meta start method, used by child characters.
+
+        USERS AND DEVELOPERS SHOULD NOT OVERLOAD THIS METHOD!
+        (Unless they are creating a new character type)
+
+        Most child characters(Like EntityCharacter) rely on this method to operate.
+        Instead, you should use the normal 'start' method.
         """
 
         pass
@@ -205,6 +212,7 @@ class EntityCharacter(BaseCharacter):
 
         """
         Checks if tile is in bounds, and traversable by cycling through the tile list
+
         :param x: X coordinate
         :param y: Y coordinate
         :return: Boolean if the tile is traversable or not
@@ -231,12 +239,12 @@ class EntityCharacter(BaseCharacter):
         booleanTileMap = []
         numberTileMap = []
 
-        #Number of tiles we can fill
+        # Number of tiles we can fill
         numMoves = 0
 
         y, x = 0, 0
 
-        #Creating BooleanTileMap
+        # Creating BooleanTileMap
         for line in range(self.tilemap.height):
 
             booleanTileMap.append([])
@@ -261,7 +269,7 @@ class EntityCharacter(BaseCharacter):
             x = 0
             y += 1
 
-        #Creating NumberTileMap
+        # Creating NumberTileMap
         for line in range(self.tilemap.height):
 
             numberTileMap.append([])
@@ -270,7 +278,7 @@ class EntityCharacter(BaseCharacter):
 
                 numberTileMap[line].append(-1)
 
-        numberCoords = {0 : [startPosX, startPosY]}
+        numberCoords = {0: [startPosX, startPosY]}
 
         currentNum = 0
         nextNum = 1
@@ -353,6 +361,7 @@ class EntityCharacter(BaseCharacter):
             breakWhileLoop = False
 
             surroundingTiles = self.tilemap.get_around(currentX, currentY)
+
             for l in surroundingTiles:
 
                 for i in l:
@@ -368,6 +377,7 @@ class EntityCharacter(BaseCharacter):
         return numberTileMap
 
 # Custom CharacterClasses - probably wont live here
+
 
 class Player(EntityCharacter):
 
@@ -415,7 +425,7 @@ class Player(EntityCharacter):
 
             # Move up:
 
-            #Checks if the player is moving into a tile with a chest. If so, open it
+            # Checks if the player is moving into a tile with a chest. If so, open it
             self.check_chest(playerTile.x, playerTile.y - 1)
 
             if self.check_tile(playerTile.x, playerTile.y - 1):
@@ -687,12 +697,12 @@ class TrackerEnemy(EntityCharacter):
 
         self.name = 'Enemy'
         self.char = 'E'
-        self.attrib.append("red")
+        self.attrib.append("green")
         self.priority = 18
         self.move_priority = 19
+        self.debug_move = True
 
     def move(self):
-
 
         if self.debug_move:
 
@@ -801,27 +811,6 @@ class TrackerEnemy(EntityCharacter):
 
             xPos = 0
             yPos = 0
-
-            '''
-            print("\n" * 2)
-            for line in numberTileMap:
-    
-                for col in line:
-    
-                    if xPos == playerTile.x and yPos == playerTile.y:
-                        print(" C", end="")
-                    elif xPos == selfTile.x and yPos == selfTile.y:
-                        print(" E", end="")
-                    elif col != -1:
-                        print(" " + str(col), end="")
-                    else:
-                        print(col, end="")
-                    xPos += 1
-    
-                yPos += 1
-                xPos = 0
-                print("\n")
-            '''
 
     def debug_move_toggle(self):
 

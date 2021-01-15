@@ -5,6 +5,7 @@ import threading
 import random
 from inspect import isfunction
 import queue
+import time
 
 from character_classes import *
 from tilemaps import BaseTileMap, Tile
@@ -15,13 +16,19 @@ from time import sleep
 CHAS Curses wrappings.
 Includes special curses operations,
 As well as custom curses windows to use.
-The most important bit is the CHASWindow, which should 
+The most important bit is the BaseWindow, which should 
 act as the parent for all CHAS curses operations.
 """
 
-class CHASWindow:
+
+class BaseWindow:
+
     """
-    Custom CHAS Window.
+    Custom CURSES wrappings.
+
+    We try to make curses development as simple as possible,
+    while emulating the normal curses options as much as possible.
+
     Handles the following actions:
     1. Writing content to a window
     2. Creating subwindows
@@ -74,13 +81,13 @@ class CHASWindow:
         Function for setting parameters,
         And preparing the window to be written to.
 
-        Lot's of good curses default here,
-        and some mandatory features for CHASWindow to work.
+        Lot's of good curses defaults here,
+        and some mandatory features for BaseWindow to work.
         """
 
         # Turning off the echoing of keys
 
-        curses.noecho()
+        #curses.noecho()
 
         # Enabling cbreak mode, disables buffered input
 
@@ -96,7 +103,7 @@ class CHASWindow:
 
         # Allow hardware line editing facilities
 
-        self.win.idlok(True)
+        #self.win.idlok(True)
 
         curses.start_color()
         self.color = True
@@ -115,27 +122,27 @@ class CHASWindow:
         :return: Starting y cordnet, starting x cordnet
         """
 
-        if start == CHASWindow.TOP_LEFT:
+        if start == BaseWindow.TOP_LEFT:
             # User wants content in the upper left hand corner: 0, 0
 
             return 0, 0
 
-        if start == CHASWindow.TOP_RIGHT:
+        if start == BaseWindow.TOP_RIGHT:
             # User wants content in the upper right hand corner
 
             return 0, max_x - x_len
 
-        if start == CHASWindow.BOTTOM_LEFT:
+        if start == BaseWindow.BOTTOM_LEFT:
             # User wants content in bottom left hand corner
 
             return max_y - y_len, 0
 
-        if start == CHASWindow.BOTTOM_RIGHT:
+        if start == BaseWindow.BOTTOM_RIGHT:
             # User wants content in bottom right hand corner
 
             return max_y - y_len, max_x - x_len
 
-        if start == CHASWindow.CENTERED:
+        if start == BaseWindow.CENTERED:
             # User wants content centered
 
             return (ceil(max_y / 2)) - (ceil(y_len / 2)), (ceil(max_x / 2)) - (ceil(x_len / 2))
@@ -247,6 +254,18 @@ class CHASWindow:
 
             return self.input_queue.get()
 
+        # Flush input buffer:
+
+        curses.flushinp()
+
+        # Lets wait a bit!
+
+        curses.napms(2)
+
+        # Flush it once more for good measure:
+
+        curses.flushinp()
+
         # Getting keypress and returning it
 
         return self.win.getch()
@@ -283,6 +302,7 @@ class CHASWindow:
         :return: Normal curses returncodes
         """
         if attrib is None:
+
             attrib = []
 
         for index, targ in enumerate(attrib):
@@ -310,19 +330,33 @@ class CHASWindow:
 
             ystart, xstart = self._get_start_cords(position, self.max_y, self.max_x, y_len, x_len)
 
-            if position == CHASWindow.BOTTOM_RIGHT and x_len < self.max_x:
-                # We have to do some special formatting stuff to get the cursor to work
+            # Add a 'normal' character to this position to reset our terminal state:
 
-                self.win.addstr(ystart, xstart - 1, content, *attrib)
+            self.win.addstr(ystart, xstart, ' ', curses.A_NORMAL)
+
+            if position == BaseWindow.BOTTOM_RIGHT and x_len < self.max_x:
+
+                # We have to do some special formatting stuff to get the cursor to work
 
                 return self.win.insstr(ystart, xstart - 1, " ")
 
             return self.win.addstr(ystart, xstart, content, *attrib)
 
         if ystart != -1 and xstart != -1:
-            # user wants to render content at specific cordnets
 
-            return self.win.addstr(ystart, xstart, content, *attrib)
+            # Lets check if we are out of bouds:
+
+            if len(content) + xstart >= self.max_x and ystart == self.max_y - 1:
+
+                # We have to do something special to prevent the cursor from messing us up:
+
+                return self.win.insstr(ystart, xstart, content, *attrib)
+
+            else:
+
+                # user wants to render content at specific cordnets
+
+                return self.win.addstr(ystart, xstart, content, *attrib)
 
         # Lets curses handle it, user doesn't care
 
@@ -349,7 +383,7 @@ class CHASWindow:
         """
         Generates the boarder and sets the necessary parameters to the new values.
         We also use this function to generate headers and sub-headers.
-        Headers can be as tall as the user wants, and support all CHASWindow features.
+        Headers can be as tall as the user wants, and support all BaseWindow features.
         Content on the screen may be removed or messed up for borders and headers,
         So this should be called before any content is written to the window.
 
@@ -378,7 +412,7 @@ class CHASWindow:
         if header_len > 0:
             # User wants to render in a header
 
-            self.header = CHASWindow.create_subwin_at_cord(self.win, header_len, self.max_x - 2, 1, 1)
+            self.header = BaseWindow.create_subwin_at_cord(self.win, header_len, self.max_x - 2, 1, 1)
 
             # Now we draw the vertical line beneath the window:
 
@@ -389,7 +423,7 @@ class CHASWindow:
         if sub_len:
             # User wants to render in a sub-header
 
-            self.sub_header = CHASWindow.create_subwin_at_cord(self.win, sub_len, self.max_x - 2,
+            self.sub_header = BaseWindow.create_subwin_at_cord(self.win, sub_len, self.max_x - 2,
                                                                self.max_y - 1 - sub_len, 1)
 
             # Draw the sub-header line:
@@ -440,7 +474,7 @@ class CHASWindow:
     def add_input(self, key):
 
         """
-        Adds input to the CHASWindow input buffer.
+        Adds input to the BaseWindow input buffer.
 
         Great for if we are under special input handling.
 
@@ -491,7 +525,7 @@ class CHASWindow:
 
     def init_colors(self):
 
-        # Registers the default colors to the CHASWindow
+        # Registers the default colors to the BaseWindow
 
         blue = Color(9, 1, "blue", 0, 300, 1000)
         green = Color(10, 2, "green", 0, 1000, 0)
@@ -556,7 +590,8 @@ class CHASWindow:
         return cls(win.derwin(y_len, x_len, starty, startx))
 
 
-class MasterWindow(CHASWindow):
+class MasterWindow(BaseWindow):
+
     """
     CHAS Master window.
 
@@ -586,7 +621,7 @@ class MasterWindow(CHASWindow):
         We pause the input and extract callbacks from the given window.
 
         :param subwin: Subwindow being added to the Master Window list
-        :type subwin: CHASWindow
+        :type subwin: BaseWindow
         """
 
         self.subwins.append(subwin)
@@ -618,7 +653,7 @@ class MasterWindow(CHASWindow):
         and adds it to our collection.
 
         :param subwin: Subwidow to extract callbacks from
-        :type subwin: CHASWindow
+        :type subwin: BaseWindow
         """
 
         for key in subwin._calls:
@@ -650,7 +685,7 @@ class MasterWindow(CHASWindow):
         :param key: Key to pass to child
         :type key: int
         :param win: Child window
-        :type win: CHASWindow
+        :type win: BaseWindow
         """
 
         # Add input to the child window
@@ -670,7 +705,7 @@ class MasterWindow(CHASWindow):
             self.refresh()
 
 
-class DisplayWindow(CHASWindow):
+class DisplayWindow(BaseWindow):
 
     """
     New display window for testing.
@@ -684,7 +719,10 @@ class DisplayWindow(CHASWindow):
 
         self.win = win  # CURSES window instance
 
-        self.tilemap = BaseTileMap(40, 40, self)  # Tilemap storing game info
+        # We simply create a tilemap with our width and height,
+        # as the DisplayWindow is not smart enough to handle anything different
+
+        self.tilemap = BaseTileMap(self.max_y, self.max_x, self)  # Tilemap storing game info
         self.run = True  # Value determining if we are running
 
         self.thread = None  # Treading instance of the input loop
@@ -703,7 +741,10 @@ class DisplayWindow(CHASWindow):
 
             if z == 0:
 
-                self.addstr(obj.char, y, x, attrib = obj.attrib)
+                self.addstr(obj.char, y, x, attrib=obj.attrib)
+                #self.addstr(obj.char, y, x)
+
+                pass
 
             continue
 
@@ -786,8 +827,7 @@ class DisplayWindow(CHASWindow):
                 call['args'][1].add_input(None)
 
 
-class TextDisplayWindow(CHASWindow):
-
+class TextDisplayWindow(BaseWindow):
 
     def __init__(self, win):
 
@@ -827,7 +867,7 @@ class TextDisplayWindow(CHASWindow):
 
                     else:
 
-                        self.addstr(str(x), attrib = self.attrib)
+                        self.addstr(str(x), attrib=self.attrib)
                         self.addstr("\n")
 
         if newLine:
@@ -837,7 +877,7 @@ class TextDisplayWindow(CHASWindow):
         self.refresh()
 
 
-class InputWindow(CHASWindow):
+class InputWindow(BaseWindow):
 
     """
     CHAS Input window
@@ -1212,7 +1252,7 @@ class InputWindow(CHASWindow):
         self.run = False
 
 
-class ChatWindow(CHASWindow):
+class ChatWindow(BaseWindow):
     """
     CHAS Chat window, used for text interface with CHAS
     """
@@ -1228,10 +1268,10 @@ class ChatWindow(CHASWindow):
         self.inp = InputWindow.create_subwin_at_cord(self.win, 4, self.max_x, self.max_y - 4, 0)  # Creating input win
         self.inp.border()  # Adding border to banner
 
-        self.banner = CHASWindow.create_subwin_at_cord(self.win, 10, self.max_x, 0, 0)  # Creating banner window
+        self.banner = BaseWindow.create_subwin_at_cord(self.win, 10, self.max_x, 0, 0)  # Creating banner window
         self.banner.border()  # Adding border to banner
 
-        self.text = CHASWindow.create_subwin_at_cord(self.win, self.max_y - 15, self.max_x, 11, 0)  # Text window
+        self.text = BaseWindow.create_subwin_at_cord(self.win, self.max_y - 15, self.max_x, 11, 0)  # Text window
         self.text.border()  # Adding border to text
 
         self.exit = 'exit'  # Exit keyword
@@ -1369,14 +1409,14 @@ Type 'help' for more details
         self.text.refresh()
 
 
-class ScrollWindow(CHASWindow):
+class ScrollWindow(BaseWindow):
     """
     A curses window for handling content scrolling.
     """
 
     def __init__(self, win):
 
-        # Constructs the CHASWindow
+        # Constructs the BaseWindow
 
         super(ScrollWindow, self).__init__(win)
 
@@ -1600,7 +1640,7 @@ class ScrollWindow(CHASWindow):
         self.refresh()
 
 
-class OptionWindow(CHASWindow):
+class OptionWindow(BaseWindow):
     """
     Displays a list of options to the user.
     Support simple selection, boolean selection, and value selection.  
@@ -2097,7 +2137,7 @@ class OptionWindow(CHASWindow):
             # Create an input window:
 
             input_win = InputWindow.create_subwin_at_pos(self.win, self.max_y, self.max_x,
-                                                         position=CHASWindow.CENTERED)
+                                                         position=BaseWindow.CENTERED)
 
             # Create a border for viewing enjoyment:
 

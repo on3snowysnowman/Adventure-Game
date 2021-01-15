@@ -4,6 +4,7 @@ from item_classes import *
 import curses
 #from math import ceil
 
+
 def add(obj, x, y, win):
 
     win.tilemap.add(obj, x, y)
@@ -23,7 +24,7 @@ def callback_test(win):  # PASSED
 
         # Creating CHAS windows
 
-        chas = CHASWindow(win)
+        chas = BaseWindow(win)
 
         # Adding callback for the F1 key
 
@@ -57,7 +58,7 @@ def center_test(win):  # PASSED
 
     # Creating centred window:
 
-    chas = CHASWindow.create_subwin_at_pos(win, 10, 50, position=CHASWindow.CENTERED)
+    chas = BaseWindow.create_subwin_at_pos(win, 10, 50, position=BaseWindow.CENTERED)
 
     chas.win.bkgd(' ')
     chas.win.addstr("This is a test of the centered window!")
@@ -76,7 +77,7 @@ def single_position_test(win):  # PASSED
 
     win.bkgd('/')
 
-    chas = CHASWindow.create_subwin_at_pos(win, 20, 50, position=CHASWindow.CENTERED)
+    chas = BaseWindow.create_subwin_at_pos(win, 20, 50, position=BaseWindow.CENTERED)
 
     chas.bkgd(' ')
 
@@ -107,7 +108,7 @@ def multi_position_test(win):  # PASSED
 
         # Create and render a window at a position
 
-        new_win = CHASWindow.create_subwin_at_pos(win, 17, 50, position=i)
+        new_win = BaseWindow.create_subwin_at_pos(win, 17, 50, position=i)
 
         new_win.bkgd(' ')
 
@@ -131,7 +132,7 @@ def position_wrap_test(win):  # PASSED
 
     win.bkgd('/')
 
-    chas = CHASWindow.create_subwin_at_pos(win, 17, 50, position=4)
+    chas = BaseWindow.create_subwin_at_pos(win, 17, 50, position=4)
 
     chas.bkgd(" ")
 
@@ -153,7 +154,7 @@ def input_test(win):  # PASSED
 
     win.refresh()
 
-    inp = InputWindow.create_subwin_at_pos(win, 10, 50, position=CHASWindow.CENTERED)
+    inp = InputWindow.create_subwin_at_pos(win, 10, 50, position=BaseWindow.CENTERED)
 
     inp.bkgd(" ")
 
@@ -216,13 +217,13 @@ def scroll_window_wrapping_test(win):  # PASSED
 
 def border_test(win):
 
-    # Tests the border feature of CHASWindow
+    # Tests the border feature of BaseWindow
 
     win.bkgd('/')
 
     win.refresh()
 
-    chas = CHASWindow.create_subwin_at_pos(win, 20, 50, position=CHASWindow.CENTERED)
+    chas = BaseWindow.create_subwin_at_pos(win, 20, 50, position=BaseWindow.CENTERED)
 
     chas.bkgd(' ')
 
@@ -237,13 +238,13 @@ def border_test(win):
 
 def header_test(win):
 
-    # Testing the header/sub-header functionality for CHASWindow
+    # Testing the header/sub-header functionality for BaseWindow
 
     win.bkgd('/')
 
     win.refresh()
 
-    chas = CHASWindow.create_subwin_at_pos(win, 20, 50, position=CHASWindow.CENTERED)
+    chas = BaseWindow.create_subwin_at_pos(win, 20, 50, position=BaseWindow.CENTERED)
 
     chas.bkgd(' ')
 
@@ -365,12 +366,12 @@ def master_window_test_theory(win):
 
     # Tests the master window concept
 
-    chas = CHASWindow.create_subwin_at_pos(win, win.getmaxyx()[0], win.getmaxyx()[1])
+    chas = BaseWindow.create_subwin_at_pos(win, win.getmaxyx()[0], win.getmaxyx()[1])
 
     print(chas)
 
     scroll_win1 = ScrollWindow.create_subwin_at_pos(chas, 10, 40)
-    scroll_win2 = ScrollWindow.create_subwin_at_pos(chas, 10, 40, position=CHASWindow.TOP_RIGHT)
+    scroll_win2 = ScrollWindow.create_subwin_at_pos(chas, 10, 40, position=BaseWindow.TOP_RIGHT)
 
     content = []
 
@@ -575,7 +576,7 @@ def mapping_text(win):
 
 def path_finding_test(win):
 
-    map_win = DisplayWindow.create_subwin_at_pos(win, 50, 50, CHASWindow.TOP_LEFT)
+    map_win = DisplayWindow.create_subwin_at_pos(win, 50, 76, BaseWindow.TOP_LEFT)
 
     map_win.add_callback('f', map_win.stop)
     curses.curs_set(0)
@@ -589,7 +590,6 @@ def path_finding_test(win):
     add(TrackerEnemy(), 6, 6, map_win)
 
     usedCoords = [[3, 1], [6, 6]]
-
 
     for x in range(map_win.tilemap.get_height()):
 
@@ -607,7 +607,6 @@ def path_finding_test(win):
 
                     add(Wall(), xCoord, yCoord, map_win)
                     xCoord += 1
-
 
     #Creating random walls on the x axis
     '''
@@ -646,5 +645,6 @@ def all_tests(win):
         test(win)
 
         win.erase()
+
 
 curses.wrapper(path_finding_test)
