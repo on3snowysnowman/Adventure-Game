@@ -586,18 +586,19 @@ def path_finding_test(win):
     map_win.tilemap.fill(Floor)
 
     player = Player()
-    add(player, 3, 1, map_win)
-    add(TrackerEnemy(), 6, 6, map_win)
-
+    add(player, 9, 13, map_win)
+    add(TrackerEnemy(), 2, 2, map_win)
     usedCoords = [[3, 1], [6, 6]]
 
+    '''
+    # Creating random walls on the x axis
     for x in range(map_win.tilemap.get_height()):
 
         fillBool = random.choice([True, False])
 
         if fillBool:
 
-            numWalls = random.randrange(2, map_win.tilemap.get_width(x) / 2)
+            numWalls = random.randrange(2, int(map_win.tilemap.get_width(x) / 2))
             yCoord = x
             xCoord = random.randrange(0, map_win.tilemap.get_height())
 
@@ -609,7 +610,7 @@ def path_finding_test(win):
                     xCoord += 1
 
     #Creating random walls on the x axis
-    '''
+
     add(Wall(), 8, 0, map_win)
     add(Wall(), 7, 1, map_win)
     add(Wall(), 6, 2, map_win)
@@ -630,6 +631,51 @@ def path_finding_test(win):
     add(Wall(), 7, 5, map_win)
     '''
     map_win.display()
+
+
+def curses_standard_test(win):
+
+    screen = curses.initscr()
+
+    tilemap = BaseTileMap(60, 60, screen)
+
+    tilemap.fill(Floor)
+    player = Player()
+    tilemap.add(player, 4, 13)
+    tilemap.add(TrackerEnemy(), 2, 2)
+
+    curses.init_pair(1, curses.COLOR_BLUE, curses.COLOR_BLACK)
+
+    key = ''
+    count = 0
+
+    while key != 'f':
+
+        yIndex = 0
+        xIndex = 0
+
+        for line in tilemap.tilemap:
+
+            for col in line:
+
+                renderChar = tilemap.tilemap[yIndex][xIndex][0].char
+
+                if renderChar == '0': screen.addstr(renderChar, curses.color_pair(1))
+
+                else: screen.addstr(renderChar)
+
+                xIndex += 1
+
+            screen.addstr("\n")
+            xIndex = 0
+            yIndex += 1
+
+            continue
+
+        screen.addstr(str(count))
+        screen.refresh()
+        screen.clear()
+        count += 1
 
 
 def all_tests(win):
