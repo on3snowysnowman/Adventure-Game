@@ -87,7 +87,7 @@ class BaseWindow:
 
         # Turning off the echoing of keys
 
-        #curses.noecho()
+        curses.noecho()
 
         # Enabling cbreak mode, disables buffered input
 
@@ -256,15 +256,15 @@ class BaseWindow:
 
         # Flush input buffer:
 
-        curses.flushinp()
+        #curses.flushinp()
 
         # Lets wait a bit!
 
-        curses.napms(2)
+        #curses.napms(2)
 
         # Flush it once more for good measure:
 
-        curses.flushinp()
+        #curses.flushinp()
 
         # Getting keypress and returning it
 
@@ -514,6 +514,7 @@ class BaseWindow:
             return False
 
         if ignore_special and key > 255:
+
             # Key is a special key that we don't care about:
 
             return False
@@ -633,7 +634,9 @@ class MasterWindow(BaseWindow):
         """
         Pauses the input from all windows
         """
+
         for x in self.subwins:
+
             x.pause_input()
 
     def extract_all_callbacks(self):
@@ -690,7 +693,6 @@ class MasterWindow(BaseWindow):
 
         # Add input to the child window
 
-
         win.add_input(key)
 
     def _run(self):
@@ -702,7 +704,7 @@ class MasterWindow(BaseWindow):
         while self.run:
 
             self.get_input()
-            self.refresh()
+            #self.refresh()
 
 
 class DisplayWindow(BaseWindow):
@@ -744,8 +746,6 @@ class DisplayWindow(BaseWindow):
                 self.addstr(obj.char, y, x, attrib=obj.attrib)
                 #self.addstr(obj.char, y, x)
 
-                pass
-
             continue
 
         # Refresh the window:
@@ -778,7 +778,6 @@ class DisplayWindow(BaseWindow):
             self.tilemap.update()
 
             self._render()
-            sleep(.01)
 
     def _add_key(self, key, obj):
 

@@ -121,6 +121,10 @@ class BaseTileMap(object):
 
     def get_all(self):
 
+        """
+        Returns all of the tiles as a 3d array.
+        """
+
         tiles = []
 
         for x, y, z, obj in self._iterate():
@@ -395,8 +399,6 @@ class BaseTileMap(object):
             # Call the 'move' method:
 
             cord.obj.move()
-
-            self.win._render()
 
     def _iterate(self):
 

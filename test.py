@@ -476,20 +476,11 @@ def master_window_options_test(win):
     curses.curs_set(0)
 
     # Create Colors
-    blue = Color(9, 1, "blue", 0, 300, 1000)
-    green = Color(10, 2, "green", 0, 1000, 300)
-    yellow = Color(11, 3, "yellow", 1000, 950, 0)
-    red = Color(12, 4, "red", 1000, 0, 300)
-
-    map_win.register_color("blue", blue)
-    map_win.register_color("green", green)
-    map_win.register_color("yellow", yellow)
-    map_win.register_color("red", red)
+    map_win.init_colors()
 
     # Puts a player in top left corner of map:
 
     player = Player()
-    ground = Floor()
     wall = Wall()
     enemy1 = Enemy()
     enemy2 = Enemy()
@@ -635,6 +626,51 @@ def path_finding_test(win):
     map_win.display()
 
 
+def large_test(win):
+
+    # Tests to make sure we can handle very large windows:
+
+    master = MasterWindow(win)
+
+    # Create menus:
+
+    map_win = DisplayWindow.create_subwin_at_pos(master, 50, 75, position=MasterWindow.TOP_RIGHT)
+
+    # Add stuff to DisplayWindow:
+
+    map_win.add_callback('f', map_win.stop)
+
+    curses.curs_set(0)
+    curses.delay_output(1)
+
+    # Create Colors
+
+    map_win.init_colors()
+
+    # Puts a player in top left corner of map:
+
+    player = Player()
+    wall = Wall()
+    enemy1 = TrackerEnemy()
+    enemy2 = Enemy()
+
+    map_win.tilemap.fill(Floor)
+    map_win.tilemap.add(player, 0, 0)
+    map_win.tilemap.add(wall, 0, 1)
+    map_win.tilemap.add(enemy1, 2, 2)
+    map_win.tilemap.add(enemy2, 3, 3)
+
+    # Add the map window:
+
+    master.add_subwin(map_win)
+
+    # Start the master window:
+
+    master.start()
+
+    map_win.display()
+
+
 def curses_standard_test(win):
 
     screen = curses.initscr()
@@ -662,13 +698,12 @@ def curses_standard_test(win):
 
                 renderChar = tilemap.tilemap[yIndex][xIndex][0].char
 
-                if renderChar == '0': screen.addstr(renderChar, curses.color_pair(1))
+                if renderChar == '0': screen.addstr(yIndex, xIndex, renderChar, curses.color_pair(1))
 
-                else: screen.addstr(renderChar)
+                else: screen.addstr(yIndex, xIndex, renderChar)
 
                 xIndex += 1
 
-            screen.addstr("\n")
             xIndex = 0
             yIndex += 1
 
@@ -695,4 +730,4 @@ def all_tests(win):
         win.erase()
 
 
-curses.wrapper(path_finding_test)
+curses.wrapper(large_test)

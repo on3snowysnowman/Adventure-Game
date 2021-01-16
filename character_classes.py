@@ -172,7 +172,6 @@ class EntityCharacter(BaseCharacter):
 
         pass
 
-
     def look(self, targs, radius):
 
         selfTile = self.tilemap.find_object(self)
