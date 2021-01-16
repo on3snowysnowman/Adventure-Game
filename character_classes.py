@@ -177,6 +177,52 @@ class EntityCharacter(BaseCharacter):
         selfTile = self.tilemap.find_object(self)
         posX, posY = selfTile.x, selfTile.y
 
+        upRadius = 0
+        leftRadius = 0
+        downRadius = 0
+        rightRadius = 0
+
+        #Checking up
+        for l in range(radius):
+
+            if self.tilemap._bound_check(posX, posY - 1): upRadius += 1
+
+            posY -= 1
+
+        posX, posY = selfTile.x, selfTile.y
+
+        #Checking left
+        for l in range(radius):
+
+            if self.tilemap._bound_check(posX - 1, posY): leftRadius += 1
+
+            posX -= 1
+
+        posX, posY = selfTile.x, selfTile.y
+
+        #Checking down
+        for l in range(radius):
+
+            if self.tilemap._bound_check(posX, posY + 1): downRadius += 1
+
+            posY += 1
+
+        posX, posY = selfTile.x, selfTile.y
+
+        #Checking right
+        for l in range(radius):
+
+            if self.tilemap._bound_check(posX + 1, posY): rightRadius += 1
+
+            posX += 1
+
+        posX, posY = selfTile.x, selfTile.y
+
+        #print(f"upRadius: {upRadius}")
+        #print(f"leftRadius: {leftRadius}")
+        #print(f"downRadius: {downRadius}")
+        #print(f"rightRadius: {rightRadius}")
+
         objects = self.tilemap.get_around(posX, posY, radius, True)
         booleanTileMap = [[]]
 
@@ -186,9 +232,10 @@ class EntityCharacter(BaseCharacter):
         #Index of boolean list
         count = 0
 
-        newLineCount = 1
+        newLineCount = 0
 
         hasWall = False
+        isPlayer = False
 
         playerX = 0
         playerY = 0
@@ -197,23 +244,33 @@ class EntityCharacter(BaseCharacter):
 
             for subIndex in objects[index]:
 
+                if isinstance(subIndex.obj, Player):
+
+                    isPlayer = True
+                    break
+
                 if not subIndex.obj.can_traverse:
 
                     hasWall = True
                     break
 
-            if hasWall:
+            if isPlayer:
+
+                isPlayer = False
+                booleanTileMap[count].append("C")
+
+            elif hasWall:
 
                 hasWall = False
                 booleanTileMap[count].append("W")
 
             else: booleanTileMap[count].append(False)
 
-            if newLineCount == 1 + (2 * radius) and index + 1 < len(objects):
+            if newLineCount == leftRadius + rightRadius and index + 1 < len(objects):
 
                 index += 1
                 booleanTileMap.append([])
-                newLineCount = 1
+                newLineCount = 0
                 count += 1
                 continue
 
@@ -222,29 +279,8 @@ class EntityCharacter(BaseCharacter):
                 index += 1
                 newLineCount += 1
 
-        # Printing out tilemap
-        print("\n" * 2)
-        for line in booleanTileMap:
-
-            for col in line:
-
-                if type(col) is str:
-                    print(" " + col + " ", end="")
-
-                elif col is True:
-
-                    print(" T ", end="")
-
-                elif not col:
-                    print(" F ", end="")
-
-            print("\n")
-
-        yLimit = radius * 2
-        xLimit = radius * 2
-
-        yPos = radius
-        xPos = radius
+        yPos = upRadius
+        xPos = leftRadius
 
         breakTwice = False
 
@@ -253,73 +289,81 @@ class EntityCharacter(BaseCharacter):
         #y - 1
         while yPos > 0:
 
-            if booleanTileMap[yPos - 1][xPos]:
-
+            if booleanTileMap[yPos - 1][xPos] is True:
                 yPos -= 1
                 continue
 
             if type(booleanTileMap[yPos - 1][xPos]) is str:
 
-                if booleanTileMap[yPos - 1][xPos] == "W": break
+                if booleanTileMap[yPos - 1][xPos] == "W":
+
+                    break
 
             else: booleanTileMap[yPos - 1][xPos] = True
 
             yPos -= 1
 
-        yPos = radius
-        xPos = radius
+        #Loop through (Height / 2) + 1
+        num = 2
 
-        #y - 2, x + 1
-        while yPos > 0 and xPos < xLimit:
+        while num != int(upRadius / 2) + 2:
 
-            for l in range(2):
+            yPos = upRadius
+            xPos = leftRadius
 
-                if booleanTileMap[yPos - 1][xPos]:
+            #y - 2, x + 1...y - 3, x + 1...
+            while yPos > 0 and xPos < rightRadius:
 
-                    yPos -= 1
-                    continue
+                for l in range(num):
 
-                if yPos <= 0:
+                    if booleanTileMap[yPos - 1][xPos] is True:
 
-                    breakTwice = True
-                    break
+                        yPos -= 1
+                        continue
 
-                if type(booleanTileMap[yPos - 1][xPos]) is str:
-
-                    if booleanTileMap[yPos - 1][xPos] == "W":
+                    if yPos <= 0:
 
                         breakTwice = True
                         break
 
-                else: booleanTileMap[yPos - 1][xPos] = True
+                    if type(booleanTileMap[yPos - 1][xPos]) is str:
 
-                yPos -= 1
+                        if booleanTileMap[yPos - 1][xPos] == "W":
 
-            if breakTwice:
+                            breakTwice = True
+                            break
 
-                breakTwice = False
-                break
+                    else: booleanTileMap[yPos - 1][xPos] = True
 
-            if not booleanTileMap[yPos][xPos + 1]:
+                    yPos -= 1
 
-                if booleanTileMap[yPos][xPos + 1]:
+                if breakTwice:
 
-                    xPos += 1
-                    continue
+                    breakTwice = False
+                    break
 
-                if type(booleanTileMap[yPos][xPos + 1]) is str:
+                if not booleanTileMap[yPos][xPos + 1]:
 
-                    if booleanTileMap[yPos][xPos + 1] == "W": break
+                    if booleanTileMap[yPos][xPos + 1] is True:
 
-                else: booleanTileMap[yPos][xPos + 1] = True
+                        xPos += 1
+                        continue
 
-            xPos += 1
+                    if type(booleanTileMap[yPos][xPos + 1]) is str:
 
-        yPos = radius
-        xPos = radius
+                        if booleanTileMap[yPos][xPos + 1] == "W": break
 
+                    else: booleanTileMap[yPos][xPos + 1] = True
+
+                xPos += 1
+
+            num += 1
+
+        yPos = upRadius
+        xPos = leftRadius
+        
         #y - 1, x + 1
-        while yPos > 0 and xPos < xLimit:
+        while yPos > 0 and xPos < rightRadius:
 
             if not booleanTileMap[yPos - 1][xPos]:
 
@@ -331,37 +375,31 @@ class EntityCharacter(BaseCharacter):
 
             yPos -= 1
 
-            if yPos <= 0: break
+            if type(booleanTileMap[yPos][xPos + 1]) is str:
 
-            if not booleanTileMap[yPos][xPos + 1]:
+                if booleanTileMap[yPos][xPos + 1] == "W": break
 
-                if type(booleanTileMap[yPos][xPos + 1]) is str:
-
-                    if booleanTileMap[yPos][xPos + 1] == "W": break
-
-                else: booleanTileMap[yPos][xPos + 1] = True
+            booleanTileMap[yPos][xPos + 1] = True
 
             xPos += 1
-
-        yPos = radius
-        xPos = radius
+        
+        yPos = upRadius
+        xPos = leftRadius
 
         #x + 1, y - 1
-        while  xPos < xLimit and yPos > 0:
+        while  xPos < rightRadius and yPos > 0:
 
-            if not booleanTileMap[yPos][xPos + 1]:
+            if type(booleanTileMap[yPos][xPos + 1]) is str:
 
-                if type(booleanTileMap[yPos][xPos + 1]) is str:
+                if booleanTileMap[yPos][xPos + 1] == "W":
+                    break
 
-                    if booleanTileMap[yPos][xPos + 1] == "W":
-
-                        break
-
-                else: booleanTileMap[yPos][xPos + 1] = True
+            booleanTileMap[yPos][xPos + 1] = True
 
             xPos += 1
 
-            if booleanTileMap[yPos - 1][xPos]:
+            if booleanTileMap[yPos - 1][xPos] is True:
+
                 yPos -= 1
                 continue
 
@@ -369,28 +407,24 @@ class EntityCharacter(BaseCharacter):
 
                 if booleanTileMap[yPos - 1][xPos] == "W": break
 
-            else:
-                booleanTileMap[yPos - 1][xPos] = True
+            booleanTileMap[yPos - 1][xPos] = True
 
             yPos -= 1
 
-        yPos = radius
-        xPos = radius
+        yPos = upRadius
+        xPos = leftRadius
 
         #x + 2, y - 1
-        while xPos < xLimit and yPos > 0:
+        while xPos < rightRadius and yPos > 0:
 
             for l in range(2):
 
-                if booleanTileMap[yPos][xPos + 1]:
+                if xPos + 1 > rightRadius: break
+
+                if booleanTileMap[yPos][xPos + 1] is True:
 
                     xPos += 1
                     continue
-
-                if xPos > xLimit:
-
-                    breakTwice = True
-                    break
 
                 if type(booleanTileMap[yPos][xPos + 1]) is str:
 
@@ -399,7 +433,7 @@ class EntityCharacter(BaseCharacter):
                         breakTwice = True
                         break
 
-                else: booleanTileMap[yPos][xPos + 1] = True
+                booleanTileMap[yPos][xPos + 1] = True
 
                 xPos += 1
 
@@ -408,26 +442,24 @@ class EntityCharacter(BaseCharacter):
                 breakTwice = False
                 break
 
-            if not booleanTileMap[yPos - 1][xPos]:
+            if type(booleanTileMap[yPos - 1][xPos]) is str:
 
-                if booleanTileMap[yPos - 1][xPos]:
+                if booleanTileMap[yPos - 1][xPos] == "W": break
 
-                    yPos -= 1
-                    continue
+            if booleanTileMap[yPos - 1][xPos] is True:
 
-                if type(booleanTileMap[yPos - 1][xPos]) is str:
+                yPos -= 1
+                continue
 
-                    if booleanTileMap[yPos - 1][xPos] == "W": break
-
-                else: booleanTileMap[yPos - 1][xPos] = True
+            booleanTileMap[yPos - 1][xPos] = True
 
             yPos -= 1
-
-        yPos = radius
-        xPos = radius
+         
+        yPos = upRadius
+        xPos = leftRadius
 
         #x + 1
-        while  xPos < xLimit:
+        while  xPos < rightRadius:
 
             if not booleanTileMap[yPos][xPos + 1]:
 
@@ -441,7 +473,7 @@ class EntityCharacter(BaseCharacter):
 
             xPos += 1
 
-        #Printing out tilemap
+        #Printing out tilemap------------------------------------------------------------------
         print("\n" * 2)
         for line in booleanTileMap:
 
@@ -451,12 +483,12 @@ class EntityCharacter(BaseCharacter):
 
                 elif col is True:
 
-                    print(" T ", end = "")
+                    print(" 1 ", end = "")
 
-                elif not col: print(" F ", end = "")
+                elif not col: print(" 0 ", end = "")
 
             print("\n")
-
+        #--------------------------------------------------------------------------------------
 
         return objects
 
@@ -775,7 +807,7 @@ class Player(EntityCharacter):
 
         elif inp == 'l':
 
-            self.look(self.see_list, 4)
+            self.look(self.see_list, 15)
 
             #self.text_win.add_content("You don't see any objects in this room", "white")
 
