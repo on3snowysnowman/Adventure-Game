@@ -602,13 +602,13 @@ class EntityCharacter(BaseCharacter):
 
             for col in line:
 
-                if type(col) is str: print("" + col + "", end = "")
+                if type(col) is str: print(" " + col + " ", end = "")
 
                 elif col is True:
 
-                    print(".", end = "")
+                    print(" . ", end = "")
 
-                elif not col: print("X", end = "")
+                elif not col: print(" X ", end = "")
 
             print("\n")
         #--------------------------------------------------------------------------------------
