@@ -8,7 +8,7 @@ and interact with, the DisplayWindow.
 import random
 import queue
 from item_classes import *
-
+import math
 
 class BaseCharacter(object):
 
@@ -172,7 +172,7 @@ class EntityCharacter(BaseCharacter):
 
         pass
 
-    def look(self, targs, radius):
+    def look(self, radius):
 
         selfTile = self.tilemap.find_object(self)
         posX, posY = selfTile.x, selfTile.y
@@ -217,7 +217,6 @@ class EntityCharacter(BaseCharacter):
             posX += 1
 
         posX, posY = selfTile.x, selfTile.y
-
         #print(f"upRadius: {upRadius}")
         #print(f"leftRadius: {leftRadius}")
         #print(f"downRadius: {downRadius}")
@@ -264,7 +263,7 @@ class EntityCharacter(BaseCharacter):
                 hasWall = False
                 booleanTileMap[count].append("W")
 
-            else: booleanTileMap[count].append(False)
+            else: booleanTileMap[count].append(True)
 
             if newLineCount == leftRadius + rightRadius and index + 1 < len(objects):
 
@@ -279,11 +278,133 @@ class EntityCharacter(BaseCharacter):
                 index += 1
                 newLineCount += 1
 
-        yPos = upRadius
-        xPos = leftRadius
+        xIt = 0
+        yIt = 0
 
-        breakTwice = False
+        posY = (len(booleanTileMap) - 1) - posY
+        posX = selfTile.x
 
+        testedPoints = []
+
+        for line in booleanTileMap:
+
+            for col in line:
+
+                if col == "W":
+
+                    wallPosY  = ((len(booleanTileMap) - 1) - yIt) - posY
+                    wallPosX = xIt - posX
+
+                    if yIt == selfTile.y:
+
+                        print(float((wallPosY + 1) / (wallPosX + 3)))
+                        equationTop = float((wallPosY + 1) / (wallPosX + 3))
+                        equationBottom = 1
+
+                        print(equationTop, equationBottom)
+
+                    else:
+
+                        equationTop = float((wallPosY + 1) / wallPosX)
+                        equationBottom = float(wallPosY / (wallPosX + 1))
+
+                    yIndex = yIt
+                    xIndex = xIt + 1
+
+                    if yIt - selfTile.y >= 3:
+
+                        booleanTileMap[yIt - 1][xIt] = False
+
+                    # Slope of 1
+                    if wallPosY - 1 == wallPosX or wallPosY == wallPosX + 1:
+
+                        # BottomLine
+                        while xIndex < len(booleanTileMap[yIndex]):
+
+                            floatOutput = equationBottom * (xIndex - posX)
+
+                            if math.floor((floatOutput % 1) * 10) / 10 <= .5 and math.floor((floatOutput % 1) * 10) / 10 != 0.0: booleanTileMap[yIndex][xIndex] = False
+
+                            testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
+
+                            yIndex -= 1
+                            # Top Line
+
+                            while yIndex >= 0 and ((len(booleanTileMap) - 1) - yIndex) - posY < math.floor(equationTop * (xIndex - posX)):
+
+                                booleanTileMap[yIndex][xIndex] = False
+                                testedPoints.append([xIndex, yIndex])
+                                yIndex -= 1
+
+                            floatOutput = equationTop * (xIndex - posX)
+
+                            if math.floor((floatOutput % 1) * 10) / 10 >= .5 and math.floor((floatOutput % 1) * 10) / 10 != 0.0 and yIndex > 0:
+
+                                if yIndex < 0:
+                                    yIndex = 0
+
+                                booleanTileMap[yIndex][xIndex] = False
+
+                                testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
+
+                            xIndex += 1
+                            yIndex = (len(booleanTileMap) - 1) - math.floor(equationBottom * (xIndex - posX) + posY)
+
+                    else:
+
+                        equationTop = float((wallPosY + 1) / wallPosX)
+                        equationBottom = float(wallPosY / (wallPosX + 1))
+
+                        yIndex = yIt
+                        xIndex = xIt + 1
+
+                        #BottomLine
+                        while xIndex < len(booleanTileMap[yIndex]):
+
+                            floatOutput = equationBottom * (xIndex - posX)
+
+                            if math.floor((floatOutput % 1) * 10) / 10 <= .5:
+
+                                booleanTileMap[yIndex][xIndex] = False
+
+                            testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
+
+                            yIndex -= 1
+                            #Top Line
+
+                            while yIndex >= 0 and ((len(booleanTileMap) - 1) - yIndex) - posY < math.floor(equationTop * (xIndex - posX)):
+
+                                booleanTileMap[yIndex][xIndex] = False
+                                testedPoints.append([xIndex, yIndex])
+                                yIndex -= 1
+
+                            floatOutput = equationTop * (xIndex - posX)
+
+                            if math.floor((floatOutput % 1) * 10) / 10 >= .5 and yIndex > 0:
+
+                                if yIndex < 0:
+
+                                    yIndex = 0
+
+                                booleanTileMap[yIndex][xIndex] = False
+
+                                testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
+
+                            xIndex += 1
+                            yIndex = (len(booleanTileMap) - 1) - math.floor(equationBottom * (xIndex - posX) + posY)
+                            if yIndex < 0: break
+
+                xIt += 1
+
+            xIt = 0
+            yIt += 1
+
+
+        for line in testedPoints:
+
+            print(line)
+
+        '''
         #Quadrant 1 -----------------------------------------------------------------------------------------------------
 
         #y - 1
@@ -472,6 +593,7 @@ class EntityCharacter(BaseCharacter):
                 else: booleanTileMap[yPos][xPos + 1] = True
 
             xPos += 1
+        '''
 
         #Printing out tilemap------------------------------------------------------------------
         print("\n" * 2)
@@ -483,14 +605,14 @@ class EntityCharacter(BaseCharacter):
 
                 elif col is True:
 
-                    print(" 1 ", end = "")
+                    print(" . ", end = "")
 
-                elif not col: print(" 0 ", end = "")
+                elif not col: print(" X ", end = "")
 
             print("\n")
         #--------------------------------------------------------------------------------------
 
-        return objects
+        return booleanTileMap
 
     def check_tile(self, x, y):
 
@@ -570,95 +692,751 @@ class EntityCharacter(BaseCharacter):
         currentX = numberCoords[0][0]
         currentY = numberCoords[0][1]
 
-        while currentNum < numMoves:
+        #If Enemy is above target
+        if selfTile.y < startPosY and selfTile.x == startPosX:
 
-            # TODO: Change arrangement of creating numbers based on the enemies movement
+            while currentNum < numMoves:
 
-            # Check Up
-            if self.check_tile(currentX, currentY - 1) and booleanTileMap[currentY - 1][currentX]:
+                # Check Up
+                if self.check_tile(currentX, currentY - 1) and booleanTileMap[currentY - 1][currentX]:
 
-                numberTileMap[currentY - 1][currentX] = nextNum
-                numberCoords[nextNum] = [currentX, currentY - 1]
-                booleanTileMap[currentY - 1][currentX] = False
-                nextNum += 1
+                    numberTileMap[currentY - 1][currentX] = nextNum
+                    numberCoords[nextNum] = [currentX, currentY - 1]
+                    booleanTileMap[currentY - 1][currentX] = False
+                    nextNum += 1
 
-            # Check Left Up
-            elif self.check_tile(currentX - 1, currentY - 1) and booleanTileMap[currentY - 1][currentX - 1]:
+                # Check Left Up
+                elif self.check_tile(currentX - 1, currentY - 1) and booleanTileMap[currentY - 1][currentX - 1]:
 
-                numberTileMap[currentY - 1][currentX - 1] = nextNum
-                numberCoords[nextNum] = [currentX - 1, currentY - 1]
-                booleanTileMap[currentY - 1][currentX - 1] = False
-                nextNum += 1
+                    numberTileMap[currentY - 1][currentX - 1] = nextNum
+                    numberCoords[nextNum] = [currentX - 1, currentY - 1]
+                    booleanTileMap[currentY - 1][currentX - 1] = False
+                    nextNum += 1
 
-            # Check Left
-            elif self.check_tile(currentX - 1, currentY) and booleanTileMap[currentY][currentX - 1]:
+                # Check Left
+                elif self.check_tile(currentX - 1, currentY) and booleanTileMap[currentY][currentX - 1]:
 
-                numberTileMap[currentY][currentX - 1] = nextNum
-                numberCoords[nextNum] = [currentX - 1, currentY]
-                booleanTileMap[currentY][currentX - 1] = False
-                nextNum += 1
+                    numberTileMap[currentY][currentX - 1] = nextNum
+                    numberCoords[nextNum] = [currentX - 1, currentY]
+                    booleanTileMap[currentY][currentX - 1] = False
+                    nextNum += 1
 
-            # Check Down Left
-            elif self.check_tile(currentX - 1, currentY + 1) and booleanTileMap[currentY + 1][currentX - 1]:
+                # Check Down Left
+                elif self.check_tile(currentX - 1, currentY + 1) and booleanTileMap[currentY + 1][currentX - 1]:
 
-                numberTileMap[currentY + 1][currentX - 1] = nextNum
-                numberCoords[nextNum] = [currentX - 1, currentY + 1]
-                booleanTileMap[currentY + 1][currentX - 1] = False
-                nextNum += 1
+                    numberTileMap[currentY + 1][currentX - 1] = nextNum
+                    numberCoords[nextNum] = [currentX - 1, currentY + 1]
+                    booleanTileMap[currentY + 1][currentX - 1] = False
+                    nextNum += 1
 
-            # Check Down
-            elif self.check_tile(currentX, currentY + 1) and booleanTileMap[currentY + 1][currentX]:
+                # Check Down
+                elif self.check_tile(currentX, currentY + 1) and booleanTileMap[currentY + 1][currentX]:
 
-                numberTileMap[currentY + 1][currentX] = nextNum
-                numberCoords[nextNum] = [currentX, currentY + 1]
-                booleanTileMap[currentY + 1][currentX] = False
-                nextNum += 1
+                    numberTileMap[currentY + 1][currentX] = nextNum
+                    numberCoords[nextNum] = [currentX, currentY + 1]
+                    booleanTileMap[currentY + 1][currentX] = False
+                    nextNum += 1
 
-            # Check Down Right
-            elif self.check_tile(currentX + 1, currentY + 1) and booleanTileMap[currentY + 1][currentX + 1]:
+                # Check Down Right
+                elif self.check_tile(currentX + 1, currentY + 1) and booleanTileMap[currentY + 1][currentX + 1]:
 
-                numberTileMap[currentY + 1][currentX + 1] = nextNum
-                numberCoords[nextNum] = [currentX + 1, currentY + 1]
-                booleanTileMap[currentY + 1][currentX + 1] = False
-                nextNum += 1
+                    numberTileMap[currentY + 1][currentX + 1] = nextNum
+                    numberCoords[nextNum] = [currentX + 1, currentY + 1]
+                    booleanTileMap[currentY + 1][currentX + 1] = False
+                    nextNum += 1
 
-            #Check Right
-            elif self.check_tile(currentX + 1, currentY) and booleanTileMap[currentY][currentX + 1]:
+                #Check Right
+                elif self.check_tile(currentX + 1, currentY) and booleanTileMap[currentY][currentX + 1]:
 
-                numberTileMap[currentY][currentX + 1] = nextNum
-                numberCoords[nextNum] = [currentX + 1, currentY]
-                booleanTileMap[currentY][currentX + 1] = False
-                nextNum += 1
+                    numberTileMap[currentY][currentX + 1] = nextNum
+                    numberCoords[nextNum] = [currentX + 1, currentY]
+                    booleanTileMap[currentY][currentX + 1] = False
+                    nextNum += 1
 
-            #Check Right Up
-            elif self.check_tile(currentX + 1, currentY - 1) and booleanTileMap[currentY - 1][currentX + 1]:
+                #Check Right Up
+                elif self.check_tile(currentX + 1, currentY - 1) and booleanTileMap[currentY - 1][currentX + 1]:
 
-                numberTileMap[currentY - 1][currentX + 1] = nextNum
-                numberCoords[nextNum] = [currentX + 1, currentY - 1]
-                booleanTileMap[currentY - 1][currentX + 1] = False
-                nextNum += 1
+                    numberTileMap[currentY - 1][currentX + 1] = nextNum
+                    numberCoords[nextNum] = [currentX + 1, currentY - 1]
+                    booleanTileMap[currentY - 1][currentX + 1] = False
+                    nextNum += 1
 
-            else:
+                else:
 
-                currentNum += 1
-                currentX = numberCoords[currentNum][0]
-                currentY = numberCoords[currentNum][1]
+                    currentNum += 1
+                    currentX = numberCoords[currentNum][0]
+                    currentY = numberCoords[currentNum][1]
 
-            breakWhileLoop = False
+                breakWhileLoop = False
 
-            surroundingTiles = self.tilemap.get_around(currentX, currentY)
+                surroundingTiles = self.tilemap.get_around(currentX, currentY)
 
-            for l in surroundingTiles:
+                for l in surroundingTiles:
 
-                for i in l:
+                    for i in l:
 
-                    if i.obj == self:
-                        breakWhileLoop = True
-                        break
+                        if i.obj == self:
+
+                            breakWhileLoop = True
+                            break
+
+                    if breakWhileLoop: break
 
                 if breakWhileLoop: break
 
-            if breakWhileLoop: break
+        #If Enemy is left above the target
+        elif selfTile.y < startPosY and selfTile.x < startPosX:
+
+            while currentNum < numMoves:
+
+                # Check Left Up
+                if self.check_tile(currentX - 1, currentY - 1) and booleanTileMap[currentY - 1][currentX - 1]:
+
+                    numberTileMap[currentY - 1][currentX - 1] = nextNum
+                    numberCoords[nextNum] = [currentX - 1, currentY - 1]
+                    booleanTileMap[currentY - 1][currentX - 1] = False
+                    nextNum += 1
+
+                # Check Left
+                elif self.check_tile(currentX - 1, currentY) and booleanTileMap[currentY][currentX - 1]:
+
+                    numberTileMap[currentY][currentX - 1] = nextNum
+                    numberCoords[nextNum] = [currentX - 1, currentY]
+                    booleanTileMap[currentY][currentX - 1] = False
+                    nextNum += 1
+
+                # Check Down Left
+                elif self.check_tile(currentX - 1, currentY + 1) and booleanTileMap[currentY + 1][currentX - 1]:
+
+                    numberTileMap[currentY + 1][currentX - 1] = nextNum
+                    numberCoords[nextNum] = [currentX - 1, currentY + 1]
+                    booleanTileMap[currentY + 1][currentX - 1] = False
+                    nextNum += 1
+
+                # Check Down
+                elif self.check_tile(currentX, currentY + 1) and booleanTileMap[currentY + 1][currentX]:
+
+                    numberTileMap[currentY + 1][currentX] = nextNum
+                    numberCoords[nextNum] = [currentX, currentY + 1]
+                    booleanTileMap[currentY + 1][currentX] = False
+                    nextNum += 1
+
+                # Check Down Right
+                elif self.check_tile(currentX + 1, currentY + 1) and booleanTileMap[currentY + 1][currentX + 1]:
+
+                    numberTileMap[currentY + 1][currentX + 1] = nextNum
+                    numberCoords[nextNum] = [currentX + 1, currentY + 1]
+                    booleanTileMap[currentY + 1][currentX + 1] = False
+                    nextNum += 1
+
+                # Check Right
+                elif self.check_tile(currentX + 1, currentY) and booleanTileMap[currentY][currentX + 1]:
+
+                    numberTileMap[currentY][currentX + 1] = nextNum
+                    numberCoords[nextNum] = [currentX + 1, currentY]
+                    booleanTileMap[currentY][currentX + 1] = False
+                    nextNum += 1
+
+                # Check Right Up
+                elif self.check_tile(currentX + 1, currentY - 1) and booleanTileMap[currentY - 1][currentX + 1]:
+
+                    numberTileMap[currentY - 1][currentX + 1] = nextNum
+                    numberCoords[nextNum] = [currentX + 1, currentY - 1]
+                    booleanTileMap[currentY - 1][currentX + 1] = False
+                    nextNum += 1
+
+
+                # Check Up
+                elif self.check_tile(currentX, currentY - 1) and booleanTileMap[currentY - 1][currentX]:
+
+                    numberTileMap[currentY - 1][currentX] = nextNum
+                    numberCoords[nextNum] = [currentX, currentY - 1]
+                    booleanTileMap[currentY - 1][currentX] = False
+                    nextNum += 1
+
+                else:
+
+                    currentNum += 1
+                    currentX = numberCoords[currentNum][0]
+                    currentY = numberCoords[currentNum][1]
+
+                breakWhileLoop = False
+
+                surroundingTiles = self.tilemap.get_around(currentX, currentY)
+
+                for l in surroundingTiles:
+
+                    for i in l:
+
+                        if i.obj == self:
+                            breakWhileLoop = True
+                            break
+
+                    if breakWhileLoop: break
+
+                if breakWhileLoop: break
+
+        #If Enemy is left of the target
+        elif selfTile.y == startPosY and selfTile.x < startPosX:
+
+            while currentNum < numMoves:
+
+                # Check Left
+                if self.check_tile(currentX - 1, currentY) and booleanTileMap[currentY][currentX - 1]:
+
+                    numberTileMap[currentY][currentX - 1] = nextNum
+                    numberCoords[nextNum] = [currentX - 1, currentY]
+                    booleanTileMap[currentY][currentX - 1] = False
+                    nextNum += 1
+
+                # Check Down Left
+                elif self.check_tile(currentX - 1, currentY + 1) and booleanTileMap[currentY + 1][currentX - 1]:
+
+                    numberTileMap[currentY + 1][currentX - 1] = nextNum
+                    numberCoords[nextNum] = [currentX - 1, currentY + 1]
+                    booleanTileMap[currentY + 1][currentX - 1] = False
+                    nextNum += 1
+
+                # Check Down
+                elif self.check_tile(currentX, currentY + 1) and booleanTileMap[currentY + 1][currentX]:
+
+                    numberTileMap[currentY + 1][currentX] = nextNum
+                    numberCoords[nextNum] = [currentX, currentY + 1]
+                    booleanTileMap[currentY + 1][currentX] = False
+                    nextNum += 1
+
+                # Check Down Right
+                elif self.check_tile(currentX + 1, currentY + 1) and booleanTileMap[currentY + 1][currentX + 1]:
+
+                    numberTileMap[currentY + 1][currentX + 1] = nextNum
+                    numberCoords[nextNum] = [currentX + 1, currentY + 1]
+                    booleanTileMap[currentY + 1][currentX + 1] = False
+                    nextNum += 1
+
+                # Check Right
+                elif self.check_tile(currentX + 1, currentY) and booleanTileMap[currentY][currentX + 1]:
+
+                    numberTileMap[currentY][currentX + 1] = nextNum
+                    numberCoords[nextNum] = [currentX + 1, currentY]
+                    booleanTileMap[currentY][currentX + 1] = False
+                    nextNum += 1
+
+                # Check Right Up
+                elif self.check_tile(currentX + 1, currentY - 1) and booleanTileMap[currentY - 1][currentX + 1]:
+
+                    numberTileMap[currentY - 1][currentX + 1] = nextNum
+                    numberCoords[nextNum] = [currentX + 1, currentY - 1]
+                    booleanTileMap[currentY - 1][currentX + 1] = False
+                    nextNum += 1
+
+
+                # Check Up
+                elif self.check_tile(currentX, currentY - 1) and booleanTileMap[currentY - 1][currentX]:
+
+                    numberTileMap[currentY - 1][currentX] = nextNum
+                    numberCoords[nextNum] = [currentX, currentY - 1]
+                    booleanTileMap[currentY - 1][currentX] = False
+                    nextNum += 1
+
+                # Check Left Up
+                elif self.check_tile(currentX - 1, currentY - 1) and booleanTileMap[currentY - 1][currentX - 1]:
+
+                    numberTileMap[currentY - 1][currentX - 1] = nextNum
+                    numberCoords[nextNum] = [currentX - 1, currentY - 1]
+                    booleanTileMap[currentY - 1][currentX - 1] = False
+                    nextNum += 1
+
+                else:
+
+                    currentNum += 1
+                    currentX = numberCoords[currentNum][0]
+                    currentY = numberCoords[currentNum][1]
+
+                breakWhileLoop = False
+
+                surroundingTiles = self.tilemap.get_around(currentX, currentY)
+
+                for l in surroundingTiles:
+
+                    for i in l:
+
+                        if i.obj == self:
+                            breakWhileLoop = True
+                            break
+
+                    if breakWhileLoop: break
+
+                if breakWhileLoop: break
+
+        #If Enemy is left down of the target
+        elif selfTile.y > startPosY and selfTile.x < startPosX:
+
+            while currentNum < numMoves:
+
+                # Check Down Left
+                if self.check_tile(currentX - 1, currentY + 1) and booleanTileMap[currentY + 1][currentX - 1]:
+
+                    numberTileMap[currentY + 1][currentX - 1] = nextNum
+                    numberCoords[nextNum] = [currentX - 1, currentY + 1]
+                    booleanTileMap[currentY + 1][currentX - 1] = False
+                    nextNum += 1
+
+                # Check Down
+                elif self.check_tile(currentX, currentY + 1) and booleanTileMap[currentY + 1][currentX]:
+
+                    numberTileMap[currentY + 1][currentX] = nextNum
+                    numberCoords[nextNum] = [currentX, currentY + 1]
+                    booleanTileMap[currentY + 1][currentX] = False
+                    nextNum += 1
+
+                # Check Down Right
+                elif self.check_tile(currentX + 1, currentY + 1) and booleanTileMap[currentY + 1][currentX + 1]:
+
+                    numberTileMap[currentY + 1][currentX + 1] = nextNum
+                    numberCoords[nextNum] = [currentX + 1, currentY + 1]
+                    booleanTileMap[currentY + 1][currentX + 1] = False
+                    nextNum += 1
+
+                # Check Right
+                elif self.check_tile(currentX + 1, currentY) and booleanTileMap[currentY][currentX + 1]:
+
+                    numberTileMap[currentY][currentX + 1] = nextNum
+                    numberCoords[nextNum] = [currentX + 1, currentY]
+                    booleanTileMap[currentY][currentX + 1] = False
+                    nextNum += 1
+
+                # Check Right Up
+                elif self.check_tile(currentX + 1, currentY - 1) and booleanTileMap[currentY - 1][currentX + 1]:
+
+                    numberTileMap[currentY - 1][currentX + 1] = nextNum
+                    numberCoords[nextNum] = [currentX + 1, currentY - 1]
+                    booleanTileMap[currentY - 1][currentX + 1] = False
+                    nextNum += 1
+
+
+                # Check Up
+                elif self.check_tile(currentX, currentY - 1) and booleanTileMap[currentY - 1][currentX]:
+
+                    numberTileMap[currentY - 1][currentX] = nextNum
+                    numberCoords[nextNum] = [currentX, currentY - 1]
+                    booleanTileMap[currentY - 1][currentX] = False
+                    nextNum += 1
+
+                # Check Left Up
+                elif self.check_tile(currentX - 1, currentY - 1) and booleanTileMap[currentY - 1][currentX - 1]:
+
+                    numberTileMap[currentY - 1][currentX - 1] = nextNum
+                    numberCoords[nextNum] = [currentX - 1, currentY - 1]
+                    booleanTileMap[currentY - 1][currentX - 1] = False
+                    nextNum += 1
+
+                # Check Left
+                elif self.check_tile(currentX - 1, currentY) and booleanTileMap[currentY][currentX - 1]:
+                    numberTileMap[currentY][currentX - 1] = nextNum
+                    numberCoords[nextNum] = [currentX - 1, currentY]
+                    booleanTileMap[currentY][currentX - 1] = False
+                    nextNum += 1
+
+                else:
+
+                    currentNum += 1
+                    currentX = numberCoords[currentNum][0]
+                    currentY = numberCoords[currentNum][1]
+
+                breakWhileLoop = False
+
+                surroundingTiles = self.tilemap.get_around(currentX, currentY)
+
+                for l in surroundingTiles:
+
+                    for i in l:
+
+                        if i.obj == self:
+                            breakWhileLoop = True
+                            break
+
+                    if breakWhileLoop: break
+
+                if breakWhileLoop: break
+
+        #If Enemy is down of the target
+        elif selfTile.y > startPosY and selfTile.x == startPosX:
+
+            while currentNum < numMoves:
+
+                # Check Down
+                if self.check_tile(currentX, currentY + 1) and booleanTileMap[currentY + 1][currentX]:
+
+                    numberTileMap[currentY + 1][currentX] = nextNum
+                    numberCoords[nextNum] = [currentX, currentY + 1]
+                    booleanTileMap[currentY + 1][currentX] = False
+                    nextNum += 1
+
+                # Check Down Right
+                elif self.check_tile(currentX + 1, currentY + 1) and booleanTileMap[currentY + 1][currentX + 1]:
+
+                    numberTileMap[currentY + 1][currentX + 1] = nextNum
+                    numberCoords[nextNum] = [currentX + 1, currentY + 1]
+                    booleanTileMap[currentY + 1][currentX + 1] = False
+                    nextNum += 1
+
+                # Check Right
+                elif self.check_tile(currentX + 1, currentY) and booleanTileMap[currentY][currentX + 1]:
+
+                    numberTileMap[currentY][currentX + 1] = nextNum
+                    numberCoords[nextNum] = [currentX + 1, currentY]
+                    booleanTileMap[currentY][currentX + 1] = False
+                    nextNum += 1
+
+                # Check Right Up
+                elif self.check_tile(currentX + 1, currentY - 1) and booleanTileMap[currentY - 1][currentX + 1]:
+
+                    numberTileMap[currentY - 1][currentX + 1] = nextNum
+                    numberCoords[nextNum] = [currentX + 1, currentY - 1]
+                    booleanTileMap[currentY - 1][currentX + 1] = False
+                    nextNum += 1
+
+
+                # Check Up
+                elif self.check_tile(currentX, currentY - 1) and booleanTileMap[currentY - 1][currentX]:
+
+                    numberTileMap[currentY - 1][currentX] = nextNum
+                    numberCoords[nextNum] = [currentX, currentY - 1]
+                    booleanTileMap[currentY - 1][currentX] = False
+                    nextNum += 1
+
+                # Check Left Up
+                elif self.check_tile(currentX - 1, currentY - 1) and booleanTileMap[currentY - 1][currentX - 1]:
+
+                    numberTileMap[currentY - 1][currentX - 1] = nextNum
+                    numberCoords[nextNum] = [currentX - 1, currentY - 1]
+                    booleanTileMap[currentY - 1][currentX - 1] = False
+                    nextNum += 1
+
+                # Check Left
+                elif self.check_tile(currentX - 1, currentY) and booleanTileMap[currentY][currentX - 1]:
+                    numberTileMap[currentY][currentX - 1] = nextNum
+                    numberCoords[nextNum] = [currentX - 1, currentY]
+                    booleanTileMap[currentY][currentX - 1] = False
+                    nextNum += 1
+
+                # Check Down Left
+                elif self.check_tile(currentX - 1, currentY + 1) and booleanTileMap[currentY + 1][currentX - 1]:
+                    numberTileMap[currentY + 1][currentX - 1] = nextNum
+                    numberCoords[nextNum] = [currentX - 1, currentY + 1]
+                    booleanTileMap[currentY + 1][currentX - 1] = False
+                    nextNum += 1
+
+                else:
+
+                    currentNum += 1
+                    currentX = numberCoords[currentNum][0]
+                    currentY = numberCoords[currentNum][1]
+
+                breakWhileLoop = False
+
+                surroundingTiles = self.tilemap.get_around(currentX, currentY)
+
+                for l in surroundingTiles:
+
+                    for i in l:
+
+                        if i.obj == self:
+                            breakWhileLoop = True
+                            break
+
+                    if breakWhileLoop: break
+
+                if breakWhileLoop: break
+
+        #If Enemy is right down of the target
+        elif selfTile.y > startPosY and selfTile.x > startPosX:
+
+            while currentNum < numMoves:
+
+                # Check Down Right
+                if self.check_tile(currentX + 1, currentY + 1) and booleanTileMap[currentY + 1][currentX + 1]:
+
+                    numberTileMap[currentY + 1][currentX + 1] = nextNum
+                    numberCoords[nextNum] = [currentX + 1, currentY + 1]
+                    booleanTileMap[currentY + 1][currentX + 1] = False
+                    nextNum += 1
+
+                # Check Right
+                elif self.check_tile(currentX + 1, currentY) and booleanTileMap[currentY][currentX + 1]:
+
+                    numberTileMap[currentY][currentX + 1] = nextNum
+                    numberCoords[nextNum] = [currentX + 1, currentY]
+                    booleanTileMap[currentY][currentX + 1] = False
+                    nextNum += 1
+
+                # Check Right Up
+                elif self.check_tile(currentX + 1, currentY - 1) and booleanTileMap[currentY - 1][currentX + 1]:
+
+                    numberTileMap[currentY - 1][currentX + 1] = nextNum
+                    numberCoords[nextNum] = [currentX + 1, currentY - 1]
+                    booleanTileMap[currentY - 1][currentX + 1] = False
+                    nextNum += 1
+
+
+                # Check Up
+                elif self.check_tile(currentX, currentY - 1) and booleanTileMap[currentY - 1][currentX]:
+
+                    numberTileMap[currentY - 1][currentX] = nextNum
+                    numberCoords[nextNum] = [currentX, currentY - 1]
+                    booleanTileMap[currentY - 1][currentX] = False
+                    nextNum += 1
+
+                # Check Left Up
+                elif self.check_tile(currentX - 1, currentY - 1) and booleanTileMap[currentY - 1][currentX - 1]:
+
+                    numberTileMap[currentY - 1][currentX - 1] = nextNum
+                    numberCoords[nextNum] = [currentX - 1, currentY - 1]
+                    booleanTileMap[currentY - 1][currentX - 1] = False
+                    nextNum += 1
+
+                # Check Left
+                elif self.check_tile(currentX - 1, currentY) and booleanTileMap[currentY][currentX - 1]:
+                    numberTileMap[currentY][currentX - 1] = nextNum
+                    numberCoords[nextNum] = [currentX - 1, currentY]
+                    booleanTileMap[currentY][currentX - 1] = False
+                    nextNum += 1
+
+                # Check Down Left
+                elif self.check_tile(currentX - 1, currentY + 1) and booleanTileMap[currentY + 1][currentX - 1]:
+                    numberTileMap[currentY + 1][currentX - 1] = nextNum
+                    numberCoords[nextNum] = [currentX - 1, currentY + 1]
+                    booleanTileMap[currentY + 1][currentX - 1] = False
+                    nextNum += 1
+
+                # Check Down
+                elif self.check_tile(currentX, currentY + 1) and booleanTileMap[currentY + 1][currentX]:
+
+                    numberTileMap[currentY + 1][currentX] = nextNum
+                    numberCoords[nextNum] = [currentX, currentY + 1]
+                    booleanTileMap[currentY + 1][currentX] = False
+                    nextNum += 1
+
+                else:
+
+                    currentNum += 1
+                    currentX = numberCoords[currentNum][0]
+                    currentY = numberCoords[currentNum][1]
+
+                breakWhileLoop = False
+
+                surroundingTiles = self.tilemap.get_around(currentX, currentY)
+
+                for l in surroundingTiles:
+
+                    for i in l:
+
+                        if i.obj == self:
+                            breakWhileLoop = True
+                            break
+
+                    if breakWhileLoop: break
+
+                if breakWhileLoop: break
+
+        #If Enemy is right of the target
+        elif selfTile.y == startPosY and selfTile.x > startPosX:
+
+            while currentNum < numMoves:
+
+                # Check Right
+                if self.check_tile(currentX + 1, currentY) and booleanTileMap[currentY][currentX + 1]:
+
+                    numberTileMap[currentY][currentX + 1] = nextNum
+                    numberCoords[nextNum] = [currentX + 1, currentY]
+                    booleanTileMap[currentY][currentX + 1] = False
+                    nextNum += 1
+
+                # Check Right Up
+                elif self.check_tile(currentX + 1, currentY - 1) and booleanTileMap[currentY - 1][currentX + 1]:
+
+                    numberTileMap[currentY - 1][currentX + 1] = nextNum
+                    numberCoords[nextNum] = [currentX + 1, currentY - 1]
+                    booleanTileMap[currentY - 1][currentX + 1] = False
+                    nextNum += 1
+
+
+                # Check Up
+                elif self.check_tile(currentX, currentY - 1) and booleanTileMap[currentY - 1][currentX]:
+
+                    numberTileMap[currentY - 1][currentX] = nextNum
+                    numberCoords[nextNum] = [currentX, currentY - 1]
+                    booleanTileMap[currentY - 1][currentX] = False
+                    nextNum += 1
+
+                # Check Left Up
+                elif self.check_tile(currentX - 1, currentY - 1) and booleanTileMap[currentY - 1][currentX - 1]:
+
+                    numberTileMap[currentY - 1][currentX - 1] = nextNum
+                    numberCoords[nextNum] = [currentX - 1, currentY - 1]
+                    booleanTileMap[currentY - 1][currentX - 1] = False
+                    nextNum += 1
+
+                # Check Left
+                elif self.check_tile(currentX - 1, currentY) and booleanTileMap[currentY][currentX - 1]:
+                    numberTileMap[currentY][currentX - 1] = nextNum
+                    numberCoords[nextNum] = [currentX - 1, currentY]
+                    booleanTileMap[currentY][currentX - 1] = False
+                    nextNum += 1
+
+                # Check Down Left
+                elif self.check_tile(currentX - 1, currentY + 1) and booleanTileMap[currentY + 1][currentX - 1]:
+                    numberTileMap[currentY + 1][currentX - 1] = nextNum
+                    numberCoords[nextNum] = [currentX - 1, currentY + 1]
+                    booleanTileMap[currentY + 1][currentX - 1] = False
+                    nextNum += 1
+
+                # Check Down
+                elif self.check_tile(currentX, currentY + 1) and booleanTileMap[currentY + 1][currentX]:
+
+                    numberTileMap[currentY + 1][currentX] = nextNum
+                    numberCoords[nextNum] = [currentX, currentY + 1]
+                    booleanTileMap[currentY + 1][currentX] = False
+                    nextNum += 1
+
+                # Check Down Right
+                elif self.check_tile(currentX + 1, currentY + 1) and booleanTileMap[currentY + 1][currentX + 1]:
+
+                    numberTileMap[currentY + 1][currentX + 1] = nextNum
+                    numberCoords[nextNum] = [currentX + 1, currentY + 1]
+                    booleanTileMap[currentY + 1][currentX + 1] = False
+                    nextNum += 1
+
+                else:
+
+                    currentNum += 1
+                    currentX = numberCoords[currentNum][0]
+                    currentY = numberCoords[currentNum][1]
+
+                breakWhileLoop = False
+
+                surroundingTiles = self.tilemap.get_around(currentX, currentY)
+
+                for l in surroundingTiles:
+
+                    for i in l:
+
+                        if i.obj == self:
+                            breakWhileLoop = True
+                            break
+
+                    if breakWhileLoop: break
+
+                if breakWhileLoop: break
+
+        #If Enemy is right up of the target
+        elif selfTile.y < startPosY and selfTile.x > startPosX:
+
+            while currentNum < numMoves:
+
+                # Check Right Up
+                if self.check_tile(currentX + 1, currentY - 1) and booleanTileMap[currentY - 1][currentX + 1]:
+
+                    numberTileMap[currentY - 1][currentX + 1] = nextNum
+                    numberCoords[nextNum] = [currentX + 1, currentY - 1]
+                    booleanTileMap[currentY - 1][currentX + 1] = False
+                    nextNum += 1
+
+
+                # Check Up
+                elif self.check_tile(currentX, currentY - 1) and booleanTileMap[currentY - 1][currentX]:
+
+                    numberTileMap[currentY - 1][currentX] = nextNum
+                    numberCoords[nextNum] = [currentX, currentY - 1]
+                    booleanTileMap[currentY - 1][currentX] = False
+                    nextNum += 1
+
+                # Check Left Up
+                elif self.check_tile(currentX - 1, currentY - 1) and booleanTileMap[currentY - 1][currentX - 1]:
+
+                    numberTileMap[currentY - 1][currentX - 1] = nextNum
+                    numberCoords[nextNum] = [currentX - 1, currentY - 1]
+                    booleanTileMap[currentY - 1][currentX - 1] = False
+                    nextNum += 1
+
+                # Check Left
+                elif self.check_tile(currentX - 1, currentY) and booleanTileMap[currentY][currentX - 1]:
+                    numberTileMap[currentY][currentX - 1] = nextNum
+                    numberCoords[nextNum] = [currentX - 1, currentY]
+                    booleanTileMap[currentY][currentX - 1] = False
+                    nextNum += 1
+
+                # Check Down Left
+                elif self.check_tile(currentX - 1, currentY + 1) and booleanTileMap[currentY + 1][currentX - 1]:
+                    numberTileMap[currentY + 1][currentX - 1] = nextNum
+                    numberCoords[nextNum] = [currentX - 1, currentY + 1]
+                    booleanTileMap[currentY + 1][currentX - 1] = False
+                    nextNum += 1
+
+                # Check Down
+                elif self.check_tile(currentX, currentY + 1) and booleanTileMap[currentY + 1][currentX]:
+
+                    numberTileMap[currentY + 1][currentX] = nextNum
+                    numberCoords[nextNum] = [currentX, currentY + 1]
+                    booleanTileMap[currentY + 1][currentX] = False
+                    nextNum += 1
+
+                # Check Down Right
+                elif self.check_tile(currentX + 1, currentY + 1) and booleanTileMap[currentY + 1][currentX + 1]:
+
+                    numberTileMap[currentY + 1][currentX + 1] = nextNum
+                    numberCoords[nextNum] = [currentX + 1, currentY + 1]
+                    booleanTileMap[currentY + 1][currentX + 1] = False
+                    nextNum += 1
+
+                # Check Right
+                elif self.check_tile(currentX + 1, currentY) and booleanTileMap[currentY][currentX + 1]:
+
+                    numberTileMap[currentY][currentX + 1] = nextNum
+                    numberCoords[nextNum] = [currentX + 1, currentY]
+                    booleanTileMap[currentY][currentX + 1] = False
+                    nextNum += 1
+
+                else:
+
+                    currentNum += 1
+                    currentX = numberCoords[currentNum][0]
+                    currentY = numberCoords[currentNum][1]
+
+                breakWhileLoop = False
+
+                surroundingTiles = self.tilemap.get_around(currentX, currentY)
+
+                for l in surroundingTiles:
+
+                    for i in l:
+
+                        if i.obj == self:
+                            breakWhileLoop = True
+                            break
+
+                    if breakWhileLoop: break
+
+                if breakWhileLoop: break
+
+        '''
+        #Printing tilemap------------------------------------------------------------------
+        print("\n" * 2)
+        for line in numberTileMap:
+
+            for col in line:
+
+
+                if len(str(col)) == 1: print(str(col) + "   ", end="")
+
+                elif len(str(col)) == 2: print(str(col) + "  ", end="")
+
+                elif len(str(col)) == 3: print(str(col) + " ", end="")
+
+
+            print("\n")
+        #-----------------------------------------------------------------------------
+        '''
 
         return numberTileMap
 
@@ -780,9 +1558,7 @@ class Player(EntityCharacter):
             if self.check_tile(playerTile.x + 1, playerTile.y + 1):
                 self.tilemap.move(self, playerTile.x + 1, playerTile.y + 1)
 
-        elif inp == 'p':
-
-            self.pickup_first_item()
+        elif inp == 'p': self.pickup_first_item()
 
         elif inp == 'i':
 
@@ -806,7 +1582,7 @@ class Player(EntityCharacter):
 
         elif inp == 'l':
 
-            self.look(self.see_list, 15)
+            self.look(100)
 
             #self.text_win.add_content("You don't see any objects in this room", "white")
 
@@ -984,7 +1760,6 @@ class TrackerEnemy(EntityCharacter):
         self.debug_move = True
 
     def move(self):
-
 
         if self.debug_move:
 

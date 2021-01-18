@@ -32,6 +32,7 @@ class BaseTileMap(object):
         self.width = width  # Width of the tilemap
         self.win = win  # DisplayWindow in use
 
+        self.boolList = []
         self.tilemap = None  # 3D array representing the screen
 
         # Crete out tilemap:
@@ -381,6 +382,15 @@ class BaseTileMap(object):
             z += 1
 
         del self.tilemap[y][x][z]
+
+    def check_vision(self):
+
+        """
+        Updates the tilemaps boolList to fill with tiles the player can see
+        """
+
+        playerTile = self.find_object_type(Player)
+        self.boolList = playerTile.obj.look(100)
 
     def update(self):
 
