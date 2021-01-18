@@ -401,12 +401,14 @@ def master_window_test(win):
 
     # Tests the MasterWindow functionality.
 
+    curses.endwin()
+
     master = MasterWindow(win)
 
     # Create menus:
 
     scroll1 = ScrollWindow.create_subwin_at_pos(master, 10, 50)
-    map_win = DisplayWindow.create_subwin_at_pos(master, 10, 20, position=DisplayWindow.TOP_RIGHT)
+    map_win = DisplayWindow.create_subwin_at_pos(master, 50, 75, position=DisplayWindow.TOP_RIGHT)
 
     # Populate the scroll menus:
 
@@ -418,7 +420,7 @@ def master_window_test(win):
 
     # Add stuff to DisplayWindow:
 
-    map_win.add_callback('q', map_win.stop)
+    map_win.add_callback('f', map_win.stop)
 
     curses.curs_set(0)
 
@@ -451,9 +453,13 @@ def master_window_test(win):
 
     # Start the master window:
 
-    master.start()
+    display_thread = threading.Thread(target=map_win.display)
+    display_thread.daemon = True
+    display_thread.start()
 
-    map_win.display()
+    # Start the master window
+
+    master.start()
 
 
 def master_window_options_test(win):
@@ -471,7 +477,7 @@ def master_window_options_test(win):
 
     # Add stuff to DisplayWindow:
 
-    map_win.add_callback('q', map_win.stop)
+    map_win.add_callback('f', map_win.stop)
 
     curses.curs_set(0)
 
@@ -567,7 +573,7 @@ def mapping_text(win):
 
 def path_finding_test(win):
 
-    map_win = DisplayWindow.create_subwin_at_pos(win, 60, 60, BaseWindow.TOP_LEFT)
+    map_win = DisplayWindow.create_subwin_at_pos(win, 50, 50)
 
     map_win.add_callback('f', map_win.stop)
     curses.curs_set(0)
@@ -577,8 +583,8 @@ def path_finding_test(win):
     map_win.tilemap.fill(Floor)
 
     player = Player()
-    add(player, 0, 4, map_win)
-    #add(Wall(), 2, 1, map_win)
+    add(player, 25, 25, map_win)
+    add(Wall(), 27, 25, map_win)
     #add(Wall(), 2, 2, map_win)
     #add(Wall(), 1, 1, map_win)
 
@@ -731,4 +737,4 @@ def all_tests(win):
         win.erase()
 
 
-curses.wrapper(mapping_text)
+curses.wrapper(master_window_test)

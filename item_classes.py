@@ -58,7 +58,7 @@ class Armor(Item):
         self.res = 0 # Amount of damage this piece of armor resists, divided by 100 for a percentage
         self.durability = 0  # Amount of durability
         self.max_durability = 0  # Maximum amount of durability
-        self.part = "" # What part of the body this covers
+        self.part = ""  # What part of the body this covers
         self.priority = 19
 
         # Calling meta start method:

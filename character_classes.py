@@ -763,7 +763,6 @@ class Player(EntityCharacter):
 
             # Move diagonal up right
 
-
             if self.check_tile(playerTile.x + 1, playerTile.y - 1):
                 self.tilemap.move(self, playerTile.x + 1, playerTile.y - 1)
 
@@ -1177,6 +1176,18 @@ class OpenedChest(BaseCharacter):
         # Disabling traversal mode
 
         self.can_traverse = False
+
+
+class Fog(BaseCharacter):
+
+    """
+    Represents Fog, things that the user can't see
+    """
+
+    def start(self):
+
+        self.char = '*'
+        self.name = 'Fog'
 
 
 class Floor(BaseCharacter):

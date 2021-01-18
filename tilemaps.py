@@ -559,5 +559,3 @@ class Tile:
     def calc_distance(self, targObj):
 
         return math.sqrt(math.pow(targObj.xPos - self.x, 2) + math.pow(targObj.yPos - self.y, 2))
-
-

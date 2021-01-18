@@ -2,18 +2,14 @@ import curses
 import curses.panel
 from math import ceil, floor
 import threading
-import random
 from inspect import isfunction
-import queue
-import time
+from queue import Queue, Empty
 
 from character_classes import *
 from tilemaps import BaseTileMap, Tile
 
-from time import sleep
-
 """
-CHAS Curses wrappings.
+Curses wrappings.
 Includes special curses operations,
 As well as custom curses windows to use.
 The most important bit is the BaseWindow, which should 
@@ -57,12 +53,12 @@ class BaseWindow:
         self.win = win  # Curses window to do our operations on, provided to us
         self.color = False  # Value determining if we have color
         self._calls = {}  # List of callbacks to be called given a keypress
-        self._window_calls = {}
 
         self.colorPairs = {}
 
-        self.input_hand = False  # Value  determining if our input is handled
-        self.input_queue = queue.SimpleQueue()  # Queue to store inputs
+        self.managed = False  # Value  determining if our input is handled
+        self.input_queue = None  # Queue to store inputs - only relevant if we are managed!
+        self.master = None  # Instance of MasterWindow controlling us - only relevant if we are managed!
 
         max_y, max_x = win.getmaxyx()
 
@@ -248,23 +244,11 @@ class BaseWindow:
 
         # Check if we have special input handling:
 
-        if self.input_hand:
+        if self.managed:
 
             # Wait until input from our queue is received:
 
             return self.input_queue.get()
-
-        # Flush input buffer:
-
-        #curses.flushinp()
-
-        # Lets wait a bit!
-
-        #curses.napms(2)
-
-        # Flush it once more for good measure:
-
-        #curses.flushinp()
 
         # Getting keypress and returning it
 
@@ -273,18 +257,28 @@ class BaseWindow:
     def refresh(self):
 
         """
-        Refreshes the curses screen.
-        We also refresh the parent, and any headers.
+        Refreshes the curses screen,
+        and by extension, the BaseWindow parent window and headers.
+
+        If we are managed by a MasterWindow,
+        then we simply call 'noutrefresh()',
+        which only refreshes the virtual screen.
+
+        We then mark the MasterWindow for refresh,
+        which calls 'doupdate()' as soon as possible.
         """
 
-        if self.parent is not None:
-            self.parent.refresh()
+        if self.managed:
 
-        if self.header is not None:
-            self.header.refresh()
+            # We are managed, update the virtual screen and prompt for update:
 
-        if self.sub_header is not None:
-            self.sub_header.refresh()
+            self.win.noutrefresh()
+
+            # Mark the master window for refresh:
+
+            self.master.need_refresh = True
+
+            return
 
         self.win.refresh()
 
@@ -451,25 +445,54 @@ class BaseWindow:
 
         return self.win.erase()
 
-    def pause_input(self):
+    def manage(self, master):
 
         """
-        Pauses the input system, casing any calls to '_get_input' to block until our queue is filled.
+        Sets the window mode ot 'managed'. This does a few things:
 
-        (By extension, the high level 'get_input' is affected, as it calls this same method).
+        1. Create an input queue
+        2. Pull values from said input queue on each 'get_input()' call
+        3. Refresh the virtual screen and mark for physical upon 'refresh()' calls
+        4. Add MasterWindow instance to this window
+
+        This allows us to play nicely with other windows that are also managed by MasterWindow.
+
+        :param master: Instance of MasterWindow that is managing us
+        :type master: MasterWindow
         """
 
-        self.input_hand = True
+        # Set us to managed mode:
 
-    def resume_input(self):
+        self.managed = True
+
+        # Create an input queue for this window:
+
+        self.input_queue = Queue()
+
+        # Add instance of the master window:
+
+        self.master = master
+
+    def un_manage(self):
 
         """
-        Resumes the input system, allowing '_get_input' to work correctly.
+        Reverts the BaseWindow back to normal operation.
+        We undo much of what has been done in the 'manage()' method.
+
+        THIS WILL REMOVE ALL INPUT IN THE INPUT QUEUE, SO USE WITH CAUTION!
         """
 
-        # CLear the input queue:
+        # Set our status:
 
-        self.input_hand = False
+        self.managed = False
+
+        # Remove input queue:
+
+        self.input_queue = None
+
+        # Remove MasterWindow instance:
+
+        self.master = None
 
     def add_input(self, key):
 
@@ -486,7 +509,7 @@ class BaseWindow:
 
         self.input_queue.put(key)
 
-    def get_input(self, return_ascii=False, ignore_special=False):
+    def get_input(self, return_ascii=False, ignore_special=False, no_calls=False):
 
         """
         Gets key from curses, sends it though the callbacks, and returns the key if not handled.
@@ -495,13 +518,17 @@ class BaseWindow:
         We also offer the ability to ignore special characters, returning False in their place.
 
         :param return_ascii: Value determining if we should return the ascii number of the key
+        :type return_ascii: bool
         :param ignore_special: Determines if we should ignore special characters(ASCII values > 255)
+        :type ignore_special: bool
+        :param no_calls: Determines if we should pass the input through the callbacks
+        :type no_calls: bool
         :return: Key that isn't handled by a callback
         """
 
         key = self._get_input()
 
-        if self.handle_key(key):
+        if not no_calls and self.handle_key(key):
 
             # Key was handled by a callback, return nothing
 
@@ -520,6 +547,7 @@ class BaseWindow:
             return False
 
         if return_ascii:
+
             return key
 
         return chr(key)
@@ -599,7 +627,13 @@ class MasterWindow(BaseWindow):
     We handle the location of subwindows registered to us,
     as well as taking over the input for each window.
 
-    We also handle the process of focusing windows?
+    We also handle the process of focusing windows.
+    When a window(s) is focused, then we direct all input towards that specific window(s).
+    Otherwise, we direct input to the windows that request it.
+
+    We also handle the process of refreshing windows,
+    specifically physically updating the entire screen when a sub-window requests it.
+    This removes a lot of drawing latency, and greatly reduces screen flicker.
     """
 
     def __init__(self, win):
@@ -609,10 +643,15 @@ class MasterWindow(BaseWindow):
         self.win = win  # Master window to do our operations on
 
         self.thread = None  # Threading object
+        self.input_queue = queue.Queue()  # Input queue
+        self._win_calls = {}  # Mapping inputs to windows
+
+        self.need_refresh = False  # Value determining if we need to physically refresh the screen
 
         self.run = False  # Value determining if we are running
 
         self.subwins = []  # List of subwindows
+        self.focus = []  # Sub-windows to send ALL inputs to
 
     def add_subwin(self, subwin):
 
@@ -625,29 +664,17 @@ class MasterWindow(BaseWindow):
         :type subwin: BaseWindow
         """
 
-        self.subwins.append(subwin)
-        subwin.pause_input()
+        # Pause the sub-window input:
+
+        subwin.manage(self)
+
+        # Extract the sub-window callbacks:
+
         self.extract_callback(subwin)
 
-    def pause_window(self):
+        # Add the subwindow to the MasterWindow:
 
-        """
-        Pauses the input from all windows
-        """
-
-        for x in self.subwins:
-
-            x.pause_input()
-
-    def extract_all_callbacks(self):
-
-        """
-        Extracts all callbacks from the subwindows,
-        and adds them to our collection.
-        """
-
-        for win in self.subwins:
-            self.extract_callback(win)
+        self.subwins.append(subwin)
 
     def extract_callback(self, subwin):
 
@@ -661,9 +688,25 @@ class MasterWindow(BaseWindow):
 
         for key in subwin._calls:
 
-            self.add_callback(key, self._handle_input, args=[key, subwin])
+            if key in self._win_calls.keys():
 
-    def start(self):
+                # Key is present in window callbacks already, lets add it:
+
+                print("Key {} present with {}, adding {}".format(key, self._win_calls[key], subwin))
+
+                self._win_calls[key].append(subwin)
+
+            else:
+
+                # Key is NOT present, lets make a new entry:
+
+                print("Adding key {} with {}".format(key, subwin))
+
+                self._win_calls[key] = [subwin]
+
+        print(self._win_calls)
+
+    def _start_thread(self):
 
         """
         Starts the MasterWindow thread,
@@ -680,20 +723,76 @@ class MasterWindow(BaseWindow):
         self.thread.daemon = True
         self.thread.start()
 
-    def _handle_input(self, key, win):
+    def start(self):
 
         """
-        Passes given input the the given child window.
+        Starts the MasterWindow input thread,
+        and starts handling operations on sub-windows.
 
-        :param key: Key to pass to child
-        :type key: int
-        :param win: Child window
-        :type win: BaseWindow
+        This is not a very good implementation.
+        Perhaps asyncio would be more appropriate?
         """
 
-        # Add input to the child window
+        # Start the input thread:
 
-        win.add_input(key)
+        self._start_thread()
+
+        # Iterate over our event loop:
+
+        while self.run:
+
+            # Get input from our input queue:
+
+            try:
+
+                inp = self.input_queue.get_nowait()
+
+                # Send input to focused window(If any):
+
+                if self.focus:
+
+                    # Focused windows, iterate over them and send input:
+
+                    for win in self.focus:
+
+                        win.add_input(inp)
+
+                else:
+
+                    # Send the input to relevant window only:
+
+                    if inp in self._win_calls.keys():
+
+                        # Key is present, lets send it over:
+
+                        for win in self._win_calls[inp]:
+
+                            # Add the input to the specified window:
+
+                            win.add_input(inp)
+
+            except Empty:
+
+                # Queue is empty, do nothing
+
+                pass
+
+            # Check if any windows need to be refreshed:
+
+            if self.need_refresh:
+
+                # Refresh the physical screen:
+
+                curses.doupdate()
+
+    def stop(self):
+
+        """
+        Stops all MasterWindow components,
+        specifically the input loop and event loop.
+        """
+
+        self.run = False
 
     def _run(self):
 
@@ -703,8 +802,7 @@ class MasterWindow(BaseWindow):
 
         while self.run:
 
-            self.get_input()
-            #self.refresh()
+            self.input_queue.put(self.get_input(return_ascii=True, no_calls=True))
 
 
 class DisplayWindow(BaseWindow):
@@ -1251,163 +1349,6 @@ class InputWindow(BaseWindow):
         self.run = False
 
 
-class ChatWindow(BaseWindow):
-    """
-    CHAS Chat window, used for text interface with CHAS
-    """
-
-    def __init__(self, win):
-
-        super(ChatWindow, self).__init__(win)
-
-        self.chas = None  # CHAS Instance
-        self._history = []  # All inputs entered
-        self.test = None
-
-        self.inp = InputWindow.create_subwin_at_cord(self.win, 4, self.max_x, self.max_y - 4, 0)  # Creating input win
-        self.inp.border()  # Adding border to banner
-
-        self.banner = BaseWindow.create_subwin_at_cord(self.win, 10, self.max_x, 0, 0)  # Creating banner window
-        self.banner.border()  # Adding border to banner
-
-        self.text = BaseWindow.create_subwin_at_cord(self.win, self.max_y - 15, self.max_x, 11, 0)  # Text window
-        self.text.border()  # Adding border to text
-
-        self.exit = 'exit'  # Exit keyword
-        self.ban_text = '''+================================================+
-C.H.A.S Text Interface system Ver: {}
-Welcome to the C.H.A.S Text Interface System!
-Please make sure your statements are spelled correctly.
-C.H.A.S is not case sensitive!
-Type 'help' for more details
-'''.format('[[NOT IMPLEMENTED]]')
-
-        self._init_screen()
-
-        self.banner.refresh()
-        self.text.refresh()
-
-    def _render_banner(self):
-
-        """
-        Function for rendering banner text
-        """
-
-        self.banner.clear()
-
-        self.banner.addstr("C.H.A.S Text Interface System Ver: {}".format(self.chas.version), 0, 0)
-        self.banner.addstr("Welcome to the C.H.A.S Text Interface System!", 1, 0)
-        self.banner.addstr("Type 'help' for information on available commands", 2, 0)
-        self.banner.addstr("Plugins Loaded: {}".format(len(self.chas.extensions.get_extensions()['enabled'])), 3, 0)
-        self.banner.addstr("Personality Loaded: {}".format(self.chas.person.selected.name), 4, 0)
-
-        self.banner.refresh()
-
-    def run(self):
-
-        """
-        Runs the chat window, and exits upon the keyword 'exit'
-        """
-
-        while True:
-
-            self._render_banner()
-
-            # Getting input from the user:
-
-            inp = self.inp.input(prompt="Enter a statement:")
-
-            # Adding input to screen and internal collection
-
-            self._history.append(inp)
-
-            self.add(inp, output='INPUT')
-
-            # Checking for exit keyword:
-
-            if self._check_exit(inp):
-                # User wishes to exit
-
-                return
-
-            # Check CHAS handlers:
-
-            val = self.chas.extensions.handel(inp, False, self)
-
-            if val:
-                # Extension was able to handel our input, continue,
-
-                continue
-
-            # Extensions were not able to handel our input, pass information on to personality
-
-            self.chas.person.handel(inp, False, self)
-
-            continue
-
-    def input(self):
-
-        """
-        Gets input from user and returns it
-        :return: User input
-        """
-
-        while True:
-            # Render in the banner:
-
-            self._render_banner()
-
-            # Getting input from the user:
-
-            inp = self.inp.input(prompt='Enter a statement:')
-
-            # Adding input to screen and internal collection:
-
-            self._history.append(inp)
-
-            self.add(inp, output='INPUT')
-
-            # Returning input
-
-            return inp
-
-    def _check_exit(self, inp):
-
-        """
-        Checks if the input is the exit keyword
-        :param inp: Input from user
-        :return: Boolean determining if input is exit keyword
-        """
-
-        if self.exit == inp:
-            return True
-
-        return False
-
-    def add(self, thing, output='OUTPUT'):
-
-        """
-        Adds text to screen, each entry is on a new line
-        :param thing: String to add
-        :param output: Information to add before the string
-        :return:
-        """
-
-        # Formatting output value
-
-        val = '[' + str(output.rstrip()) + ']:'
-
-        # Adding input to window
-
-        final = val + str(thing.rstrip()) + '\n'
-
-        self.text.addstr(final)
-
-        # Refreshing window
-
-        self.text.refresh()
-
-
 class ScrollWindow(BaseWindow):
     """
     A curses window for handling content scrolling.
@@ -1433,7 +1374,7 @@ class ScrollWindow(BaseWindow):
         self.add_callback(curses.KEY_DOWN, self._increment_scroll)
         self.add_callback(curses.KEY_UP, self._decrement_scroll)
         self.add_callback('r', self._render_content)
-        self.add_callback([curses.KEY_END, curses.KEY_EXIT, 'e'], self.stop)
+        self.add_callback([curses.KEY_END, curses.KEY_EXIT, 'f'], self.stop)
 
     def get_key(self, block=True, timeout=None):
 
