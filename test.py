@@ -571,7 +571,9 @@ def mapping_text(win):
 
 def path_finding_test(win):
 
-    map_win = DisplayWindow.create_subwin_at_pos(win, 50, 50)
+    master = MasterWindow(win)
+
+    map_win = DisplayWindow.create_subwin_at_pos(win, 15, 15)
 
     map_win.add_callback('f', map_win.stop)
     curses.curs_set(0)
@@ -581,11 +583,17 @@ def path_finding_test(win):
     map_win.tilemap.fill(Floor)
 
     player = Player()
-    add(player, 25, 25, map_win)
-    add(Wall(), 27, 25, map_win)
-    #add(Wall(), 2, 2, map_win)
-    #add(Wall(), 1, 1, map_win)
+    add(player, 4, 0, map_win)
 
+    master.add_subwin(map_win)
+
+    display_thread = threading.Thread(target=map_win.display)
+    display_thread.daemon = True
+    display_thread.start()
+
+    # Start the master window
+
+    master.start()
 
     '''
     # Creating random walls on the x axis
@@ -628,7 +636,6 @@ def path_finding_test(win):
     add(Wall(), 7, 5, map_win)
     '''
 
-    map_win.display()
 
 
 def large_test(win):
@@ -735,4 +742,4 @@ def all_tests(win):
         win.erase()
 
 
-curses.wrapper(master_window_test)
+curses.wrapper(path_finding_test)
