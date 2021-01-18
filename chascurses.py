@@ -3,7 +3,7 @@ import curses.panel
 from math import ceil, floor
 import threading
 from inspect import isfunction
-from queue import Queue, Empty
+from queue import Queue
 
 from character_classes import *
 from tilemaps import BaseTileMap, Tile
@@ -55,6 +55,7 @@ class BaseWindow:
         self._calls = {}  # List of callbacks to be called given a keypress
 
         self.colorPairs = {}
+        self.done = False  # Value determining if we are done displaying info
 
         self.managed = False  # Value  determining if our input is handled
         self.input_queue = None  # Queue to store inputs - only relevant if we are managed!
@@ -142,6 +143,31 @@ class BaseWindow:
             # User wants content centered
 
             return (ceil(max_y / 2)) - (ceil(y_len / 2)), (ceil(max_x / 2)) - (ceil(x_len / 2))
+
+    def stop(self):
+
+        """
+        Makes it clear that we are done displaying and working in the terminal.
+
+        We clear the screen and set our done attribute to True.
+        This is very useful for MasterWindow, which needs this information to determine when to exit.
+        """
+
+        # Set our 'done' attribute:
+
+        self.done = False
+
+        # CLear the screen
+
+        self.clear()
+
+        # Check if we are managed:
+
+        if self.managed:
+
+            # Tell the MasterWindow we are done:
+
+            self.master.mark_done(self)
 
     def getmaxyx(self):
 
@@ -276,7 +302,7 @@ class BaseWindow:
 
             # Mark the master window for refresh:
 
-            self.master.need_refresh = True
+            self.master.need_refresh()
 
             return
 
@@ -634,6 +660,7 @@ class MasterWindow(BaseWindow):
     We also handle the process of refreshing windows,
     specifically physically updating the entire screen when a sub-window requests it.
     This removes a lot of drawing latency, and greatly reduces screen flicker.
+
     """
 
     def __init__(self, win):
@@ -643,10 +670,8 @@ class MasterWindow(BaseWindow):
         self.win = win  # Master window to do our operations on
 
         self.thread = None  # Threading object
-        self.input_queue = queue.Queue()  # Input queue
+        self.event_queue = queue.Queue()  # Event queue
         self._win_calls = {}  # Mapping inputs to windows
-
-        self.need_refresh = False  # Value determining if we need to physically refresh the screen
 
         self.run = False  # Value determining if we are running
 
@@ -723,86 +748,135 @@ class MasterWindow(BaseWindow):
         self.thread.daemon = True
         self.thread.start()
 
+    def need_refresh(self):
+
+        """
+        Add a 'refresh' event to the MasterWindow event queue.
+
+        The 'refresh' event is a None value.
+        When the event loop comes across a refresh value,
+        then it does a physical screen refresh.
+        """
+
+        self.event_queue.put(None)
+
+    def mark_done(self, win):
+
+        """
+        Removes the given window from the sub-list.
+
+        If the sub-list is empty, then MasterWindow stops the event loop
+        (If it is still running).
+        """
+
+        # Remove the window from the sublist
+
+        self.subwins.remove(win)
+
+        # Remove window from focus list, if present:
+
+        if win in self.focus:
+
+            self.focus.remove(win)
+
+        # Check if we are done:
+
+        if not self.subwins:
+
+            # No more subwindows, let's exit:
+
+            self.stop()
+
     def start(self):
 
         """
         Starts the MasterWindow input thread,
         and starts handling operations on sub-windows.
 
-        This is not a very good implementation.
-        Perhaps asyncio would be more appropriate?
+        We redirect input to relevant windows,
+        as well as handle physical screen refreshes.
         """
 
         # Start the input thread:
 
         self._start_thread()
 
-        # Iterate over our event loop:
+        # Iterate over our event loop, cleans out the queue if full:
 
-        while self.run:
+        while self.run or not self.event_queue.empty():
 
             # Get input from our input queue:
 
-            try:
+            inp = self.event_queue.get()
 
-                inp = self.input_queue.get_nowait()
+            # Check if we have to refresh the windows:
 
-                # Send input to focused window(If any):
-
-                if self.focus:
-
-                    # Focused windows, iterate over them and send input:
-
-                    for win in self.focus:
-
-                        win.add_input(inp)
-
-                else:
-
-                    # Send the input to relevant window only:
-
-                    if inp in self._win_calls.keys():
-
-                        # Key is present, lets send it over:
-
-                        for win in self._win_calls[inp]:
-
-                            # Add the input to the specified window:
-
-                            win.add_input(inp)
-
-            except Empty:
-
-                # Queue is empty, do nothing
-
-                pass
-
-            # Check if any windows need to be refreshed:
-
-            if self.need_refresh:
+            if inp is None:
 
                 # Refresh the physical screen:
 
                 curses.doupdate()
+
+                # Mark task as complete:
+
+                self.event_queue.task_done()
+
+                continue
+
+            # Send input to focused window(If any):
+
+            if self.focus:
+
+                # Focused windows, iterate over them and send input:
+
+                for win in self.focus:
+
+                    win.add_input(inp)
+
+            else:
+
+                # Send the input to relevant window only:
+
+                if inp in self._win_calls.keys():
+
+                    # Key is present, lets send it over:
+
+                    for win in self._win_calls[inp]:
+
+                        # Add the input to the specified window:
+
+                        win.add_input(inp)
+
+            # Mark task as complete:
+
+            self.event_queue.task_done()
 
     def stop(self):
 
         """
         Stops all MasterWindow components,
         specifically the input loop and event loop.
+
+        We also request a refresh, so any changes made will carry over.
         """
+
+        # Request a refresh:
+
+        self.need_refresh()
+
+        # Stop the window:
 
         self.run = False
 
     def _run(self):
 
         """
-        Main event loop, continuously extracts input from CURSES and passes it to the relevant windows.
+        Input event loop, continuously pulls values from CURSES and adds it to the input queue.
         """
 
         while self.run:
 
-            self.input_queue.put(self.get_input(return_ascii=True, no_calls=True))
+            self.event_queue.put(self.get_input(return_ascii=True, no_calls=True))
 
 
 class DisplayWindow(BaseWindow):
@@ -922,6 +996,10 @@ class DisplayWindow(BaseWindow):
                 # Add 'None' to the input queue:
 
                 call['args'][1].add_input(None)
+
+        # Mark ourselves as done:
+
+        super(DisplayWindow, self).stop()
 
 
 class TextDisplayWindow(BaseWindow):
@@ -1350,6 +1428,7 @@ class InputWindow(BaseWindow):
 
 
 class ScrollWindow(BaseWindow):
+
     """
     A curses window for handling content scrolling.
     """
@@ -1423,6 +1502,10 @@ class ScrollWindow(BaseWindow):
             return
 
         self.running = False
+
+        # Stops parent window:
+
+        super(ScrollWindow, self).stop()
 
     def block(self):
 

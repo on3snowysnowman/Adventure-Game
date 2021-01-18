@@ -742,4 +742,4 @@ def all_tests(win):
         win.erase()
 
 
-curses.wrapper(path_finding_test)
+curses.wrapper(master_window_test)
