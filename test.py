@@ -578,7 +578,7 @@ def path_finding_test(win):
 
     player = Player()
     add(player, 0, 8, map_win)
-    #add(Wall(), 2, 1, map_win)
+    #add(Wall(), 3, 4, map_win)
     add(Wall(), 2, 4, map_win)
     #add(Wall(), 1, 1, map_win)
     #add(TrackerEnemy(), 6, 2, map_win)

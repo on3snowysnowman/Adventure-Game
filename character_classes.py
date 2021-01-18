@@ -404,7 +404,6 @@ class EntityCharacter(BaseCharacter):
 
             print(line)
 
-
         '''
         #Quadrant 1 -----------------------------------------------------------------------------------------------------
 
@@ -613,7 +612,7 @@ class EntityCharacter(BaseCharacter):
             print("\n")
         #--------------------------------------------------------------------------------------
 
-        return objects
+        return booleanTileMap
 
     def check_tile(self, x, y):
 

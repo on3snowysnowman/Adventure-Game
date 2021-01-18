@@ -743,8 +743,10 @@ class DisplayWindow(BaseWindow):
 
             if z == 0:
 
-                self.addstr(obj.char, y, x, attrib=obj.attrib)
-                #self.addstr(obj.char, y, x)
+                if self.tilemap.boolList[y][x]:
+
+                    self.addstr(obj.char, y, x, attrib=obj.attrib)
+                    #self.addstr(obj.char, y, x)
 
             continue
 
@@ -769,13 +771,16 @@ class DisplayWindow(BaseWindow):
         self.thread.daemon = True
         self.thread.start()
 
+        self.tilemap.check_vision()
+
         self._render()
 
         while self.run:
 
             # Update the tilemap:
-
             self.tilemap.update()
+
+            self.tilemap.check_vision()
 
             self._render()
 
