@@ -1178,18 +1178,6 @@ class OpenedChest(BaseCharacter):
         self.can_traverse = False
 
 
-class Fog(BaseCharacter):
-
-    """
-    Represents Fog, things that the user can't see
-    """
-
-    def start(self):
-
-        self.char = '*'
-        self.name = 'Fog'
-
-
 class Floor(BaseCharacter):
 
     """

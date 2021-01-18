@@ -401,8 +401,6 @@ def master_window_test(win):
 
     # Tests the MasterWindow functionality.
 
-    curses.endwin()
-
     master = MasterWindow(win)
 
     # Create menus:
