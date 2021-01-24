@@ -573,7 +573,7 @@ def path_finding_test(win):
 
     master = MasterWindow(win)
 
-    map_win = DisplayWindow.create_subwin_at_pos(win, 15, 15)
+    map_win = DisplayWindow.create_subwin_at_pos(win, 13, 9)
 
     map_win.add_callback('f', map_win.stop)
     curses.curs_set(0)
@@ -583,7 +583,11 @@ def path_finding_test(win):
     map_win.tilemap.fill(Floor)
 
     player = Player()
-    add(player, 4, 0, map_win)
+    add(player, 0, 7, map_win)
+    add(Wall(), 3, 2, map_win)
+    #add(Wall(), 25, 2, map_win)
+    #add(Wall(), 25, 3, map_win)
+    #add(Wall(), 25, 4, map_win)
 
     master.add_subwin(map_win)
 
@@ -635,7 +639,6 @@ def path_finding_test(win):
     add(Wall(), 6, 5, map_win)
     add(Wall(), 7, 5, map_win)
     '''
-
 
 
 def large_test(win):
@@ -742,4 +745,4 @@ def all_tests(win):
         win.erase()
 
 
-curses.wrapper(master_window_test)
+curses.wrapper(path_finding_test)

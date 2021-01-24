@@ -717,7 +717,7 @@ class MasterWindow(BaseWindow):
 
                 # Key is present in window callbacks already, lets add it:
 
-                print("Key {} present with {}, adding {}".format(key, self._win_calls[key], subwin))
+                #print("Key {} present with {}, adding {}".format(key, self._win_calls[key], subwin))
 
                 self._win_calls[key].append(subwin)
 
@@ -725,11 +725,11 @@ class MasterWindow(BaseWindow):
 
                 # Key is NOT present, lets make a new entry:
 
-                print("Adding key {} with {}".format(key, subwin))
+                #print("Adding key {} with {}".format(key, subwin))
 
                 self._win_calls[key] = [subwin]
 
-        print(self._win_calls)
+        #print(self._win_calls)
 
     def _start_thread(self):
 
