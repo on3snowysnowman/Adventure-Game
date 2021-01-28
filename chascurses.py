@@ -1575,6 +1575,7 @@ class ScrollWindow(BaseWindow):
         # Adding content to the end of the collection
 
         for i in split:
+
             self.content.append(i)
 
         return

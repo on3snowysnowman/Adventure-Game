@@ -37,7 +37,7 @@ class BaseCharacter(object):
 
         self.tilemap = None  # Tilemap instance
         self.win = None  # DisplayWindow instance
-        self.text_win = None
+        self.scroll_win = None
 
         # Calling meta start method:
 
@@ -174,6 +174,8 @@ class EntityCharacter(BaseCharacter):
 
     def look(self, radius, debugPrint = False):
 
+        self.scroll_win.clear()
+
         selfTile = self.tilemap.find_object(self)
         posX, posY = selfTile.x, selfTile.y
 
@@ -278,6 +280,12 @@ class EntityCharacter(BaseCharacter):
                 index += 1
                 newLineCount += 1
 
+        equationTop = 0
+        equationBottom = 0
+
+        wallPosX = 0
+        wallPosY = 0
+
         xIt = 0
         yIt = 0
 
@@ -295,28 +303,37 @@ class EntityCharacter(BaseCharacter):
                     wallPosY  = ((len(booleanTileMap) - 1) - yIt) - posY
                     wallPosX = xIt - posX
 
-                    #if selfTile.y - yIt >= 4:
-
-                        #equationTop = float((wallPosY + 2) / wallPosX)
-                        #equationBottom = float(wallPosY + 1/ (wallPosX + 1))
-
-                        #yIndex = yIt - 1
-                        #xIndex = xIt + 1
-
-
                     equationTop = float((wallPosY + 1) / wallPosX)
                     equationBottom = float(wallPosY/ (wallPosX + 1))
 
                     yIndex = yIt
                     xIndex = xIt + 1
 
-                    #if yIt - selfTile.y >= 3:
+                    #Checking if the bottom slope is greater than 1.0
+                    if equationBottom > 1.0:
 
-                        #booleanTileMap[yIt - 1][xIt] = False
+                        self.scroll_win.add_content("Bottom is greater than 1")
+
+                        #Reassigning the bottom slope so that it's angled slightly more above the wall
+                        equationBottom = float(wallPosY + 1 / (wallPosX + 1))
+
+                        #Reassigning the yIndex to match where the new slope starts
+                        yIndex = yIt - 1
+
+                    #Checking if the top slope is greater than 1.0
+                    if equationTop > 1.0:
+
+                        self.scroll_win.add_content("Top is greater than 1")
+
+                        #Reassigning the top slope so that it's angled more above the wall
+                        equationTop = float((wallPosY + 2) / wallPosX)
+
+                        #Reassigning the xIndex to allow the equation to check the x tile we start on
+                        xIndex = xIt
 
                     # Slope of 1
                     if wallPosY - 1 == wallPosX or wallPosY == wallPosX + 1:
-                        
+
                         if debugPrint:
                             print("Slope of 1")
                         # BottomLine
@@ -395,10 +412,17 @@ class EntityCharacter(BaseCharacter):
 
         if debugPrint:
 
+            self.scroll_win.add_content("Top Equation: " )
+            self.scroll_win.add_content("Bottom Equation: ")
+
             for line in testedPoints:
 
-                print(line)
+                self.scroll_win.add_content(str(line))
 
+
+            self.scroll_win._render_content()
+
+            '''
             #Printing out tilemap------------------------------------------------------------------
             print("\n" * 2)
             for line in booleanTileMap:
@@ -415,7 +439,7 @@ class EntityCharacter(BaseCharacter):
 
                 print("\n")
             #--------------------------------------------------------------------------------------
-
+            '''
 
         return booleanTileMap
 
@@ -1367,29 +1391,29 @@ class Player(EntityCharacter):
 
         elif inp == 'i':
 
-            if self.text_win is not None:
+            if self.scroll_win is not None:
 
                 if len(self.inventory) == 0:
 
-                    self.text_win.add_content("Your inventory is empty", attrib="white")
+                    self.scroll_win.add_content("Your inventory is empty", attrib="white")
 
             else:
 
-                self.text_win.add_content("Inventory: ", attrib = "white")
+                self.scroll_win.add_content("Inventory: ", attrib = "white")
 
                 for x in self.inventory:
 
                     if isinstance(x, Item):
 
-                        self.text_win.add_content(x.name)
+                        self.scroll_win.add_content(x.name)
 
-                self.text_win.add_content("\n" * 0)
+                self.scroll_win.add_content("\n" * 0)
 
         elif inp == 'l':
 
             self.look(100, True)
 
-            #self.text_win.add_content("You don't see any objects in this room", "white")
+            #self.scroll_win.add_content("You don't see any objects in this room", "white")
 
         elif inp == 'o':
 
@@ -1403,15 +1427,15 @@ class Player(EntityCharacter):
 
             if len(groundContents) > 0:
 
-                self.text_win.add_content("Things on the ground: ", "white")
+                self.scroll_win.add_content("Things on the ground: ", "white")
 
                 for x in groundContents:
 
                     if not isinstance(x.obj, Player):
 
-                        self.text_win.add_content(x.obj.name)
+                        self.scroll_win.add_content(x.obj.name)
 
-                self.text_win.add_content("\n" * 0)
+                self.scroll_win.add_content("\n" * 0)
 
         elif inp == 'y':
             
@@ -1448,7 +1472,7 @@ class Player(EntityCharacter):
                     self.inventory.append(targObj)
                     self.inventory_space += targObj.size
                     self.tilemap.removeObj(targObj)
-                    self.text_win.add_content(targObj.name + " added to inventory")
+                    self.scroll_win.add_content(targObj.name + " added to inventory")
 
     def pickup_item(self, targObj):
 
@@ -1462,7 +1486,7 @@ class Player(EntityCharacter):
 
                     self.inventory.append(targObj)
                     self.inventory_space += targObj.size
-                    self.text_win.add_content(targObj.name + " added to inventory")
+                    self.scroll_win.add_content(targObj.name + " added to inventory")
 
     def get_item(self, targObj):
 
@@ -1472,13 +1496,13 @@ class Player(EntityCharacter):
 
                 playerPos = self.tilemap.get(self)
                 self.tilemap.add(targObj, playerPos.x, playerPos.y)
-                self.text_win.add_content(f"You don't have enough space for the {targObj.name}")
+                self.scroll_win.add_content(f"You don't have enough space for the {targObj.name}")
 
             else:
 
                 self.inventory.append(targObj)
                 self.inventory_space += targObj.size
-                self.text_win.add_content(targObj.name + " added to inventory")
+                self.scroll_win.add_content(targObj.name + " added to inventory")
 
     def check_chest(self, xPos, yPos):
 
@@ -1491,7 +1515,7 @@ class Player(EntityCharacter):
                     item = i.obj.open_chest()
 
                     if isinstance(item, Item):
-                        self.text_win.add_content(f"You found a {item.name} in a chest! ")
+                        self.scroll_win.add_content(f"You found a {item.name} in a chest! ")
                         self.pickup_item(item)
                         self.tilemap.removeObj_by_coords(xPos, yPos)
                         self.tilemap.add(OpenedChest(), xPos, yPos)

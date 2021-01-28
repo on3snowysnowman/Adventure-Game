@@ -574,6 +574,7 @@ def path_finding_test(win):
     master = MasterWindow(win)
 
     map_win = DisplayWindow.create_subwin_at_pos(win, 13, 9)
+    scroll_win = ScrollWindow.create_subwin_at_pos(win, 20, 70, BaseWindow.TOP_RIGHT)
 
     map_win.add_callback('f', map_win.stop)
     curses.curs_set(0)
@@ -595,9 +596,13 @@ def path_finding_test(win):
     display_thread.daemon = True
     display_thread.start()
 
-    # Start the master window
+    player.scroll_win = scroll_win
 
+    # Start the master window
+    scroll_win.add_content("Scroll Window")
+    scroll_win._render_content()
     master.start()
+
 
     '''
     # Creating random walls on the x axis
