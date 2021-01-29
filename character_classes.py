@@ -283,20 +283,33 @@ class EntityCharacter(BaseCharacter):
         equationTop = 0
         equationBottom = 0
 
+        #X Position of wall in relation to self as the origin
         wallPosX = 0
+        #Y Position of wall in relation to self as the origin
         wallPosY = 0
 
+        #X Position of wall in relation to an origin at the top left
         xIt = 0
+        #Y Position of wall in relation to an origin at the top left
         yIt = 0
 
+        #Y Position of character in relation to an origin at the bottom left
         posY = (len(booleanTileMap) - 1) - posY
+        #X Position of character, irrelevent if origin is top left or bottom left
         posX = selfTile.x
+
+        #X Index of the tile we are accessing in relation to an origin at top left
+        xIndex = 0
+        #Y Index of the tile we are accessing in relation to an origin at top left
+        yIndex = 0
 
         testedPoints = []
 
         for line in booleanTileMap:
 
             for col in line:
+
+                checkTop = False
 
                 if col == "W":
 
@@ -310,13 +323,14 @@ class EntityCharacter(BaseCharacter):
                     xIndex = xIt + 1
 
                     #Checking if the bottom slope is greater than 1.0
-                    if equationBottom > 1.0:
+
+                    if equationBottom >= .5:
+
 
                         self.scroll_win.add_content("Bottom is greater than 1")
 
                         #Reassigning the bottom slope so that it's angled slightly more above the wall
-                        equationBottom = float(wallPosY + 1 / (wallPosX + 1))
-
+                        equationBottom = float((wallPosY + 1) / (wallPosX + 1))
                         #Reassigning the yIndex to match where the new slope starts
                         yIndex = yIt - 1
 
@@ -325,19 +339,47 @@ class EntityCharacter(BaseCharacter):
 
                         self.scroll_win.add_content("Top is greater than 1")
 
+                        checkTop = True
+
                         #Reassigning the top slope so that it's angled more above the wall
                         equationTop = float((wallPosY + 2) / wallPosX)
 
                         #Reassigning the xIndex to allow the equation to check the x tile we start on
                         xIndex = xIt
 
+                        if equationBottom < .5:
+
+                            #Reassigning the yIndex to start above the wall, and not on top of it
+                            yIndex = yIt - 1
+
+                    '''
                     # Slope of 1
                     if wallPosY - 1 == wallPosX or wallPosY == wallPosX + 1:
 
                         if debugPrint:
-                            print("Slope of 1")
-                        # BottomLine
 
+                            print("Slope of 1")
+
+                        if checkTop:
+
+                            #Top of Wall
+                            while ((len(booleanTileMap) - 1) - yIndex) - posY < math.floor(equationTop * (xIndex - posX)):
+
+                                booleanTileMap[yIndex][xIndex] = False
+                                yIndex -= 1
+
+                            floatOutput = equationTop * (xIndex - posX)
+
+                            if math.floor((floatOutput % 1) * 10) / 10 >= .5 and math.floor((floatOutput % 1) * 10) / 10 != 0.0 and yIndex > 0:
+
+                                if yIndex < 0:
+                                    yIndex = 0
+
+                                booleanTileMap[yIndex][xIndex] = False
+
+                                testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
+
+                        # BottomLine
                         while xIndex < len(booleanTileMap[0]):
 
                             floatOutput = equationBottom * (xIndex - posX)
@@ -368,78 +410,97 @@ class EntityCharacter(BaseCharacter):
 
                             xIndex += 1
                             yIndex = (len(booleanTileMap) - 1) - math.floor(equationBottom * (xIndex - posX) + posY)
+                    '''
 
-                    else:
+                    if checkTop:
 
-                        #BottomLine
-                        while xIndex < len(booleanTileMap[yIndex]):
+                        #Top of Wall
+                        while ((len(booleanTileMap) - 1) - yIndex) - posY < math.floor(equationTop * (xIndex - posX)):
 
-                            floatOutput = equationBottom * (xIndex - posX)
+                            booleanTileMap[yIndex][xIndex] = False
+                            yIndex -= 1
 
-                            if math.floor((floatOutput % 1) * 10) / 10 <= .5: booleanTileMap[yIndex][xIndex] = False
+                        floatOutput = equationTop * (xIndex - posX)
+
+                        if math.floor((floatOutput % 1) * 10) / 10 >= .5 and math.floor((floatOutput % 1) * 10) / 10 != 0.0 and yIndex > 0:
+
+                            if yIndex < 0:
+                                yIndex = 0
+
+                            booleanTileMap[yIndex][xIndex] = False
 
                             testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
 
+                        xIndex += 1
+                        yIndex = (len(booleanTileMap) - 1) - (math.floor(equationBottom * (xIndex - posX)) + posY)
+
+                    #BottomLine
+                    while xIndex < len(booleanTileMap[yIndex]):
+
+                        floatOutput = equationBottom * (xIndex - posX)
+
+                        if math.floor((floatOutput % 1) * 10) / 10 <= .5: booleanTileMap[yIndex][xIndex] = False
+
+                        testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
+
+                        yIndex -= 1
+                        #Top Line
+
+                        while yIndex >= 0 and ((len(booleanTileMap) - 1) - yIndex) - posY < math.floor(equationTop * (xIndex - posX)):
+
+                            booleanTileMap[yIndex][xIndex] = False
+                            testedPoints.append([xIndex, yIndex])
                             yIndex -= 1
-                            #Top Line
 
-                            while yIndex >= 0 and ((len(booleanTileMap) - 1) - yIndex) - posY < math.floor(equationTop * (xIndex - posX)):
+                        floatOutput = equationTop * (xIndex - posX)
 
-                                booleanTileMap[yIndex][xIndex] = False
-                                testedPoints.append([xIndex, yIndex])
-                                yIndex -= 1
+                        if math.floor((floatOutput % 1) * 10) / 10 >= .5 and yIndex > 0:
 
-                            floatOutput = equationTop * (xIndex - posX)
+                            if yIndex < 0:
 
-                            if math.floor((floatOutput % 1) * 10) / 10 >= .5 and yIndex > 0:
+                                yIndex = 0
 
-                                if yIndex < 0:
+                            booleanTileMap[yIndex][xIndex] = False
 
-                                    yIndex = 0
+                            testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
 
-                                booleanTileMap[yIndex][xIndex] = False
-
-                                testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
-
-                            xIndex += 1
-                            yIndex = (len(booleanTileMap) - 1) - math.floor(equationBottom * (xIndex - posX) + posY)
-                            if yIndex < 0: break
+                        xIndex += 1
+                        yIndex = (len(booleanTileMap) - 1) - math.floor(equationBottom * (xIndex - posX) + posY)
+                        if yIndex < 0: break
 
                 xIt += 1
 
             xIt = 0
             yIt += 1
 
-        if debugPrint:
+        self.scroll_win.add_content("Top Equation: " + str(equationTop))
+        self.scroll_win.add_content("Bottom Equation: " + str(equationBottom))
 
-            self.scroll_win.add_content("Top Equation: " )
-            self.scroll_win.add_content("Bottom Equation: ")
+        for line in testedPoints:
 
-            for line in testedPoints:
-
-                self.scroll_win.add_content(str(line))
+            self.scroll_win.add_content(str(line))
 
 
-            self.scroll_win._render_content()
+        self.scroll_win._render_content()
 
-            '''
-            #Printing out tilemap------------------------------------------------------------------
-            print("\n" * 2)
-            for line in booleanTileMap:
+        '''
+        #Printing out tilemap------------------------------------------------------------------
+        print("\n" * 2)
+        for line in booleanTileMap:
 
-                for col in line:
+            for col in line:
 
-                    if type(col) is str: print(" " + col + " ", end = "")
+                if type(col) is str: print(" " + col + " ", end = "")
 
-                    elif col is True:
+                elif col is True:
 
-                        print(" . ", end = "")
+                    print(" . ", end = "")
 
-                    elif not col: print(" X ", end = "")
+                elif not col: print(" X ", end = "")
 
-                print("\n")
-            #--------------------------------------------------------------------------------------
-            '''
+            print("\n")
+        #--------------------------------------------------------------------------------------
+        '''
 
         return booleanTileMap
 

@@ -943,18 +943,18 @@ class DisplayWindow(BaseWindow):
         self.thread.daemon = True
         self.thread.start()
 
-        self.tilemap.check_vision()
+        #self.tilemap.check_vision()
 
-        self._render()
+        #self._render()
 
         while self.run:
-
-            # Update the tilemap:
-            self.tilemap.update()
 
             self.tilemap.check_vision()
 
             self._render()
+
+            # Update the tilemap:
+            self.tilemap.update()
 
     def _add_key(self, key, obj):
 
