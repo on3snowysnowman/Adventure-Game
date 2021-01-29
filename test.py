@@ -569,7 +569,7 @@ def mapping_text(win):
     map_win.display()
 
 
-def path_finding_test(win):
+def look_test(win):
 
     master = MasterWindow(win)
 
@@ -586,9 +586,8 @@ def path_finding_test(win):
     player = Player()
     add(player, 0, 7, map_win)
     add(Wall(), 3, 2, map_win)
-    #add(Wall(), 25, 2, map_win)
-    #add(Wall(), 25, 3, map_win)
-    #add(Wall(), 25, 4, map_win)
+    #add(Wall(), 4, 2, map_win)
+    #add(Wall(), 4, 3, map_win)
 
     master.add_subwin(map_win)
 
@@ -750,4 +749,4 @@ def all_tests(win):
         win.erase()
 
 
-curses.wrapper(path_finding_test)
+curses.wrapper(look_test)
