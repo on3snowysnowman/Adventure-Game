@@ -19,7 +19,10 @@ class BaseCharacter(object):
     """
 
     def __init__(self):
+        """
 
+        :rtype: object
+        """
         self.char = ''  # Character to draw
         self.contains_color = True  # Determines if this character has color attributes
         self.color = ""  # Color of this object
@@ -225,7 +228,7 @@ class EntityCharacter(BaseCharacter):
         #print(f"rightRadius: {rightRadius}")
 
         objects = self.tilemap.get_around(posX, posY, radius, True)
-        booleanTileMap = [[]]
+        referenceTileMap = [[]]
 
         #Index of object list
         index = 0
@@ -241,6 +244,7 @@ class EntityCharacter(BaseCharacter):
         playerX = 0
         playerY = 0
 
+        #Creating referenceTileMap
         while index < len(objects):
 
             for subIndex in objects[index]:
@@ -250,7 +254,7 @@ class EntityCharacter(BaseCharacter):
                     isPlayer = True
                     break
 
-                if not subIndex.obj.can_traverse:
+                if isinstance(subIndex.obj, Wall):
 
                     hasWall = True
                     break
@@ -258,19 +262,19 @@ class EntityCharacter(BaseCharacter):
             if isPlayer:
 
                 isPlayer = False
-                booleanTileMap[count].append("C")
+                referenceTileMap[count].append("C")
 
             elif hasWall:
 
                 hasWall = False
-                booleanTileMap[count].append("W")
+                referenceTileMap[count].append("W")
 
-            else: booleanTileMap[count].append(True)
+            else: referenceTileMap[count].append(True)
 
             if newLineCount == leftRadius + rightRadius and index + 1 < len(objects):
 
                 index += 1
-                booleanTileMap.append([])
+                referenceTileMap.append([])
                 newLineCount = 0
                 count += 1
                 continue
@@ -279,6 +283,21 @@ class EntityCharacter(BaseCharacter):
 
                 index += 1
                 newLineCount += 1
+
+        booleanTileMap = []
+
+        yIt = 0
+
+        # Creating BooleanTileMap off of reference
+        for line in referenceTileMap:
+
+            booleanTileMap.append([])
+
+            for col in line:
+
+                booleanTileMap[yIt].append(col)
+
+            yIt += 1
 
         equationTop = 0
         equationBottom = 0
@@ -294,7 +313,7 @@ class EntityCharacter(BaseCharacter):
         yIt = 0
 
         #Y Position of character in relation to an origin at the bottom left
-        posY = (len(booleanTileMap) - 1) - posY
+        posY = (len(referenceTileMap) - 1) - posY
         #X Position of character, irrelevent if origin is top left or bottom left
         posX = selfTile.x
 
@@ -305,7 +324,7 @@ class EntityCharacter(BaseCharacter):
 
         testedPoints = []
 
-        for line in booleanTileMap:
+        for line in referenceTileMap:
 
             for col in line:
 
@@ -314,11 +333,11 @@ class EntityCharacter(BaseCharacter):
                 if col == "W":
 
                     #Wall Positions will be the same in relation to the character no matter what slope, so we init them here
-                    wallPosY = ((len(booleanTileMap) - 1) - yIt) - posY
+                    wallPosY = ((len(referenceTileMap) - 1) - yIt) - posY
                     wallPosX = xIt - posX
 
                     #Wall is in Quadrant 1
-                    if xIt - selfTile.x >= 0 and ((len(booleanTileMap) - 1) - yIt) - posY >= 0:
+                    if xIt - selfTile.x >= 0 and ((len(referenceTileMap) - 1) - yIt) - posY >= 0:
 
                         # Wall is on the same X Value
                         if xIt == selfTile.x:
@@ -339,7 +358,7 @@ class EntityCharacter(BaseCharacter):
                             yIndex = yIt
                             xIndex = xIt + 1
 
-                            while xIndex < len(booleanTileMap[yIndex]):
+                            while xIndex < len(referenceTileMap[yIndex]):
 
                                 # Bottom Line
                                 floatOutput = equationBottom * (xIndex - posX)
@@ -357,7 +376,7 @@ class EntityCharacter(BaseCharacter):
                                 yIndex -= 1
 
                                 # Top Line
-                                while yIndex >= 0 and ((len(booleanTileMap) - 1) - yIndex) - posY < math.floor(
+                                while yIndex >= 0 and ((len(referenceTileMap) - 1) - yIndex) - posY < math.floor(
                                         equationTop * (xIndex - posX)):
 
                                     booleanTileMap[yIndex][xIndex] = False
@@ -382,7 +401,7 @@ class EntityCharacter(BaseCharacter):
                                     testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
 
                                 xIndex += 1
-                                yIndex = (len(booleanTileMap) - 1) - math.floor(equationBottom * (xIndex - posX) + posY)
+                                yIndex = (len(referenceTileMap) - 1) - math.floor(equationBottom * (xIndex - posX) + posY)
                                 if yIndex < 0: break
 
                             # Reflecting over the x axis
@@ -430,7 +449,7 @@ class EntityCharacter(BaseCharacter):
                             if checkTop:
 
                                 #Top of Wall
-                                while ((len(booleanTileMap) - 1) - yIndex) - posY < math.floor(equationTop * (xIndex - posX)):
+                                while ((len(referenceTileMap) - 1) - yIndex) - posY < math.floor(equationTop * (xIndex - posX)):
 
                                     booleanTileMap[yIndex][xIndex] = False
                                     yIndex -= 1
@@ -447,10 +466,10 @@ class EntityCharacter(BaseCharacter):
                                     testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
 
                                 xIndex += 1
-                                yIndex = (len(booleanTileMap) - 1) - (math.floor(equationBottom * (xIndex - posX)) + posY)
+                                yIndex = (len(referenceTileMap) - 1) - (math.floor(equationBottom * (xIndex - posX)) + posY)
 
                             #BottomLine
-                            while xIndex < len(booleanTileMap[yIndex]):
+                            while xIndex < len(referenceTileMap[yIndex]):
 
                                 # Bottom Line
                                 floatOutput = equationBottom * (xIndex - posX)
@@ -462,7 +481,7 @@ class EntityCharacter(BaseCharacter):
                                 yIndex -= 1
                                 #Top Line
 
-                                while yIndex >= 0 and ((len(booleanTileMap) - 1) - yIndex) - posY < math.floor(equationTop * (xIndex - posX)):
+                                while yIndex >= 0 and ((len(referenceTileMap) - 1) - yIndex) - posY < math.floor(equationTop * (xIndex - posX)):
 
                                     booleanTileMap[yIndex][xIndex] = False
                                     testedPoints.append([xIndex, yIndex])
@@ -481,7 +500,7 @@ class EntityCharacter(BaseCharacter):
                                     testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
 
                                 xIndex += 1
-                                yIndex = (len(booleanTileMap) - 1) - math.floor(equationBottom * (xIndex - posX) + posY)
+                                yIndex = (len(referenceTileMap) - 1) - math.floor(equationBottom * (xIndex - posX) + posY)
                                 if yIndex < 0: break
 
                 xIt += 1
@@ -497,13 +516,12 @@ class EntityCharacter(BaseCharacter):
 
             #self.scroll_win.add_content(str(line))
 
-
         self.scroll_win._render_content()
 
         '''
         #Printing out tilemap------------------------------------------------------------------
         print("\n" * 2)
-        for line in booleanTileMap:
+        for line in referenceTileMap:
 
             for col in line:
 

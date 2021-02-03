@@ -1,4 +1,6 @@
 #from chascurses import *
+from builtins import print
+
 from chascurses import *
 from item_classes import *
 import curses
@@ -573,7 +575,7 @@ def look_test(win):
 
     master = MasterWindow(win)
 
-    map_win = DisplayWindow.create_subwin_at_pos(win, 13, 9)
+    map_win = DisplayWindow.create_subwin_at_pos(win, 10, 25)
     scroll_win = ScrollWindow.create_subwin_at_pos(win, 20, 70, BaseWindow.TOP_RIGHT)
 
     map_win.add_callback('f', map_win.stop)
@@ -584,10 +586,10 @@ def look_test(win):
     map_win.tilemap.fill(Floor)
 
     player = Player()
-    add(player, 0, 7, map_win)
-    add(Wall(), 3, 2, map_win)
-    #add(Wall(), 4, 2, map_win)
-    #add(Wall(), 4, 3, map_win)
+    add(player, 16, 4, map_win)
+    add(Wall(), 19, 2, map_win)
+    add(Wall(), 20, 2, map_win)
+    add(Wall(), 20, 3, map_win)
 
     master.add_subwin(map_win)
 
@@ -747,6 +749,5 @@ def all_tests(win):
         test(win)
 
         win.erase()
-
 
 curses.wrapper(look_test)
