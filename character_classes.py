@@ -376,8 +376,7 @@ class EntityCharacter(BaseCharacter):
                                 yIndex -= 1
 
                                 # Top Line
-                                while yIndex >= 0 and ((len(referenceTileMap) - 1) - yIndex) - posY < math.floor(
-                                        equationTop * (xIndex - posX)):
+                                while yIndex >= 0 and ((len(referenceTileMap) - 1) - yIndex) - posY < math.floor(equationTop * (xIndex - posX)):
 
                                     booleanTileMap[yIndex][xIndex] = False
                                     if yIndex != selfTile.y:
@@ -386,32 +385,49 @@ class EntityCharacter(BaseCharacter):
                                     testedPoints.append([xIndex, yIndex])
                                     yIndex -= 1
 
+                                while ((len(referenceTileMap) - 1) - yIndex) - posY < math.floor(equationTop * (xIndex - posX)):
+
+                                    if yIndex != selfTile.y:
+                                        pointsBlocked.append([xIndex, yIndex])
+                                    yIndex -= 1
+
                                 floatOutput = equationTop * (xIndex - posX)
 
                                 if math.floor((floatOutput % 1) * 10) / 10 >= .5 and yIndex > 0:
 
-                                    if yIndex < 0:
-                                        yIndex = 0
+                                    if yIndex >= 0:
 
-                                    booleanTileMap[yIndex][xIndex] = False
+                                        booleanTileMap[yIndex][xIndex] = False
 
-                                    if yIndex != selfTile.y:
-                                        pointsBlocked.append([xIndex, yIndex])
+                                        if yIndex != selfTile.y:
+                                            pointsBlocked.append([xIndex, yIndex])
 
-                                    testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
+                                        testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
 
                                 xIndex += 1
                                 yIndex = (len(referenceTileMap) - 1) - math.floor(equationBottom * (xIndex - posX) + posY)
                                 if yIndex < 0: break
 
+
                             # Reflecting over the x axis
                             for point in pointsBlocked:
-                                booleanTileMap[selfTile.y + (selfTile.y - point[1])][point[0]] = False
+
+                                if point[1] < 0:
+
+                                    if (selfTile.y * 2)  + abs(point[1]) < len(booleanTileMap):
+
+                                        booleanTileMap[(selfTile.y * 2)  + abs(point[1])][point[0]] = False
+
+                                else:
+
+                                    if (selfTile.y + (selfTile.y - point[1])) < len(booleanTileMap):
+
+                                        booleanTileMap[selfTile.y + (selfTile.y - point[1])][point[0]] = False
 
                         else:
 
                             equationTop = float((wallPosY + 1) / wallPosX)
-                            equationBottom = float(wallPosY/ (wallPosX + 1))
+                            equationBottom = float(wallPosY / (wallPosX + 1))
 
                             yIndex = yIt
                             xIndex = xIt + 1
@@ -445,7 +461,6 @@ class EntityCharacter(BaseCharacter):
                                     #Reassigning the yIndex to start above the wall, and not on top of it
                                     yIndex = yIt - 1
 
-
                             if checkTop:
 
                                 #Top of Wall
@@ -458,12 +473,11 @@ class EntityCharacter(BaseCharacter):
 
                                 if math.floor((floatOutput % 1) * 10) / 10 >= .5 and math.floor((floatOutput % 1) * 10) / 10 != 0.0 and yIndex > 0:
 
-                                    if yIndex < 0:
-                                        yIndex = 0
+                                    if yIndex >= 0:
 
-                                    booleanTileMap[yIndex][xIndex] = False
+                                        booleanTileMap[yIndex][xIndex] = False
 
-                                    testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
+                                        testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
 
                                 xIndex += 1
                                 yIndex = (len(referenceTileMap) - 1) - (math.floor(equationBottom * (xIndex - posX)) + posY)
@@ -491,13 +505,11 @@ class EntityCharacter(BaseCharacter):
 
                                 if math.floor((floatOutput % 1) * 10) / 10 >= .5 and yIndex > 0:
 
-                                    if yIndex < 0:
+                                    if yIndex >= 0:
 
-                                        yIndex = 0
+                                        booleanTileMap[yIndex][xIndex] = False
 
-                                    booleanTileMap[yIndex][xIndex] = False
-
-                                    testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
+                                        testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
 
                                 xIndex += 1
                                 yIndex = (len(referenceTileMap) - 1) - math.floor(equationBottom * (xIndex - posX) + posY)
@@ -512,10 +524,10 @@ class EntityCharacter(BaseCharacter):
         self.scroll_win.add_content("Bottom Equation: " + str(equationBottom))
 
 
-        #for line in testedPoints:
+        for line in testedPoints:
 
-            #self.scroll_win.add_content(str(line))
-
+            self.scroll_win.add_content(str(line))
+        self.scroll_win.add_content("yes")
         self.scroll_win._render_content()
 
         '''

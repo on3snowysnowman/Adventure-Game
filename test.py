@@ -575,8 +575,8 @@ def look_test(win):
 
     master = MasterWindow(win)
 
-    map_win = DisplayWindow.create_subwin_at_pos(win, 10, 25)
-    scroll_win = ScrollWindow.create_subwin_at_pos(win, 20, 70, BaseWindow.TOP_RIGHT)
+    map_win = DisplayWindow.create_subwin_at_pos(win, 16, 25)
+    scroll_win = ScrollWindow.create_subwin_at_pos(win, master.max_y, int(master.max_x / 2), BaseWindow.TOP_RIGHT)
 
     map_win.add_callback('f', map_win.stop)
     curses.curs_set(0)
@@ -586,10 +586,11 @@ def look_test(win):
     map_win.tilemap.fill(Floor)
 
     player = Player()
-    add(player, 16, 4, map_win)
-    add(Wall(), 19, 2, map_win)
-    add(Wall(), 20, 2, map_win)
-    add(Wall(), 20, 3, map_win)
+    add(player, 16, 14, map_win)
+    #add(Wall(), 15, 10, map_win)
+    add(Wall(), 15, 8, map_win)
+    #add(Wall(), 20, 2, map_win)
+    add(Wall(), 16, 9, map_win)
 
     master.add_subwin(map_win)
 

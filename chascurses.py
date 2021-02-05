@@ -88,7 +88,7 @@ class BaseWindow:
 
         # Enabling cbreak mode, disables buffered input
 
-        curses.cbreak(True)
+        curses.cbreak()
 
         # Start Keypad handling
 
