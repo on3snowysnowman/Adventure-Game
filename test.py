@@ -586,11 +586,11 @@ def look_test(win):
     map_win.tilemap.fill(Floor)
 
     player = Player()
-    add(player, 14, 14, map_win)
+    add(player, 3, 14, map_win)
     #add(Wall(), 15, 10, map_win)
     #add(Wall(), 15, 7, map_win)
     #add(Wall(), 20, 2, map_win)
-    add(Wall(), 19, 8, map_win)
+    add(Wall(), 4, 8, map_win)
 
     master.add_subwin(map_win)
 
