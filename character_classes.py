@@ -10,8 +10,8 @@ import queue
 from item_classes import *
 import math
 
-class BaseCharacter(object):
 
+class BaseCharacter(object):
     """
     BaseCharacter class all sub-characters must inherit.
 
@@ -27,7 +27,7 @@ class BaseCharacter(object):
         self.contains_color = True  # Determines if this character has color attributes
         self.color = ""  # Color of this object
         self.attrib = []  # Color/terminal attributes to draw this character with
-        self.name = 'BaseCharacter'   # Name of the character
+        self.name = 'BaseCharacter'  # Name of the character
         self.can_traverse = True  # Boolean determining if other characters can move on our position
         self.priority = 20  # Value determining object stacking priority
         self.can_move = False  # Determines if this character can move
@@ -108,7 +108,6 @@ class BaseCharacter(object):
         inp = self.inp.get(block=block, timeout=timeout)
 
         if inp is None:
-
             # We are done here, exit and do something:
 
             pass
@@ -116,7 +115,6 @@ class BaseCharacter(object):
         try:
 
             if not return_ascii and inp < 225:
-
                 # input is valid string, return in string format:
 
                 return chr(inp)
@@ -153,7 +151,6 @@ class BaseCharacter(object):
 
 
 class EntityCharacter(BaseCharacter):
-
     """
     Class representing an entity that can move across the screen.
     """
@@ -175,7 +172,7 @@ class EntityCharacter(BaseCharacter):
 
         pass
 
-    def look(self, radius, debugPrint = False):
+    def look(self, radius, debugPrint=False):
 
         self.scroll_win.clear()
 
@@ -187,8 +184,8 @@ class EntityCharacter(BaseCharacter):
         downRadius = 0
         rightRadius = 0
 
-        #Checking up
-        for l in range(radius):
+        # Checking up
+        for i in range(radius):
 
             if self.tilemap._bound_check(posX, posY - 1): upRadius += 1
 
@@ -196,8 +193,8 @@ class EntityCharacter(BaseCharacter):
 
         posX, posY = selfTile.x, selfTile.y
 
-        #Checking left
-        for l in range(radius):
+        # Checking left
+        for i in range(radius):
 
             if self.tilemap._bound_check(posX - 1, posY): leftRadius += 1
 
@@ -205,8 +202,8 @@ class EntityCharacter(BaseCharacter):
 
         posX, posY = selfTile.x, selfTile.y
 
-        #Checking down
-        for l in range(radius):
+        # Checking down
+        for i in range(radius):
 
             if self.tilemap._bound_check(posX, posY + 1): downRadius += 1
 
@@ -214,26 +211,26 @@ class EntityCharacter(BaseCharacter):
 
         posX, posY = selfTile.x, selfTile.y
 
-        #Checking right
-        for l in range(radius):
+        # Checking right
+        for i in range(radius):
 
             if self.tilemap._bound_check(posX + 1, posY): rightRadius += 1
 
             posX += 1
 
         posX, posY = selfTile.x, selfTile.y
-        #print(f"upRadius: {upRadius}")
-        #print(f"leftRadius: {leftRadius}")
-        #print(f"downRadius: {downRadius}")
-        #print(f"rightRadius: {rightRadius}")
+        # print(f"upRadius: {upRadius}")
+        # print(f"leftRadius: {leftRadius}")
+        # print(f"downRadius: {downRadius}")
+        # print(f"rightRadius: {rightRadius}")
 
         objects = self.tilemap.get_around(posX, posY, radius, True)
         referenceTileMap = [[]]
 
-        #Index of object list
+        # Index of object list
         index = 0
 
-        #Index of boolean list
+        # Index of boolean list
         count = 0
 
         newLineCount = 0
@@ -244,18 +241,16 @@ class EntityCharacter(BaseCharacter):
         playerX = 0
         playerY = 0
 
-        #Creating referenceTileMap
+        # Creating referenceTileMap
         while index < len(objects):
 
             for subIndex in objects[index]:
 
                 if isinstance(subIndex.obj, Player):
-
                     isPlayer = True
                     break
 
                 if isinstance(subIndex.obj, Wall):
-
                     hasWall = True
                     break
 
@@ -269,7 +264,8 @@ class EntityCharacter(BaseCharacter):
                 hasWall = False
                 referenceTileMap[count].append("W")
 
-            else: referenceTileMap[count].append(True)
+            else:
+                referenceTileMap[count].append(True)
 
             if newLineCount == leftRadius + rightRadius and index + 1 < len(objects):
 
@@ -294,7 +290,6 @@ class EntityCharacter(BaseCharacter):
             booleanTileMap.append([])
 
             for col in line:
-
                 booleanTileMap[yIt].append(col)
 
             yIt += 1
@@ -302,28 +297,29 @@ class EntityCharacter(BaseCharacter):
         equationTop = 0
         equationBottom = 0
 
-        #X Position of wall in relation to self as the origin
+        # X Position of wall in relation to self as the origin
         wallPosX = 0
-        #Y Position of wall in relation to self as the origin
+        # Y Position of wall in relation to self as the origin
         wallPosY = 0
 
-        #X Position of wall in relation to an origin at the top left
+        # X Position of wall in relation to an origin at the top left
         xIt = 0
-        #Y Position of wall in relation to an origin at the top left
+        # Y Position of wall in relation to an origin at the top left
         yIt = 0
 
-        #Y Position of character in relation to an origin at the bottom left
+        # Y Position of character in relation to an origin at the bottom left
         posY = (len(referenceTileMap) - 1) - posY
-        #X Position of character, irrelevent if origin is top left or bottom left
+        # X Position of character, irrelevant if origin is top left or bottom left
         posX = selfTile.x
 
-        #X Index of the tile we are accessing in relation to an origin at top left
+        # X Index of the tile we are accessing in relation to an origin at top left
         xIndex = 0
-        #Y Index of the tile we are accessing in relation to an origin at top left
+        # Y Index of the tile we are accessing in relation to an origin at top left
         yIndex = 0
 
         testedPoints = []
 
+        # Checking Walls
         for line in referenceTileMap:
 
             for col in line:
@@ -332,11 +328,13 @@ class EntityCharacter(BaseCharacter):
 
                 if col == "W":
 
-                    #Wall Positions will be the same in relation to the character no matter what slope, so we init them here
+                    # Wall Positions will be the same in relation to the character no matter what slope,
+                    # so we init them here
+
                     wallPosY = ((len(referenceTileMap) - 1) - yIt) - posY
                     wallPosX = xIt - posX
 
-                    #Wall is in Quadrant 1
+                    # Wall is in Quadrant 1
                     if xIt - selfTile.x >= 0 and ((len(referenceTileMap) - 1) - yIt) - posY >= 0:
 
                         # Wall is on the same X Value
@@ -345,15 +343,50 @@ class EntityCharacter(BaseCharacter):
                             self.scroll_win.add_content("Same X value")
                             pointsBlocked = []
 
-                            #Right Half
+                            # Right Half
                             equationRight = float(wallPosY / (wallPosX + 1))
 
-                            yIndex = yIt
-                            xIndex = xIt + 1
+                            yIndex = yIt - 1
+                            xIndex = xIt
 
-                            while xIndex < len(referenceTileMap[yIndex]):
+                            while yIndex >= 0:
 
-                                pass
+                                # Tile directly above the wall, will always be blocked out
+                                booleanTileMap[yIndex][xIndex] = False
+
+                                xIndex += 1
+
+                                # Incrementing along x axis until we reach the beginning tile of where the slope indexes
+                                while xIndex < len(booleanTileMap[yIndex]) and (xIndex - xIt) < \
+                                        math.floor((((len(booleanTileMap) - 1) - yIndex) - posY) / equationRight):
+
+                                    booleanTileMap[yIndex][xIndex] = False
+
+                                    if xIndex != selfTile.x:
+                                        pointsBlocked.append([xIndex, yIndex])
+
+                                    testedPoints.append([xIndex, yIndex])
+                                    xIndex += 1
+
+                                # Adding points that may extend beyond the boundary of the tilemap
+                                while (xIndex - xIt) < math.floor(
+                                        (((len(booleanTileMap) - 1) - yIndex) - posY) / equationRight):
+
+                                    if xIndex != selfTile.x:
+                                        pointsBlocked.append([xIndex, yIndex])
+
+                                    xIndex += 1
+
+                                # floatOutput =
+
+                                # Reflecting Points over the y axis
+                                for point in pointsBlocked:
+
+                                    booleanTileMap[point[1]][xIt - (point[0] - xIt)] = False
+
+                                yIndex -= 1
+                                xIndex = xIt
+                                # Infinite Loop
 
                         # Wall is on the same Y Value
                         elif selfTile.y == yIt:
@@ -378,7 +411,9 @@ class EntityCharacter(BaseCharacter):
 
                                     booleanTileMap[yIndex][xIndex] = False
 
-                                    # We've already blocked out all points on the same Y value as us, so we check if y is not equal to us, then add to the points blocked list
+                                    # We've already blocked out all points on the same Y value as us,
+                                    # so we check if y is not equal to us, then add to the points blocked list
+
                                     if yIndex != selfTile.y:
                                         pointsBlocked.append([xIndex, yIndex])
 
@@ -387,7 +422,8 @@ class EntityCharacter(BaseCharacter):
                                 yIndex -= 1
 
                                 # Top Line
-                                while yIndex >= 0 and ((len(referenceTileMap) - 1) - yIndex) - posY < math.floor(equationTop * (xIndex - posX)):
+                                while yIndex >= 0 and ((len(referenceTileMap) - 1) - yIndex) - posY < math.floor(
+                                        equationTop * (xIndex - posX)):
 
                                     booleanTileMap[yIndex][xIndex] = False
                                     if yIndex != selfTile.y:
@@ -396,7 +432,9 @@ class EntityCharacter(BaseCharacter):
                                     testedPoints.append([xIndex, yIndex])
                                     yIndex -= 1
 
-                                while ((len(referenceTileMap) - 1) - yIndex) - posY < math.floor(equationTop * (xIndex - posX)):
+                                # Adding points that may extend beyond the boundary of the tilemap
+                                while ((len(referenceTileMap) - 1) - yIndex) - posY < math.floor(
+                                        equationTop * (xIndex - posX)):
 
                                     if yIndex != selfTile.y:
                                         pointsBlocked.append([xIndex, yIndex])
@@ -416,22 +454,23 @@ class EntityCharacter(BaseCharacter):
                                         testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
 
                                 xIndex += 1
-                                yIndex = (len(referenceTileMap) - 1) - math.floor(equationBottom * (xIndex - posX) + posY)
-                                if yIndex < 0: break
+                                yIndex = (len(referenceTileMap) - 1) - math.floor(
+                                    equationBottom * (xIndex - posX) + posY)
+                                if yIndex < 0:
+
+                                    break
 
                             # Reflecting over the x axis
                             for point in pointsBlocked:
 
                                 if point[1] < 0:
 
-                                    if (selfTile.y * 2)  + abs(point[1]) < len(booleanTileMap):
-
-                                        booleanTileMap[(selfTile.y * 2)  + abs(point[1])][point[0]] = False
+                                    if (selfTile.y * 2) + abs(point[1]) < len(booleanTileMap):
+                                        booleanTileMap[(selfTile.y * 2) + abs(point[1])][point[0]] = False
 
                                 else:
 
                                     if (selfTile.y + (selfTile.y - point[1])) < len(booleanTileMap):
-
                                         booleanTileMap[selfTile.y + (selfTile.y - point[1])][point[0]] = False
 
                         else:
@@ -442,57 +481,57 @@ class EntityCharacter(BaseCharacter):
                             yIndex = yIt
                             xIndex = xIt + 1
 
-                            #Checking if the bottom slope is greater than 1.0
+                            # Checking if the bottom slope is greater than 1.0
 
                             if equationBottom >= 1.0:
+                                self.scroll_win.add_content(
+                                    "Bottom is greater than or equal to 1: " + str(equationBottom))
 
-                                self.scroll_win.add_content("Bottom is greater than or equal to 1: " + str(equationBottom))
-
-                                #Reassigning the bottom slope so that it's angled slightly more above the wall
+                                # Reassigning the bottom slope so that it's angled slightly more above the wall
                                 equationBottom = float((wallPosY + 1) / (wallPosX + 1))
-                                #Reassigning the yIndex to match where the new slope starts
+                                # Reassigning the yIndex to match where the new slope starts
                                 yIndex = yIt - 1
 
-                            #Checking if the top slope is greater than 1.0
+                            # Checking if the top slope is greater than 1.0
                             if equationTop > 1.0:
 
                                 self.scroll_win.add_content("Top is greater than 1: " + str(equationTop))
 
                                 checkTop = True
 
-                                #Reassigning the top slope so that it's angled more above the wall
+                                # Reassigning the top slope so that it's angled more above the wall
                                 equationTop = float((wallPosY + 2) / wallPosX)
 
-                                #Reassigning the xIndex to allow the equation to check the x tile we start on
+                                # Reassigning the xIndex to allow the equation to check the x tile we start on
                                 xIndex = xIt
 
                                 if equationBottom < 1.0:
-
-                                    #Reassigning the yIndex to start above the wall, and not on top of it
+                                    # Reassigning the yIndex to start above the wall, and not on top of it
                                     yIndex = yIt - 1
 
                             if checkTop:
 
-                                #Top of Wall
-                                while ((len(referenceTileMap) - 1) - yIndex) - posY < math.floor(equationTop * (xIndex - posX)):
-
+                                # Top of Wall
+                                while ((len(referenceTileMap) - 1) - yIndex) - posY < math.floor(
+                                        equationTop * (xIndex - posX)):
                                     booleanTileMap[yIndex][xIndex] = False
                                     yIndex -= 1
 
                                 floatOutput = equationTop * (xIndex - posX)
 
-                                if math.floor((floatOutput % 1) * 10) / 10 >= .5 and math.floor((floatOutput % 1) * 10) / 10 != 0.0 and yIndex > 0:
+                                if math.floor((floatOutput % 1) * 10) / 10 >= .5 and math.floor(
+                                        (floatOutput % 1) * 10) / 10 != 0.0 and yIndex > 0:
 
                                     if yIndex >= 0:
-
                                         booleanTileMap[yIndex][xIndex] = False
 
                                         testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
 
                                 xIndex += 1
-                                yIndex = (len(referenceTileMap) - 1) - (math.floor(equationBottom * (xIndex - posX)) + posY)
+                                yIndex = (len(referenceTileMap) - 1) - (
+                                        math.floor(equationBottom * (xIndex - posX)) + posY)
 
-                            #BottomLine
+                            # BottomLine
                             while xIndex < len(referenceTileMap[yIndex]):
 
                                 # Bottom Line
@@ -503,10 +542,10 @@ class EntityCharacter(BaseCharacter):
                                 testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
 
                                 yIndex -= 1
-                                #Top Line
+                                # Top Line
 
-                                while yIndex >= 0 and ((len(referenceTileMap) - 1) - yIndex) - posY < math.floor(equationTop * (xIndex - posX)):
-
+                                while yIndex >= 0 and ((len(referenceTileMap) - 1) - yIndex) - posY < math.floor(
+                                        equationTop * (xIndex - posX)):
                                     booleanTileMap[yIndex][xIndex] = False
                                     testedPoints.append([xIndex, yIndex])
                                     yIndex -= 1
@@ -516,13 +555,13 @@ class EntityCharacter(BaseCharacter):
                                 if math.floor((floatOutput % 1) * 10) / 10 >= .5 and yIndex > 0:
 
                                     if yIndex >= 0:
-
                                         booleanTileMap[yIndex][xIndex] = False
 
                                         testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
 
                                 xIndex += 1
-                                yIndex = (len(referenceTileMap) - 1) - math.floor(equationBottom * (xIndex - posX) + posY)
+                                yIndex = (len(referenceTileMap) - 1) - math.floor(
+                                    equationBottom * (xIndex - posX) + posY)
                                 if yIndex < 0: break
 
                 xIt += 1
@@ -533,9 +572,7 @@ class EntityCharacter(BaseCharacter):
         self.scroll_win.add_content("Top Equation: " + str(equationTop))
         self.scroll_win.add_content("Bottom Equation: " + str(equationBottom))
 
-
         for line in testedPoints:
-
             self.scroll_win.add_content(str(line))
 
         self.scroll_win._render_content()
@@ -572,13 +609,11 @@ class EntityCharacter(BaseCharacter):
         """
 
         if (x >= self.tilemap.width or x < 0) or (y >= self.tilemap.height or y < 0):
-
             return False
 
         for tile in self.tilemap.get(x, y):
 
             if not tile.obj.can_traverse:
-
                 return False
 
         return True
@@ -628,7 +663,6 @@ class EntityCharacter(BaseCharacter):
             numberTileMap.append([])
 
             for col in range(self.tilemap.width):
-
                 numberTileMap[line].append(-1)
 
         numberCoords = {0: [startPosX, startPosY]}
@@ -639,7 +673,7 @@ class EntityCharacter(BaseCharacter):
         currentX = numberCoords[0][0]
         currentY = numberCoords[0][1]
 
-        #If Enemy is above target
+        # If Enemy is above target
         if selfTile.y < startPosY and selfTile.x == startPosX:
 
             while currentNum < numMoves:
@@ -692,7 +726,7 @@ class EntityCharacter(BaseCharacter):
                     booleanTileMap[currentY + 1][currentX + 1] = False
                     nextNum += 1
 
-                #Check Right
+                # Check Right
                 elif self.check_tile(currentX + 1, currentY) and booleanTileMap[currentY][currentX + 1]:
 
                     numberTileMap[currentY][currentX + 1] = nextNum
@@ -700,7 +734,7 @@ class EntityCharacter(BaseCharacter):
                     booleanTileMap[currentY][currentX + 1] = False
                     nextNum += 1
 
-                #Check Right Up
+                # Check Right Up
                 elif self.check_tile(currentX + 1, currentY - 1) and booleanTileMap[currentY - 1][currentX + 1]:
 
                     numberTileMap[currentY - 1][currentX + 1] = nextNum
@@ -723,7 +757,6 @@ class EntityCharacter(BaseCharacter):
                     for i in l:
 
                         if i.obj == self:
-
                             breakWhileLoop = True
                             break
 
@@ -731,7 +764,7 @@ class EntityCharacter(BaseCharacter):
 
                 if breakWhileLoop: break
 
-        #If Enemy is left above the target
+        # If Enemy is left above the target
         elif selfTile.y < startPosY and selfTile.x < startPosX:
 
             while currentNum < numMoves:
@@ -823,7 +856,7 @@ class EntityCharacter(BaseCharacter):
 
                 if breakWhileLoop: break
 
-        #If Enemy is left of the target
+        # If Enemy is left of the target
         elif selfTile.y == startPosY and selfTile.x < startPosX:
 
             while currentNum < numMoves:
@@ -915,7 +948,7 @@ class EntityCharacter(BaseCharacter):
 
                 if breakWhileLoop: break
 
-        #If Enemy is left down of the target
+        # If Enemy is left down of the target
         elif selfTile.y > startPosY and selfTile.x < startPosX:
 
             while currentNum < numMoves:
@@ -1006,7 +1039,7 @@ class EntityCharacter(BaseCharacter):
 
                 if breakWhileLoop: break
 
-        #If Enemy is down of the target
+        # If Enemy is down of the target
         elif selfTile.y > startPosY and selfTile.x == startPosX:
 
             while currentNum < numMoves:
@@ -1096,7 +1129,7 @@ class EntityCharacter(BaseCharacter):
 
                 if breakWhileLoop: break
 
-        #If Enemy is right down of the target
+        # If Enemy is right down of the target
         elif selfTile.y > startPosY and selfTile.x > startPosX:
 
             while currentNum < numMoves:
@@ -1186,7 +1219,7 @@ class EntityCharacter(BaseCharacter):
 
                 if breakWhileLoop: break
 
-        #If Enemy is right of the target
+        # If Enemy is right of the target
         elif selfTile.y == startPosY and selfTile.x > startPosX:
 
             while currentNum < numMoves:
@@ -1276,7 +1309,7 @@ class EntityCharacter(BaseCharacter):
 
                 if breakWhileLoop: break
 
-        #If Enemy is right up of the target
+        # If Enemy is right up of the target
         elif selfTile.y < startPosY and selfTile.x > startPosX:
 
             while currentNum < numMoves:
@@ -1387,11 +1420,11 @@ class EntityCharacter(BaseCharacter):
 
         return numberTileMap
 
+
 # Custom CharacterClasses - probably wont live here
 
 
 class Player(EntityCharacter):
-
     """
     Player class, moves and gets controlled by the user.
     """
@@ -1424,11 +1457,11 @@ class Player(EntityCharacter):
 
         # Get input from the DisplayWindow
 
-        #time.sleep(3)
+        # time.sleep(3)
 
         inp = self.get_input()
 
-        # Get our coordnates:
+        # Get our coordinates:
 
         playerTile = self.tilemap.find_object(self)
 
@@ -1440,7 +1473,6 @@ class Player(EntityCharacter):
             self.check_chest(playerTile.x, playerTile.y - 1)
 
             if self.check_tile(playerTile.x, playerTile.y - 1):
-
                 self.tilemap.move(self, playerTile.x, playerTile.y - 1)
 
         elif inp == 'a':
@@ -1451,8 +1483,7 @@ class Player(EntityCharacter):
             self.check_chest(playerTile.x - 1, playerTile.y)
 
             if self.check_tile(playerTile.x - 1, playerTile.y):
-
-                self.tilemap.move(self, playerTile.x-1, playerTile.y)
+                self.tilemap.move(self, playerTile.x - 1, playerTile.y)
 
         elif inp == 's':
 
@@ -1462,8 +1493,7 @@ class Player(EntityCharacter):
             self.check_chest(playerTile.x, playerTile.y + 1)
 
             if self.check_tile(playerTile.x, playerTile.y + 1):
-
-                self.tilemap.move(self, playerTile.x, playerTile.y+1)
+                self.tilemap.move(self, playerTile.x, playerTile.y + 1)
 
         elif inp == 'd':
 
@@ -1473,15 +1503,13 @@ class Player(EntityCharacter):
             self.check_chest(playerTile.x + 1, playerTile.y)
 
             if self.check_tile(playerTile.x + 1, playerTile.y):
-
-                self.tilemap.move(self, playerTile.x+1, playerTile.y)
+                self.tilemap.move(self, playerTile.x + 1, playerTile.y)
 
         elif inp == 'q':
 
             # Move diagonal up left
 
             if self.check_tile(playerTile.x - 1, playerTile.y - 1):
-
                 self.tilemap.move(self, playerTile.x - 1, playerTile.y - 1)
 
         elif inp == 'e':
@@ -1505,33 +1533,32 @@ class Player(EntityCharacter):
             if self.check_tile(playerTile.x + 1, playerTile.y + 1):
                 self.tilemap.move(self, playerTile.x + 1, playerTile.y + 1)
 
-        elif inp == 'p': self.pickup_first_item()
+        elif inp == 'p':
+            self.pickup_first_item()
 
         elif inp == 'i':
 
             if self.scroll_win is not None:
 
                 if len(self.inventory) == 0:
-
                     self.scroll_win.add_content("Your inventory is empty", attrib="white")
 
-            else:
+                else:
 
-                self.scroll_win.add_content("Inventory: ", attrib = "white")
+                    self.scroll_win.add_content("Inventory: ", attrib="white")
 
-                for x in self.inventory:
+                    for x in self.inventory:
 
-                    if isinstance(x, Item):
+                        if isinstance(x, Item):
+                            self.scroll_win.add_content(x.name)
 
-                        self.scroll_win.add_content(x.name)
-
-                self.scroll_win.add_content("\n" * 0)
+                    self.scroll_win.add_content("\n" * 0)
 
         elif inp == 'l':
 
             self.look(100, True)
 
-            #self.scroll_win.add_content("You don't see any objects in this room", "white")
+            # self.scroll_win.add_content("You don't see any objects in this room", "white")
 
         elif inp == 'o':
 
@@ -1540,7 +1567,6 @@ class Player(EntityCharacter):
             for x in self.tilemap.get(playerTile.x, playerTile.y):
 
                 if not isinstance(x.obj, Player) and not isinstance(x.obj, Floor):
-
                     groundContents.append(x)
 
             if len(groundContents) > 0:
@@ -1550,19 +1576,17 @@ class Player(EntityCharacter):
                 for x in groundContents:
 
                     if not isinstance(x.obj, Player):
-
                         self.scroll_win.add_content(x.obj.name)
 
                 self.scroll_win.add_content("\n" * 0)
 
         elif inp == 'y':
-            
+
             self.tilemap.toggle_enemy_movement()
 
     def check_inventory_bounds(self, obj):
 
         if self.inventory_space + obj.size > self.inventory_space_max:
-
             return False
 
         return True
@@ -1586,7 +1610,6 @@ class Player(EntityCharacter):
             if targObj.can_player_pickup:
 
                 if self.check_inventory_bounds(targObj):
-
                     self.inventory.append(targObj)
                     self.inventory_space += targObj.size
                     self.tilemap.removeObj(targObj)
@@ -1601,7 +1624,6 @@ class Player(EntityCharacter):
             if targObj.can_player_pickup:
 
                 if self.check_inventory_bounds(targObj):
-
                     self.inventory.append(targObj)
                     self.inventory_space += targObj.size
                     self.scroll_win.add_content(targObj.name + " added to inventory")
@@ -1640,7 +1662,6 @@ class Player(EntityCharacter):
 
 
 class Enemy(EntityCharacter):
-
     """
     Enemy that randomly moves across the screen.
     """
@@ -1669,17 +1690,16 @@ class Enemy(EntityCharacter):
         x = tile.x
         y = tile.y
 
-        cords = [[x-1, y], [x+1, y], [x, y+1], [x, y-1], [x-1, y-1], [x+1, y-1], [x-1, y+1], [x+1, y+1]]
+        cords = [[x - 1, y], [x + 1, y], [x, y + 1], [x, y - 1], [x - 1, y - 1], [x + 1, y - 1], [x - 1, y + 1],
+                 [x + 1, y + 1]]
         choices = []
 
         for targ in cords:
 
             if self.check_tile(targ[0], targ[1]):
-
                 choices.append(targ)
 
         if len(choices) > 0:
-
             # Now, select a random choice from the options and move their:
 
             choice = random.choice(choices)
@@ -1688,7 +1708,6 @@ class Enemy(EntityCharacter):
 
 
 class TrackerEnemy(EntityCharacter):
-
     """
     Enemy that follows the player
     """
@@ -1719,7 +1738,6 @@ class TrackerEnemy(EntityCharacter):
             final = []
 
             for x in range(8):
-
                 final.append(-1)
 
             index = 0
@@ -1738,7 +1756,6 @@ class TrackerEnemy(EntityCharacter):
                     else:
 
                         if self.check_tile(cur_x, cur_y):
-
                             final[index] = (numberTileMap[cur_y][cur_x])
 
                     index += 1
@@ -1750,7 +1767,6 @@ class TrackerEnemy(EntityCharacter):
             for num in final:
 
                 if num != -1 and num < leastNum:
-
                     leastNum = num
                     count = index
 
@@ -1764,52 +1780,50 @@ class TrackerEnemy(EntityCharacter):
 
                 for tile in tileList:
 
-                   if isinstance(tile.obj, Player):
-
-                       shouldMove = False
+                    if isinstance(tile.obj, Player):
+                        shouldMove = False
 
             if shouldMove:
 
-                #Left Up
+                # Left Up
                 if count == 0:
 
                     if self.check_tile(posX - 1, posY - 1): self.tilemap.move(self, posX - 1, posY - 1)
 
-                #Up
+                # Up
                 elif count == 1:
 
                     if self.check_tile(posX, posY - 1): self.tilemap.move(self, posX, posY - 1)
 
-                #Right Up
+                # Right Up
                 elif count == 2:
 
                     if self.check_tile(posX + 1, posY - 1): self.tilemap.move(self, posX + 1, posY - 1)
 
-                #Right
+                # Right
                 elif count == 4:
 
                     if self.check_tile(posX + 1, posY): self.tilemap.move(self, posX + 1, posY)
 
-                #Right Down
+                # Right Down
                 elif count == 7:
 
                     if self.check_tile(posX + 1, posY + 1): self.tilemap.move(self, posX + 1, posY + 1)
 
-                #Down
+                # Down
                 elif count == 6:
 
                     if self.check_tile(posX, posY + 1): self.tilemap.move(self, posX, posY + 1)
 
-                #Left Down
+                # Left Down
                 elif count == 5:
 
                     if self.check_tile(posX - 1, posY + 1): self.tilemap.move(self, posX - 1, posY + 1)
 
-                #Left
+                # Left
                 elif count == 3:
 
                     if self.check_tile(posX - 1, posY): self.tilemap.move(self, posX - 1, posY)
-
 
             playerTile = self.tilemap.find_object_type(Player)
 
@@ -1843,17 +1857,16 @@ class TrackerEnemy(EntityCharacter):
 
             self.debug_move = False
 
-        else: self.debug_move = True
+        else:
+            self.debug_move = True
 
 
 class Wall(BaseCharacter):
-
     """
     Represents a wall. Player can't move past it.
     """
 
     def start(self):
-
         self.char = 'W'
         self.name = 'Wall'
         self.attrib.append("yellow")
@@ -1867,18 +1880,16 @@ class Wall(BaseCharacter):
 class Chest(BaseCharacter):
 
     def start(self):
-
         self.char = 'C'
         self.name = 'Chest'
         self.attrib.append("brown")
         self.priority = 19
 
-        #Disabling traversal mode
+        # Disabling traversal mode
 
         self.can_traverse = False
 
     def open_chest(self):
-
         posTile = self.tilemap.find_object(self)
         contents = [Sword(), Chestplate()]
         self.tilemap.add(Enemy(), posTile.x, posTile.y)
@@ -1889,7 +1900,6 @@ class Chest(BaseCharacter):
 class OpenedChest(BaseCharacter):
 
     def start(self):
-
         self.char = "C"
         self.name = "Opened Chest"
         self.attrib.append("light_brown")
@@ -1901,14 +1911,11 @@ class OpenedChest(BaseCharacter):
 
 
 class Floor(BaseCharacter):
-
     """
     Represents a floor. Player can move over it.
     """
 
     def start(self):
-
         self.char = '0'
         self.name = 'Floor'
         self.attrib.append("gray_blue")
-
