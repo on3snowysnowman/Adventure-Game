@@ -343,6 +343,17 @@ class EntityCharacter(BaseCharacter):
                         if xIt == selfTile.x:
 
                             self.scroll_win.add_content("Same X value")
+                            pointsBlocked = []
+
+                            #Right Half
+                            equationRight = float(wallPosY / (wallPosX + 1))
+
+                            yIndex = yIt
+                            xIndex = xIt + 1
+
+                            while xIndex < len(referenceTileMap[yIndex]):
+
+                                pass
 
                         # Wall is on the same Y Value
                         elif selfTile.y == yIt:
@@ -407,7 +418,6 @@ class EntityCharacter(BaseCharacter):
                                 xIndex += 1
                                 yIndex = (len(referenceTileMap) - 1) - math.floor(equationBottom * (xIndex - posX) + posY)
                                 if yIndex < 0: break
-
 
                             # Reflecting over the x axis
                             for point in pointsBlocked:
@@ -527,7 +537,7 @@ class EntityCharacter(BaseCharacter):
         for line in testedPoints:
 
             self.scroll_win.add_content(str(line))
-        self.scroll_win.add_content("yes")
+
         self.scroll_win._render_content()
 
         '''

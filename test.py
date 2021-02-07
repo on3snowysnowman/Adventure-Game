@@ -575,7 +575,7 @@ def look_test(win):
 
     master = MasterWindow(win)
 
-    map_win = DisplayWindow.create_subwin_at_pos(win, 16, 25)
+    map_win = DisplayWindow.create_subwin_at_pos(win, 15, 25)
     scroll_win = ScrollWindow.create_subwin_at_pos(win, master.max_y, int(master.max_x / 2), BaseWindow.TOP_RIGHT)
 
     map_win.add_callback('f', map_win.stop)
@@ -588,9 +588,9 @@ def look_test(win):
     player = Player()
     add(player, 16, 14, map_win)
     #add(Wall(), 15, 10, map_win)
-    add(Wall(), 15, 8, map_win)
+    #add(Wall(), 15, 7, map_win)
     #add(Wall(), 20, 2, map_win)
-    add(Wall(), 16, 9, map_win)
+    add(Wall(), 16, 8, map_win)
 
     master.add_subwin(map_win)
 
