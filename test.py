@@ -575,7 +575,7 @@ def look_test(win):
 
     master = MasterWindow(win)
 
-    map_win = DisplayWindow.create_subwin_at_pos(win, 15, 25)
+    map_win = DisplayWindow.create_subwin_at_pos(win, 21, 21)
     scroll_win = ScrollWindow.create_subwin_at_pos(win, master.max_y, int(master.max_x / 2), BaseWindow.TOP_RIGHT)
 
     map_win.add_callback('f', map_win.stop)
@@ -585,27 +585,7 @@ def look_test(win):
 
     map_win.tilemap.fill(Floor)
 
-    player = Player()
-    add(player, 3, 14, map_win)
-    #add(Wall(), 15, 10, map_win)
-    #add(Wall(), 15, 7, map_win)
-    #add(Wall(), 20, 2, map_win)
-    add(Wall(), 4, 8, map_win)
 
-    master.add_subwin(map_win)
-
-    display_thread = threading.Thread(target=map_win.display)
-    display_thread.daemon = True
-    display_thread.start()
-
-    player.scroll_win = scroll_win
-
-    # Start the master window
-    scroll_win.add_content("Scroll Window")
-    scroll_win._render_content()
-    master.start()
-
-    '''
     # Creating random walls on the x axis
     for x in range(map_win.tilemap.get_height()):
 
@@ -624,8 +604,34 @@ def look_test(win):
                     add(Wall(), xCoord, yCoord, map_win)
                     xCoord += 1
 
-    #Creating random walls on the x axis
 
+    player = Player()
+    add(player, 3, 10, map_win)
+    #add(Wall(), 10, 9, map_win)
+    #add(Wall(), 10, 10, map_win)
+    #add(Wall(), 10, 11, map_win)
+
+    #add(Wall(), 4, 4, map_win)
+    #add(Wall(), 17, 4, map_win)
+    #add(Wall(), 17, 17, map_win)
+    #add(Wall(), 4, 17, map_win)
+    #add(Wall(), int(map_win.max_x / 2), int(map_win.max_y / 2), map_win)
+
+    master.add_subwin(map_win)
+
+    display_thread = threading.Thread(target=map_win.display)
+    display_thread.daemon = True
+    display_thread.start()
+
+    player.scroll_win = scroll_win
+
+    # Start the master window
+    scroll_win.add_content("Scroll Window")
+    scroll_win._render_content()
+    master.start()
+
+
+    '''
     add(Wall(), 8, 0, map_win)
     add(Wall(), 7, 1, map_win)
     add(Wall(), 6, 2, map_win)

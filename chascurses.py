@@ -918,7 +918,6 @@ class DisplayWindow(BaseWindow):
                 if self.tilemap.boolList[y][x]:
 
                     self.addstr(obj.char, y, x, attrib=obj.attrib)
-                    #self.addstr(obj.char, y, x)
 
             continue
 

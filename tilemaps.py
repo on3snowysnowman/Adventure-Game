@@ -410,6 +410,7 @@ class BaseTileMap(object):
 
             cord.obj.move()
 
+
     def _iterate(self):
 
         """
