@@ -35,6 +35,8 @@ class BaseTileMap(object):
         self.boolList = []
         self.tilemap = None  # 3D array representing the screen
 
+        self.radius = 0
+
         # Crete out tilemap:
 
         self._init_tilemap()
@@ -390,7 +392,9 @@ class BaseTileMap(object):
         """
 
         playerTile = self.find_object_type(Player)
-        self.boolList = playerTile.obj.look(100)
+        self.radius = playerTile.obj.radius
+        self.boolList = playerTile.obj.look(self.radius)
+        print(self.radius)
 
     def update(self):
 
@@ -409,7 +413,6 @@ class BaseTileMap(object):
             # Call the 'move' method:
 
             cord.obj.move()
-
 
     def _iterate(self):
 

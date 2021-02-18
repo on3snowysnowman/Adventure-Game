@@ -604,12 +604,11 @@ def look_test(win):
                     add(Wall(), xCoord, yCoord, map_win)
                     xCoord += 1
 
-
     player = Player()
-    add(player, 3, 10, map_win)
-    #add(Wall(), 10, 9, map_win)
-    #add(Wall(), 10, 10, map_win)
-    #add(Wall(), 10, 11, map_win)
+    add(player, int(map_win.tilemap.get_width() / 2), int(map_win.tilemap.get_height() / 2), map_win)
+    #add(Wall(), 17, 17, map_win)
+    #add(Wall(), 16, 17, map_win)
+    #add(Wall(), 15, 17, map_win)
 
     #add(Wall(), 4, 4, map_win)
     #add(Wall(), 17, 4, map_win)
@@ -629,28 +628,6 @@ def look_test(win):
     scroll_win.add_content("Scroll Window")
     scroll_win._render_content()
     master.start()
-
-
-    '''
-    add(Wall(), 8, 0, map_win)
-    add(Wall(), 7, 1, map_win)
-    add(Wall(), 6, 2, map_win)
-    add(Wall(), 5, 3, map_win)
-    add(Wall(), 4, 4, map_win)
-    add(Wall(), 3, 5, map_win)
-    add(Wall(), 2, 6, map_win)
-    add(Wall(), 1, 7, map_win)
-    add(Wall(), 0, 8, map_win)
-    add(Wall(), 2, 1, map_win)
-    add(Wall(), 3, 0, map_win)
-    add(Wall(), 4, 1, map_win)
-    add(Wall(), 3, 2, map_win)
-    add(Wall(), 4, 6, map_win)
-    add(Wall(), 5, 6, map_win)
-    add(Wall(), 5, 5, map_win)
-    add(Wall(), 6, 5, map_win)
-    add(Wall(), 7, 5, map_win)
-    '''
 
 
 def large_test(win):
@@ -755,5 +732,6 @@ def all_tests(win):
         test(win)
 
         win.erase()
+
 
 curses.wrapper(look_test)
