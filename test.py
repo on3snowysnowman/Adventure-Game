@@ -585,7 +585,7 @@ def look_test(win):
 
     map_win.tilemap.fill(Floor)
 
-    '''
+
     # Creating random walls on the x axis
     for x in range(map_win.tilemap.get_height()):
 
@@ -603,19 +603,40 @@ def look_test(win):
 
                     add(Wall(), xCoord, yCoord, map_win)
                     xCoord += 1
-    '''
+
+    availableCoordinates = []
+
+    xCount = 0
+    yCount = 0
+
+    exemptFromList = False
+
+    # Searching tilemap for traversable spots
+    for line in map_win.tilemap.tilemap:
+
+        for col in line:
+
+            for tile in col:
+
+                if not tile.can_traverse:
+
+                    exemptFromList = True
+                    break
+
+            if not exemptFromList:
+
+                availableCoordinates.append([xCount, yCount])
+
+            exemptFromList = False
+            xCount += 1
+
+        yCount += 1
+        xCount = 0
 
     player = Player()
     add(player, int(map_win.tilemap.get_width() / 2), int(map_win.tilemap.get_height() / 2), map_win)
-    add(Wall(), 4, 0, map_win)
-    add(Wall(), 5, 0, map_win)
-    add(Wall(), 6, 0, map_win)
-
-    #add(Wall(), 4, 4, map_win)
-    #add(Wall(), 17, 4, map_win)
-    #add(Wall(), 17, 17, map_win)
-    #add(Wall(), 4, 17, map_win)
-    #add(Wall(), int(map_win.max_x / 2), int(map_win.max_y / 2), map_win)
+    randomTile = random.choice(availableCoordinates)
+    add(TrackerEnemy(), randomTile[0], randomTile[1], map_win)
 
     master.add_subwin(map_win)
 
