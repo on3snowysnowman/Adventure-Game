@@ -585,7 +585,7 @@ def look_test(win):
 
     map_win.tilemap.fill(Floor)
 
-
+    '''
     # Creating random walls on the x axis
     for x in range(map_win.tilemap.get_height()):
 
@@ -603,12 +603,13 @@ def look_test(win):
 
                     add(Wall(), xCoord, yCoord, map_win)
                     xCoord += 1
+    '''
 
     player = Player()
     add(player, int(map_win.tilemap.get_width() / 2), int(map_win.tilemap.get_height() / 2), map_win)
-    #add(Wall(), 17, 17, map_win)
-    #add(Wall(), 16, 17, map_win)
-    #add(Wall(), 15, 17, map_win)
+    add(Wall(), 4, 0, map_win)
+    add(Wall(), 5, 0, map_win)
+    add(Wall(), 6, 0, map_win)
 
     #add(Wall(), 4, 4, map_win)
     #add(Wall(), 17, 4, map_win)

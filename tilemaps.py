@@ -393,8 +393,7 @@ class BaseTileMap(object):
 
         playerTile = self.find_object_type(Player)
         self.radius = playerTile.obj.radius
-        self.boolList = playerTile.obj.look(self.radius)
-        print(self.radius)
+        self.boolList = playerTile.obj.look(100)
 
     def update(self):
 

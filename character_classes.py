@@ -685,20 +685,23 @@ class EntityCharacter(BaseCharacter):
                             yIndex = yIt - 1
                             xIndex = xIt
 
-                            for x in range(selfTile.y - yIt):
+                            if selfTile.y > yIt:
 
-                                if yIndex < 0: break
+                                for x in range(selfTile.y - yIt):
 
-                                booleanTileMap[yIndex][xIndex] = False
-                                yIndex -= 1
+                                    if yIndex < 0: break
 
-                            xIndex += 1
-                            for x in range(yIt - selfTile.y):
+                                    booleanTileMap[yIndex][xIndex] = False
+                                    yIndex -= 1
 
-                                if yIndex >= len(booleanTileMap): break
+                            else:
 
-                                booleanTileMap[yIndex][xIndex] = False
-                                yIndex -= 1
+                                for x in range(yIt - selfTile.y):
+
+                                    if yIndex >= len(booleanTileMap): break
+
+                                    booleanTileMap[yIndex][xIndex] = False
+                                    yIndex -= 1
 
                         yIndex = yIt
                         xIndex = xIt + 1
@@ -755,7 +758,7 @@ class EntityCharacter(BaseCharacter):
                                     math.floor(equationBottom * (xIndex - posX)) + posY)
 
                         # BottomLine
-                        while xIndex < len(referenceTileMap[yIndex]):
+                        while xIndex < len(referenceTileMap[yIndex]) and yIndex >= 0:
 
                             # Bottom Line
                             floatOutput = equationBottom * (xIndex - posX)
@@ -1251,11 +1254,12 @@ class EntityCharacter(BaseCharacter):
             xIt = 0
             yIt += 1
 
-        #self.scroll_win.add_content("Top Equation: " + str(equationTop))
-        #self.scroll_win.add_content("Bottom Equation: " + str(equationBottom))
+        # self.scroll_win.add_content("Top Equation: " + str(equationTop))
+        # self.scroll_win.add_content("Bottom Equation: " + str(equationBottom))
 
-        #for line in pointsBlocked:
-            #self.scroll_win.add_content(str(line))
+        for line in testedPoints:
+
+             self.scroll_win.add_content(str(line))
 
         self.scroll_win._render_content()
 
