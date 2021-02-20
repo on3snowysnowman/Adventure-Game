@@ -5,7 +5,7 @@ tielmaps contain characters drawn at certain positions on the screen.
 tilemaps handle the logic of entity movement, and keeps everything organised.
 """
 
-from character_classes import EntityCharacter, Player, TrackerEnemy
+from character_classes import EntityCharacter, Player, TrackerEnemy, Fog
 import math
 
 
@@ -32,7 +32,6 @@ class BaseTileMap(object):
         self.width = width  # Width of the tilemap
         self.win = win  # DisplayWindow in use
 
-        self.boolList = []
         self.tilemap = None  # 3D array representing the screen
 
         self.radius = 0
@@ -136,7 +135,7 @@ class BaseTileMap(object):
 
         return tiles
 
-    def get_width(self, y = 0):
+    def get_width(self, y=0):
 
         """
         Gets the width of the list in the tilemap of the passed y value
@@ -275,7 +274,8 @@ class BaseTileMap(object):
 
         self.tilemap[y][x].sort(key=self._get_priority)
 
-    def get_around(self, x, y, radius=1, getSelf = False):
+
+    def get_around(self, x, y, radius=1, getSelf=False):
 
         """
         Gets all positions around the X and Y cordnets given.
@@ -358,42 +358,63 @@ class BaseTileMap(object):
 
             pass
 
-        # Adding object at cordnet:
+        # Adding object at coordinate:
 
         self.tilemap[y][x].append(obj)
 
         # Sort the objects at that position
-
         self.tilemap[y][x].sort(key=self._get_priority)
 
-    def removeObj(self, obj):
+    def remove_obj(self, obj, findall=False):
 
         """
-        Removes the object from the tilemap
+        Removes the object(s) from the tilemap
         :param obj: Object to be removed
-        :return:
+        :type obj: BaseCharacter
+        :param findall: Boolean determining if we should find all matching objects
         """
 
-        objTile = self.find_object(obj)
-        self.tilemap[objTile.y][objTile.x].remove(obj)
+        if not findall:
 
-    def removeObj_by_coords(self, x, y, z = 0):
+            objTile = self.find_object(obj)
+            self.tilemap[objTile.y][objTile.x].remove(obj)
+
+        else:
+
+            for tile in self.tilemap.find_object(obj, True):
+
+                self.tilemap[tile.y][tile.x].remove(obj)
+
+    def remove_obj_by_type(self, obj, findall=False):
+
+        """
+        Removes a type of object(s) from the tilemap
+        :param obj: Object to be removed
+        :type obj: BaseCharacter
+        :param findall: Boolean determining if we should find all matching objects
+        """
+
+        if not findall:
+
+            objTile = self.find_object_type(obj)
+            self.tilemap[objTile.y][objTile.x].remove(obj)
+
+        else:
+
+            for tile in self.tilemap.find_object_type(obj, True):
+                self.tilemap[tile.y][tile.x].remove(obj)
+
+    def remove_fog(self):
+
+        self.remove_obj_by_type(Fog, findall=True)
+
+    def remove_obj_by_coords(self, x, y, z=0):
 
         if isinstance(self.tilemap[y][x][z], Player):
 
             z += 1
 
         del self.tilemap[y][x][z]
-
-    def check_vision(self):
-
-        """
-        Updates the tilemaps boolList to fill with tiles the player can see
-        """
-
-        playerTile = self.find_object_type(Player)
-        self.radius = playerTile.obj.radius
-        self.boolList = playerTile.obj.look(100)
 
     def update(self):
 
@@ -507,6 +528,170 @@ class BaseTileMap(object):
             if isinstance(tile.obj, TrackerEnemy):
 
                 tile.obj.debug_move_toggle()
+
+
+class Camera(object):
+
+    def __init__(self, tilemap, win):
+
+        self.tilemap = tilemap  # Full tilemap
+        self.win = win  # DisplayWindow in use
+        self.displayArea = []  # Visual tilemap area will will display, based on full tilemap
+        self.focusObject = None  # Object that the camera is focused on
+        self.focusPoint = [0, 0]  # Coordinate point of the focused object
+        self.radius = 0  # Amount of tiles that we will be rendering around the focus object
+
+    def set_focus_object(self, obj):
+
+        """
+        Sets the focus point of the camera onto an object of Tile class in the tilemap
+
+        :param obj: Object being set as the focus point
+        :type obj : Tile
+        """
+
+        objTile = self.tilemap.find_object(obj)
+
+        self.focusObject = objTile
+        self.focusPoint = [objTile.x, objTile.y]
+
+    def refresh_focus_position(self):
+
+        """
+        Finds the focus object position in the tilemap and resets the focus point to its position
+        """
+
+        self.focusObject = self.tilemap.find_object(self.focusObject.obj)
+        self.focusPoint = [self.focusObject.x, self.focusObject.y]
+
+        # print("Camera self.tilemap: " + str(self.tilemap))
+        # print("Camera self.displayArea: " + str(self.displayArea))
+
+    def set_radius(self, radius):
+
+        """
+        Sets the radius of the display area
+
+        :param radius: New number of tiles to be displayed around the focus object
+        :type radius: Int
+        """
+
+        self.radius = radius
+
+    def update(self):
+
+        """
+        Fills the tilemap with fog to block the player's vision relative to walls
+        """
+
+        self.refresh_focus_position()
+        self.create_display()
+
+        playerTile = self.tilemap.find_object_type(Player)
+        playerTile.obj.look(self.displayArea)
+
+    def create_display(self):
+
+        """
+        Creates the display area based on the radius, using our tilemap
+        """
+
+        if (self.radius * 2) + 1 >= self.tilemap.height:
+
+            height = self.tilemap.height
+
+        else:
+
+            height = (self.radius * 2) + 1
+
+        if (self.radius * 2) + 1 >= self.tilemap.width:
+
+            width = self.tilemap.width
+
+        else:
+
+            width = (self.radius * 2) + 1
+
+        # Clearing our displayArea
+        del self.displayArea
+        self.displayArea = BaseTileMap(height, width, self.win)
+
+        # Creating the starting x position of our display zone
+        startX = self.focusPoint[0] - self.radius
+
+        # Creating the ending x position of our display zone
+        if self.focusPoint[0] + self.radius > len(self.tilemap.tilemap[self.focusPoint[1]]) - 1:
+
+            endX = len(self.tilemap.tilemap[self.focusPoint[1]]) - 1
+            startX -= ((self.focusPoint[0] + 1) + self.radius) - len(self.tilemap.tilemap[self.focusPoint[1]])
+
+            if startX < 0:
+
+                startX = 0
+
+        else:
+
+            endX = self.focusPoint[0] + self.radius
+
+        if startX < 0:
+
+            endX += abs(startX)
+            if endX > len(self.tilemap.tilemap[self.focusPoint[1]]) - 1:
+
+                endX = len(self.tilemap.tilemap[self.focusPoint[1]]) - 1
+
+            startX = 0
+
+        # Creating the starting y position of our display zone
+        startY = self.focusPoint[1] - self.radius
+
+        # Creating the ending y position of our display zone
+        if self.focusPoint[1] + self.radius > len(self.tilemap.tilemap) - 1:
+
+            endY = len(self.tilemap.tilemap) - 1
+            startY -= ((self.focusPoint[1] + 1) + self.radius) - len(self.tilemap.tilemap)
+
+            if startY < 0:
+
+                startY = 0
+
+        else:
+
+            endY = self.focusPoint[1] + self.radius
+
+        if startY < 0:
+
+            endY += abs(startY)
+            if endY > len(self.tilemap.tilemap) - 1:
+
+                endY = len(self.tilemap.tilemap) - 1
+
+            startY = 0
+
+        yIndex = 0
+        xIndex = 0
+
+        # Adding Tiles to the displayArea tilemap from our main tilemap
+        while yIndex + startY <= endY:
+
+            while xIndex + startX <= endX:
+
+                for obj in self.tilemap.tilemap[yIndex + startY][xIndex + startX]:
+
+                    if isinstance(obj, Player):
+
+                        self.displayArea.tilemap[yIndex][xIndex].append(obj)
+
+                        self.displayArea.tilemap[yIndex][xIndex].sort(key=self.tilemap._get_priority)
+
+                    else:
+
+                        self.displayArea.add(obj, xIndex, yIndex)
+
+                xIndex += 1
+
+            yIndex += 1
+            xIndex = 0
 
 
 class Tile:

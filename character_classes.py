@@ -172,13 +172,20 @@ class EntityCharacter(BaseCharacter):
 
         pass
 
-    def look(self, radius):
+    def look(self, tilemap):
 
-        self.scroll_win.clear()
+        """
+        Fills tiles on the map with fog based on where the wall is blocking view
+        :param tilemap: tilemap that is being parsed
+        """
 
-        selfTile = self.tilemap.find_object(self)
+        # self.scroll_win.clear()
+        fog = Fog()
+
+        selfTile = tilemap.find_object(self)
         posX, posY = selfTile.x, selfTile.y
 
+        '''
         objects = self.tilemap.get_around(posX, posY, radius, True)
         referenceTileMap = [[]]
 
@@ -309,7 +316,7 @@ class EntityCharacter(BaseCharacter):
                 referenceTileMap[yCount].append(col)
 
             yCount += 1
-
+        '''
         yIt = 0
 
         equationTop = 0
@@ -330,855 +337,890 @@ class EntityCharacter(BaseCharacter):
         pointsBlocked = []
 
         # Checking Walls
-        for line in referenceTileMap:
+        for line in tilemap.tilemap:
 
             for col in line:
 
-                checkTop = False
+                for objTile in col:
 
-                if col == "W":
+                    if isinstance(objTile, Wall):
 
-                    # Y Position of character in relation to an origin at the bottom left
-                    posY = (len(referenceTileMap) - 1) - selfTile.y
-                    # X Position of character, irrelevant if origin is top left or bottom left
-                    posX = selfTile.x
+                        checkTop = False
 
-                    wallPosY = ((len(referenceTileMap) - 1) - yIt) - posY
-                    wallPosX = xIt - posX
+                        # Y Position of character in relation to an origin at the bottom left
+                        posY = (len(tilemap.tilemap) - 1) - selfTile.y
+                        # X Position of character, irrelevant if origin is top left or bottom left
+                        posX = selfTile.x
 
-                    # Wall is on the same X Value, below us
-                    if xIt == selfTile.x and yIt > selfTile.y:
+                        wallPosY = ((tilemap.height - 1) - yIt) - posY
+                        wallPosX = xIt - posX
 
-                        pointsBlocked = []
+                        # Wall is on the same X Value, below us
+                        if xIt == selfTile.x and yIt > selfTile.y:
 
-                        # Right Half
-                        equationRight = float(wallPosY / (wallPosX + 1))
+                            pointsBlocked = []
 
-                        yIndex = yIt + 1
-                        xIndex = xIt
+                            # Right Half
+                            equationRight = float(wallPosY / (wallPosX + 1))
 
-                        while yIndex < len(booleanTileMap):
-
-                            # Tile directly above the wall, will always be blocked out
-                            booleanTileMap[yIndex][xIndex] = False
-
-                            xIndex += 1
-
-                            # Incrementing along x axis until we reach the beginning tile of where the slope indexes
-                            while xIndex < len(booleanTileMap[yIndex]) and (xIndex - xIt) < \
-                                    math.floor((((len(booleanTileMap) - 1) - yIndex) - posY) / equationRight):
-
-                                booleanTileMap[yIndex][xIndex] = False
-
-                                if xIndex != selfTile.x:
-                                    pointsBlocked.append([xIndex, yIndex])
-
-                                testedPoints.append([xIndex, yIndex])
-                                xIndex += 1
-
-                            floatOutput = (((len(booleanTileMap) - 1) - yIndex) - posY) / equationRight
-
-                            if math.floor((floatOutput % 1) * 10) / 10 >= .5 and xIndex < len(booleanTileMap[yIndex]):
-
-                                booleanTileMap[yIndex][xIndex] = False
-
-                                if xIndex != selfTile.x:
-                                    pointsBlocked.append([xIndex, yIndex])
-
-                                testedPoints.append([xIndex, yIndex])
-
-                            # Adding points that may extend beyond the boundary of the tilemap
-                            while (xIndex - xIt) < math.floor(
-                                    (((len(booleanTileMap) - 1) - yIndex) - posY) / equationRight):
-
-                                if xIndex != selfTile.x:
-                                    pointsBlocked.append([xIndex, yIndex])
-
-                                xIndex += 1
-
-                            yIndex += 1
+                            yIndex = yIt + 1
                             xIndex = xIt
 
-                        # Reflecting Points over the y axis
-                        for point in pointsBlocked:
+                            while yIndex < len(tilemap.tilemap):
 
-                            if xIt - (point[0] - xIt) >= 0 <= point[1]:
-                                booleanTileMap[point[1]][xIt - (point[0] - xIt)] = False
-
-                    # Wall is on the same X Value, above us
-                    elif xIt == selfTile.x and yIt < selfTile.y:
-
-                        pointsBlocked = []
-
-                        equationRight = float(wallPosY / (wallPosX + 1))
-
-                        yIndex = yIt - 1
-                        xIndex = xIt
-
-                        while yIndex >= 0:
-
-                            # Tile directly above the wall, will always be blocked out
-                            booleanTileMap[yIndex][xIndex] = False
-
-                            xIndex += 1
-
-                            # Incrementing along x axis until we reach the beginning tile of where the slope indexes
-                            while xIndex < len(booleanTileMap[yIndex]) and (xIndex - posX) < \
-                                    math.floor((((len(booleanTileMap) - 1) - yIndex) - posY) / equationRight):
-
-                                booleanTileMap[yIndex][xIndex] = False
-
-                                if xIndex != selfTile.x:
-                                    pointsBlocked.append([xIndex, yIndex])
-
-                                testedPoints.append([xIndex, yIndex])
-                                xIndex += 1
-
-                            floatOutput = (((len(booleanTileMap) - 1) - yIndex) - posY) / equationRight
-
-                            if math.floor((floatOutput % 1) * 10) / 10 >= .5 and xIndex < len(booleanTileMap[yIndex]):
-
-                                booleanTileMap[yIndex][xIndex] = False
-
-                                if xIndex != selfTile.x:
-                                    pointsBlocked.append([xIndex, yIndex])
-
-                                testedPoints.append([xIndex, yIndex])
-
-                            # Adding points that may extend beyond the boundary of the tilemap
-                            while (xIndex - posX) < math.floor(
-                                    (((len(booleanTileMap) - 1) - yIndex) - posY) / equationRight):
-
-                                if xIndex != selfTile.x:
-                                    pointsBlocked.append([xIndex, yIndex])
+                                # Tile directly above the wall, will always be blocked out
+                                tilemap.add(fog, xIndex, yIndex)
 
                                 xIndex += 1
 
-                            yIndex -= 1
+                                # Incrementing along x axis until we reach the beginning tile of where the slope indexes
+                                while xIndex < len(tilemap.tilemap[yIndex]) and (xIndex - xIt) < \
+                                        math.floor((((len(tilemap.tilemap) - 1) - yIndex) - posY) / equationRight):
+
+                                    tilemap.add(fog, xIndex, yIndex)
+
+                                    if xIndex != selfTile.x:
+                                        pointsBlocked.append([xIndex, yIndex])
+
+                                    testedPoints.append([xIndex, yIndex])
+                                    xIndex += 1
+
+                                floatOutput = (((len(tilemap.tilemap) - 1) - yIndex) - posY) / equationRight
+
+                                if math.floor((floatOutput % 1) * 10) / 10 >= .5 and xIndex < len(tilemap.tilemap[yIndex]):
+
+                                    tilemap.add(fog, xIndex, yIndex)
+
+                                    if xIndex != selfTile.x:
+                                        pointsBlocked.append([xIndex, yIndex])
+
+                                    testedPoints.append([xIndex, yIndex])
+
+                                # Adding points that may extend beyond the boundary of the tilemap
+                                while (xIndex - xIt) < math.floor(
+                                        (((len(tilemap.tilemap) - 1) - yIndex) - posY) / equationRight):
+
+                                    if xIndex != selfTile.x:
+                                        pointsBlocked.append([xIndex, yIndex])
+
+                                    xIndex += 1
+
+                                yIndex += 1
+                                xIndex = xIt
+
+                            # Reflecting Points over the y axis
+                            for point in pointsBlocked:
+
+                                if xIt - (point[0] - xIt) >= 0 <= point[1]:
+
+                                    tilemap.add(fog, xIt - (point[0] - xIt), point[1])
+
+                        # Wall is on the same X Value, above us
+                        elif xIt == selfTile.x and yIt < selfTile.y:
+
+                            pointsBlocked = []
+
+                            equationRight = float(wallPosY / (wallPosX + 1))
+
+                            yIndex = yIt - 1
                             xIndex = xIt
 
-                        # Reflecting Points over the y axis
-                        for point in pointsBlocked:
+                            while yIndex >= 0:
 
-                            if xIt - (point[0] - xIt) >= 0 <= point[1]:
-                                booleanTileMap[point[1]][xIt - (point[0] - xIt)] = False
+                                # Tile directly above the wall, will always be blocked out
+                                tilemap.add(fog, xIndex, yIndex)
 
-                    # Wall is on the same Y Value, left of us
-                    elif yIt == selfTile.y and xIt < selfTile.x:
+                                xIndex += 1
 
-                        #self.scroll_win.add_content("Same Y value")
+                                # Incrementing along x axis until we reach the beginning tile of where the slope indexes
+                                while xIndex < len(tilemap.tilemap[yIndex]) and (xIndex - posX) < \
+                                        math.floor((((len(tilemap.tilemap) - 1) - yIndex) - posY) / equationRight):
 
-                        pointsBlocked = []
+                                    tilemap.add(fog, xIndex, yIndex)
 
-                        # Top Half
-                        equationTop = float((wallPosY + 1) / wallPosX)
-                        equationBottom = 0
+                                    if xIndex != selfTile.x:
+                                        pointsBlocked.append([xIndex, yIndex])
 
-                        yIndex = yIt
-                        xIndex = xIt - 1
+                                    testedPoints.append([xIndex, yIndex])
+                                    xIndex += 1
 
-                        while xIndex >= 0:
+                                floatOutput = (((len(tilemap.tilemap) - 1) - yIndex) - posY) / equationRight
 
-                            # Bottom Line
-                            floatOutput = equationBottom * (xIndex - posX)
+                                if math.floor((floatOutput % 1) * 10) / 10 >= .5 and xIndex < len(tilemap.tilemap[yIndex]):
 
-                            if math.floor((floatOutput % 1) * 10) / 10 <= .5:
+                                    tilemap.add(fog, xIndex, yIndex)
 
-                                booleanTileMap[yIndex][xIndex] = False
+                                    if xIndex != selfTile.x:
+                                        pointsBlocked.append([xIndex, yIndex])
 
-                                # We've already blocked out all points on the same Y value as us,
-                                # so we check if y is not equal to us, then add to the points blocked list
+                                    testedPoints.append([xIndex, yIndex])
 
-                                if yIndex != selfTile.y:
-                                    pointsBlocked.append([xIndex, yIndex])
+                                # Adding points that may extend beyond the boundary of the tilemap
+                                while (xIndex - posX) < math.floor(
+                                        (((len(tilemap.tilemap) - 1) - yIndex) - posY) / equationRight):
 
-                            testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
+                                    if xIndex != selfTile.x:
+                                        pointsBlocked.append([xIndex, yIndex])
 
-                            yIndex -= 1
+                                    xIndex += 1
 
-                            # Top Line
-                            while yIndex >= 0 and ((len(referenceTileMap) - 1) - yIndex) - posY < math.floor(
-                                    equationTop * (xIndex - posX)):
-
-                                booleanTileMap[yIndex][xIndex] = False
-                                if yIndex != selfTile.y:
-                                    pointsBlocked.append([xIndex, yIndex])
-
-                                testedPoints.append([xIndex, yIndex])
                                 yIndex -= 1
+                                xIndex = xIt
 
-                            # Adding points that may extend beyond the boundary of the tilemap
-                            while ((len(referenceTileMap) - 1) - yIndex) - posY < math.floor(
-                                    equationTop * (xIndex - posX)):
+                            # Reflecting Points over the y axis
+                            for point in pointsBlocked:
 
-                                if yIndex != selfTile.y:
-                                    pointsBlocked.append([xIndex, yIndex])
-                                yIndex -= 1
+                                if xIt - (point[0] - xIt) >= 0 <= point[1]:
 
-                            floatOutput = equationTop * (xIndex - posX)
+                                    tilemap.add(fog, xIt - (point[0] - xIt), point[1])
 
-                            if math.floor((floatOutput % 1) * 10) / 10 >= .5 and yIndex >= 0:
+                        # Wall is on the same Y Value, left of us
+                        elif yIt == selfTile.y and xIt < selfTile.x:
 
-                                booleanTileMap[yIndex][xIndex] = False
+                            pointsBlocked = []
 
-                                if yIndex != selfTile.y:
-                                    pointsBlocked.append([xIndex, yIndex])
+                            # Top Half
+                            equationTop = float((wallPosY + 1) / wallPosX)
+                            equationBottom = 0
+
+                            yIndex = yIt
+                            xIndex = xIt - 1
+
+                            while xIndex >= 0:
+
+                                # Bottom Line
+                                floatOutput = equationBottom * (xIndex - posX)
+
+                                if math.floor((floatOutput % 1) * 10) / 10 <= .5:
+
+                                    tilemap.add(fog, xIndex, yIndex)
+
+                                    # We've already blocked out all points on the same Y value as us,
+                                    # so we check if y is not equal to us, then add to the points blocked list
+
+                                    if yIndex != selfTile.y:
+                                        pointsBlocked.append([xIndex, yIndex])
 
                                 testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
 
-                            xIndex -= 1
-                            yIndex = (len(referenceTileMap) - 1) - math.floor(
-                                equationBottom * (xIndex - posX) + posY)
-
-                            if yIndex < 0:
-                                break
-
-                        # Reflecting over the x axis
-                        for point in pointsBlocked:
-
-                            if point[1] < 0:
-
-                                if (selfTile.y * 2) + abs(point[1]) < len(booleanTileMap):
-                                    booleanTileMap[(selfTile.y * 2) + abs(point[1])][point[0]] = False
-
-                            else:
-
-                                if (selfTile.y + (selfTile.y - point[1])) < len(booleanTileMap):
-                                    booleanTileMap[selfTile.y + (selfTile.y - point[1])][point[0]] = False
-
-                    # Wall is on the same Y Value, right of us
-                    elif yIt == selfTile.y and xIt > selfTile.x:
-
-                        #self.scroll_win.add_content("Same Y value")
-
-                        pointsBlocked = []
-
-                        # Top Half
-                        equationTop = float((wallPosY + 1) / wallPosX)
-                        equationBottom = 0
-
-                        yIndex = yIt
-                        xIndex = xIt + 1
-
-                        while xIndex < len(referenceTileMap[yIndex]):
-
-                            # Bottom Line
-                            floatOutput = equationBottom * (xIndex - posX)
-
-                            if math.floor((floatOutput % 1) * 10) / 10 <= .5:
-
-                                booleanTileMap[yIndex][xIndex] = False
-
-                                # We've already blocked out all points on the same Y value as us,
-                                # so we check if y is not equal to us, then add to the points blocked list
-
-                                if yIndex != selfTile.y:
-                                    pointsBlocked.append([xIndex, yIndex])
-
-                            testedPoints.append(
-                                [xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
-
-                            yIndex -= 1
-
-                            # Top Line
-                            while yIndex >= 0 and (
-                                    (len(referenceTileMap) - 1) - yIndex) - posY < math.floor(
-                                equationTop * (xIndex - posX)):
-
-                                booleanTileMap[yIndex][xIndex] = False
-                                if yIndex != selfTile.y:
-                                    pointsBlocked.append([xIndex, yIndex])
-
-                                testedPoints.append([xIndex, yIndex])
                                 yIndex -= 1
 
-                            # Adding points that may extend beyond the boundary of the tilemap
-                            while ((len(referenceTileMap) - 1) - yIndex) - posY < math.floor(
-                                    equationTop * (xIndex - posX)):
+                                # Top Line
+                                while yIndex >= 0 and ((len(tilemap.tilemap) - 1) - yIndex) - posY < math.floor(
+                                        equationTop * (xIndex - posX)):
 
-                                if yIndex != selfTile.y:
-                                    pointsBlocked.append([xIndex, yIndex])
-                                yIndex -= 1
+                                    tilemap.add(fog, xIndex, yIndex)
+                                    if yIndex != selfTile.y:
+                                        pointsBlocked.append([xIndex, yIndex])
 
-                            floatOutput = equationTop * (xIndex - posX)
+                                    testedPoints.append([xIndex, yIndex])
+                                    yIndex -= 1
 
-                            if math.floor((floatOutput % 1) * 10) / 10 >= .5 and yIndex >= 0:
+                                # Adding points that may extend beyond the boundary of the tilemap.tilemap
+                                while ((len(tilemap.tilemap) - 1) - yIndex) - posY < math.floor(
+                                        equationTop * (xIndex - posX)):
 
-                                booleanTileMap[yIndex][xIndex] = False
+                                    if yIndex != selfTile.y:
+                                        pointsBlocked.append([xIndex, yIndex])
+                                    yIndex -= 1
 
-                                if yIndex != selfTile.y:
-                                    pointsBlocked.append([xIndex, yIndex])
+                                floatOutput = equationTop * (xIndex - posX)
+
+                                if math.floor((floatOutput % 1) * 10) / 10 >= .5 and yIndex >= 0:
+
+                                    tilemap.add(fog, xIndex, yIndex)
+
+                                    if yIndex != selfTile.y:
+                                        pointsBlocked.append([xIndex, yIndex])
+
+                                    testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
+
+                                xIndex -= 1
+                                yIndex = (len(tilemap.tilemap) - 1) - math.floor(
+                                    equationBottom * (xIndex - posX) + posY)
+
+                                if yIndex < 0:
+                                    break
+
+                            # Reflecting over the x axis
+                            for point in pointsBlocked:
+
+                                if point[1] < 0:
+
+                                    if (selfTile.y * 2) + abs(point[1]) < len(tilemap.tilemap):
+
+                                        tilemap.add(fog, point[0], (selfTile.y * 2) + abs(point[1]))
+
+                                else:
+
+                                    if (selfTile.y + (selfTile.y - point[1])) < len(tilemap.tilemap):
+
+                                        tilemap.add(fog, point[0], selfTile.y + (selfTile.y - point[1]))
+
+                        # Wall is on the same Y Value, right of us
+                        elif yIt == selfTile.y and xIt > selfTile.x:
+
+                            pointsBlocked = []
+
+                            # Top Half
+                            equationTop = float((wallPosY + 1) / wallPosX)
+                            equationBottom = 0
+
+                            yIndex = yIt
+                            xIndex = xIt + 1
+
+                            while xIndex < len(tilemap.tilemap[yIndex]):
+
+                                # Bottom Line
+                                floatOutput = equationBottom * (xIndex - posX)
+
+                                if math.floor((floatOutput % 1) * 10) / 10 <= .5:
+
+                                    tilemap.add(fog, xIndex, yIndex)
+
+                                    # We've already blocked out all points on the same Y value as us,
+                                    # so we check if y is not equal to us, then add to the points blocked list
+
+                                    if yIndex != selfTile.y:
+                                        pointsBlocked.append([xIndex, yIndex])
 
                                 testedPoints.append(
                                     [xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
 
-                            xIndex += 1
-                            yIndex = (len(referenceTileMap) - 1) - math.floor(
-                                equationBottom * (xIndex - posX) + posY)
-                            if yIndex < 0:
-                                break
-
-                        # Reflecting over the x axis
-                        for point in pointsBlocked:
-
-                            if point[1] < 0:
-
-                                if (selfTile.y * 2) + abs(point[1]) < len(booleanTileMap):
-                                    booleanTileMap[(selfTile.y * 2) + abs(point[1])][point[0]] = False
-
-                            else:
-
-                                if (selfTile.y + (selfTile.y - point[1])) < len(booleanTileMap):
-                                    booleanTileMap[selfTile.y + (selfTile.y - point[1])][
-                                        point[0]] = False
-
-                    # Wall is in Quadrant 1
-                    elif xIt >= selfTile.x and yIt <= selfTile.y:
-
-                        equationTop = float((wallPosY + 1) / wallPosX)
-                        equationBottom = float(wallPosY / (wallPosX + 1))
-
-                        if xIt == selfTile.x + 1:
-
-                            yIndex = yIt - 1
-                            xIndex = xIt
-
-                            for x in range(selfTile.y - yIt):
-
-                                if yIndex < 0: break
-
-                                booleanTileMap[yIndex][xIndex] = False
                                 yIndex -= 1
 
-                        yIndex = yIt
-                        xIndex = xIt + 1
+                                # Top Line
+                                while yIndex >= 0 and (
+                                        (len(tilemap.tilemap) - 1) - yIndex) - posY < math.floor(
+                                        equationTop * (xIndex - posX)):
 
-                        # Checking if the bottom slope is greater than 1.0
+                                    tilemap.add(fog, xIndex, yIndex)
+                                    if yIndex != selfTile.y:
+                                        pointsBlocked.append([xIndex, yIndex])
 
-                        if equationBottom >= 1.0:
-                            #self.scroll_win.add_content(
-                                #"Bottom is greater than or equal to 1: " + str(equationBottom))
+                                    testedPoints.append([xIndex, yIndex])
+                                    yIndex -= 1
 
-                            # Reassigning the bottom slope so that it's angled slightly more above the wall
-                            equationBottom = float((wallPosY + 1) / (wallPosX + 1))
-                            # Reassigning the yIndex to match where the new slope starts
-                            yIndex = yIt - 1
+                                # Adding points that may extend beyond the boundary of the tilemap.tilemap
+                                while ((len(tilemap.tilemap) - 1) - yIndex) - posY < math.floor(
+                                        equationTop * (xIndex - posX)):
 
-                        # Checking if the top slope is greater than 1.0
-                        if equationTop > 1.0:
+                                    if yIndex != selfTile.y:
+                                        pointsBlocked.append([xIndex, yIndex])
+                                    yIndex -= 1
 
-                            #self.scroll_win.add_content("Top is greater than 1: " + str(equationTop))
+                                floatOutput = equationTop * (xIndex - posX)
 
-                            checkTop = True
+                                if math.floor((floatOutput % 1) * 10) / 10 >= .5 and yIndex >= 0:
 
-                            # Reassigning the top slope so that it's angled more above the wall
-                            equationTop = float((wallPosY + 2) / wallPosX)
+                                    tilemap.add(fog, xIndex, yIndex)
 
-                            # Reassigning the xIndex to allow the equation to check the x tile we start on
-                            xIndex = xIt
+                                    if yIndex != selfTile.y:
+                                        pointsBlocked.append([xIndex, yIndex])
 
-                            if equationBottom < 1.0:
-                                # Reassigning the yIndex to start above the wall, and not on top of it
-                                yIndex = yIt - 1
+                                    testedPoints.append(
+                                        [xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
 
-                        if checkTop:
-
-                            # Top of Wall
-                            while ((len(referenceTileMap) - 1) - yIndex) - posY < math.floor(
-                                    equationTop * (xIndex - posX)) and yIndex >= 0:
-
-                                booleanTileMap[yIndex][xIndex] = False
-                                yIndex -= 1
-
-                            floatOutput = equationTop * (xIndex - posX)
-
-                            if math.floor((floatOutput % 1) * 10) / 10 >= .5 and math.floor(
-                                    (floatOutput % 1) * 10) / 10 != 0.0:
-
-                                if yIndex >= 0:
-
-                                    booleanTileMap[yIndex][xIndex] = False
-                                    testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
-
-                            xIndex += 1
-                            yIndex = (len(referenceTileMap) - 1) - (
-                                    math.floor(equationBottom * (xIndex - posX)) + posY)
-
-                        # BottomLine
-                        while xIndex < len(referenceTileMap[yIndex]) and yIndex >= 0:
-
-                            # Bottom Line
-                            floatOutput = equationBottom * (xIndex - posX)
-
-                            if math.floor((floatOutput % 1) * 10) / 10 <= .5 and \
-                                    referenceTileMap[yIndex][xIndex] != "W":
-                                booleanTileMap[yIndex][xIndex] = False
-
-                            testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
-
-                            yIndex -= 1
-                            # Top Line
-
-                            while yIndex >= 0 and ((len(referenceTileMap) - 1) - yIndex) - posY < math.floor(
-                                    equationTop * (xIndex - posX)):
-                                booleanTileMap[yIndex][xIndex] = False
-
-                                testedPoints.append([xIndex, yIndex])
-                                yIndex -= 1
-
-                            floatOutput = equationTop * (xIndex - posX)
-
-                            if math.floor((floatOutput % 1) * 10) / 10 >= .5 and yIndex >= 0:
-                                booleanTileMap[yIndex][xIndex] = False
-                                testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
-
-                            xIndex += 1
-                            yIndex = (len(referenceTileMap) - 1) - math.floor(
-                                equationBottom * (xIndex - posX) + posY)
-                            if yIndex < 0:
-                                break
-
-                    # Wall is in Quadrant 2
-                    elif xIt <= selfTile.x and yIt <= selfTile.y:
-
-                        pointsBlocked = []
-
-                        posX -= (wallPosX * 2) * -1
-
-                        wallPosX = abs(wallPosX)
-                        wallPosY = abs(wallPosY)
-
-                        equationTop = float((wallPosY + 1) / wallPosX)
-                        equationBottom = float(wallPosY / (wallPosX + 1))
-
-                        if xIt == selfTile.x - 1:
-
-                            yIndex = yIt - 1
-                            xIndex = xIt
-
-                            for x in range(selfTile.y - yIt):
-
-                                if yIndex < 0: break
-
-                                booleanTileMap[yIndex][xIndex] = False
-                                yIndex -= 1
-
-                        yIndex = yIt
-                        xIndex = xIt + 1
-
-                        # Checking if the bottom slope is greater than 1.0
-
-                        if equationBottom >= 1.0:
-                            #self.scroll_win.add_content(
-                                #"Bottom is greater than or equal to 1: " + str(equationBottom))
-
-                            # Reassigning the bottom slope so that it's angled slightly more above the wall
-                            equationBottom = float((wallPosY + 1) / (wallPosX + 1))
-                            # Reassigning the yIndex to match where the new slope starts
-                            yIndex = yIt - 1
-
-                        # Checking if the top slope is greater than 1.0
-                        if equationTop > 1.0:
-
-                            #self.scroll_win.add_content("Top is greater than 1: " + str(equationTop))
-
-                            checkTop = True
-
-                            # Reassigning the top slope so that it's angled more above the wall
-                            equationTop = float((wallPosY + 2) / wallPosX)
-
-                            # Reassigning the xIndex to allow the equation to check the x tile we start on
-                            xIndex = xIt
-
-                            if equationBottom < 1.0:
-                                # Reassigning the yIndex to start above the wall, and not on top of it
-                                yIndex = yIt - 1
-
-                        if checkTop:
-
-                            # Top of Wall
-                            while ((len(referenceTileMap) - 1) - yIndex) - posY < math.floor(
-                                    equationTop * (xIndex - posX)) and yIndex >= 0:
-                                pointsBlocked.append([xIndex, yIndex])
-                                yIndex -= 1
-
-                            floatOutput = equationTop * (xIndex - posX)
-
-                            if math.floor((floatOutput % 1) * 10) / 10 >= .5 and math.floor(
-                                    (floatOutput % 1) * 10) / 10 != 0.0:
-
-                                if yIndex >= 0:
-                                    pointsBlocked.append([xIndex, yIndex])
-                                    testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
-
-                            xIndex += 1
-                            yIndex = (len(referenceTileMap) - 1) - (
-                                    math.floor(equationBottom * (xIndex - posX)) + posY)
-
-                        # BottomLine
-                        while xIndex <= xIt * 2:
-
-                            # Bottom Line
-                            floatOutput = equationBottom * (xIndex - posX)
-
-                            if math.floor((floatOutput % 1) * 10) / 10 <= .5 and yIndex >= 0\
-                                    and referenceTileMap[yIndex][xIt - (xIndex - xIt)] != "W":
-
-                                pointsBlocked.append([xIndex, yIndex])
-
-                            testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
-
-                            yIndex -= 1
-                            # Top Line
-
-                            while ((len(referenceTileMap) - 1) - yIndex) - posY < math.floor(
-                                    equationTop * (xIndex - posX)) and yIndex >= 0:
-                                pointsBlocked.append([xIndex, yIndex])
-                                testedPoints.append([xIndex, yIndex])
-                                yIndex -= 1
-
-                            floatOutput = equationTop * (xIndex - posX)
-
-                            if math.floor((floatOutput % 1) * 10) / 10 >= .5 and yIndex >= 0:
-                                pointsBlocked.append([xIndex, yIndex])
-                                testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
-
-                            xIndex += 1
-                            yIndex = (len(referenceTileMap) - 1) - math.floor(
-                                equationBottom * (xIndex - posX) + posY)
-
-                        # Reflecting points to the other side of the wall
-                        for point in pointsBlocked:
-
-                            if 0 <= point[1] < len(booleanTileMap) and len(booleanTileMap[point[1]]) > xIt - (
-                                    point[0] - xIt) >= 0:
-
-                                booleanTileMap[point[1]][xIt - (point[0] - xIt)] = False
-
-                    # Wall is in Quadrant 3
-                    elif xIt <= selfTile.x and yIt >= selfTile.y:
-
-                        pointsBlocked = []
-
-                        posY -= (wallPosY * 2) * -1
-                        posX -= (wallPosX * 2) * -1
-
-                        wallPosX = abs(wallPosX)
-                        wallPosY = abs(wallPosY)
-
-                        equationTop = float((wallPosY + 1) / wallPosX)
-                        equationBottom = float(wallPosY / (wallPosX + 1))
-
-                        if xIt == selfTile.x - 1:
-
-                            yIndex = yIt + 1
-                            xIndex = xIt
-
-                            for x in range(yIt - selfTile.y):
-
-                                if yIndex >= len(booleanTileMap): break
-
-                                booleanTileMap[yIndex][xIndex] = False
-                                yIndex += 1
-
-                        yIndex = yIt
-                        xIndex = xIt + 1
-
-                        # Checking if the bottom slope is greater than 1.0
-
-                        if equationBottom >= 1.0:
-                            #self.scroll_win.add_content(
-                                #"Bottom is greater than or equal to 1: " + str(equationBottom))
-
-                            # Reassigning the bottom slope so that it's angled slightly more above the wall
-                            equationBottom = float((wallPosY + 1) / (wallPosX + 1))
-                            # Reassigning the yIndex to match where the new slope starts
-                            yIndex = yIt - 1
-
-                        # Checking if the top slope is greater than 1.0
-                        if equationTop > 1.0:
-
-                            #self.scroll_win.add_content("Top is greater than 1: " + str(equationTop))
-
-                            checkTop = True
-
-                            # Reassigning the top slope so that it's angled more above the wall
-                            equationTop = float((wallPosY + 2) / wallPosX)
-
-                            # Reassigning the xIndex to allow the equation to check the x tile we start on
-                            xIndex = xIt
-
-                            if equationBottom < 1.0:
-                                # Reassigning the yIndex to start above the wall, and not on top of it
-                                yIndex = yIt - 1
-
-                        if checkTop:
-
-                            # Top of Wall
-                            while ((len(referenceTileMap) - 1) - yIndex) - posY < math.floor(
-                                    equationTop * (xIndex - posX)) and yIndex >= 0:
-                                pointsBlocked.append([xIndex, yIndex])
-                                yIndex -= 1
-
-                            floatOutput = equationTop * (xIndex - posX)
-
-                            if math.floor((floatOutput % 1) * 10) / 10 >= .5 and math.floor(
-                                    (floatOutput % 1) * 10) / 10 != 0.0:
-
-                                if yIndex >= 0:
-                                    pointsBlocked.append([xIndex, yIndex])
-                                    testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
-
-                            xIndex += 1
-                            yIndex = (len(referenceTileMap) - 1) - (
-                                    math.floor(equationBottom * (xIndex - posX)) + posY)
-
-                        # BottomLine
-                        while xIndex <= xIt * 2:
-
-                            if yIndex < 0:
-
-                                if yIt + abs(yIndex) >= len(booleanTileMap) - yIt:
-                                    xIndex += 1
-                                    yIndex = (len(referenceTileMap) - 1) - math.floor(
-                                        equationBottom * (xIndex - posX) + posY)
-                                    continue
-
-                            else:
-
-                                if yIt + (yIt - yIndex) >= len(booleanTileMap):
-                                    xIndex += 1
-                                    yIndex = (len(referenceTileMap) - 1) - math.floor(
-                                        equationBottom * (xIndex - posX) + posY)
-                                    continue
-
-                            # Bottom Line
-                            floatOutput = equationBottom * (xIndex - posX)
-
-                            if math.floor((floatOutput % 1) * 10) / 10 <= .5 and \
-                                        referenceTileMap[yIt + (yIt - yIndex)][xIt - (xIndex - xIt)] != "W":
-                                pointsBlocked.append([xIndex, yIndex])
-
-                            testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
-
-                            yIndex -= 1
-                            # Top Line
-
-                            while ((len(referenceTileMap) - 1) - yIndex) - posY < math.floor(
-                                    equationTop * (xIndex - posX)):
-
+                                xIndex += 1
+                                yIndex = (len(tilemap.tilemap) - 1) - math.floor(
+                                    equationBottom * (xIndex - posX) + posY)
                                 if yIndex < 0:
+                                    break
 
-                                    if yIt + abs(yIndex) >= len(booleanTileMap) - yIt:
-                                        break
+                            # Reflecting over the x axis
+                            for point in pointsBlocked:
+
+                                if point[1] < 0:
+
+                                    if (selfTile.y * 2) + abs(point[1]) < len(tilemap.tilemap):
+
+                                        tilemap.add(fog, point[0], (selfTile.y * 2) + abs(point[1]))
 
                                 else:
 
-                                    if yIt + (yIt - yIndex) >= len(booleanTileMap):
-                                        break
+                                    if (selfTile.y + (selfTile.y - point[1])) < len(tilemap.tilemap):
 
-                                pointsBlocked.append([xIndex, yIndex])
-                                testedPoints.append([xIndex, yIndex])
-                                yIndex -= 1
+                                        tilemap.add(fog, point[0], selfTile.y + (selfTile.y - point[1]))
 
-                            floatOutput = equationTop * (xIndex - posX)
+                        # Wall is in Quadrant 1
+                        elif xIt >= selfTile.x and yIt <= selfTile.y:
 
-                            if yIndex < 0:
+                            equationTop = float((wallPosY + 1) / wallPosX)
+                            equationBottom = float(wallPosY / (wallPosX + 1))
 
-                                if yIt + abs(yIndex) >= len(booleanTileMap) - yIt:
-                                    xIndex += 1
-                                    yIndex = (len(referenceTileMap) - 1) - math.floor(
-                                        equationBottom * (xIndex - posX) + posY)
-                                    continue
+                            if xIt == selfTile.x + 1:
 
-                            else:
+                                yIndex = yIt - 1
+                                xIndex = xIt
 
-                                if yIt + (yIt - yIndex) >= len(booleanTileMap):
-                                    xIndex += 1
-                                    yIndex = (len(referenceTileMap) - 1) - math.floor(
-                                        equationBottom * (xIndex - posX) + posY)
-                                    continue
+                                for x in range(selfTile.y - yIt):
 
-                            if math.floor((floatOutput % 1) * 10) / 10 >= .5 and yIndex >= 0:
-                                pointsBlocked.append([xIndex, yIndex])
-                                testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
+                                    if yIndex < 0: break
 
-                            xIndex += 1
-                            yIndex = (len(referenceTileMap) - 1) - math.floor(
-                                equationBottom * (xIndex - posX) + posY)
+                                    tilemap.add(fog, xIndex, yIndex)
+                                    yIndex -= 1
 
-                        # Reflecting points to the other side of the wall
-                        for point in pointsBlocked:
+                            yIndex = yIt
+                            xIndex = xIt + 1
 
-                            if 0 <= point[1] < len(booleanTileMap):
+                            # Checking if the bottom slope is greater than 1.0
 
-                                if yIt + (yIt - point[1]) < len(booleanTileMap):
+                            if equationBottom >= 1.0:
+                                #self.scroll_win.add_content(
+                                    #"Bottom is greater than or equal to 1: " + str(equationBottom))
 
-                                    booleanTileMap[yIt + (yIt - point[1])][xIt - (point[0] - xIt)] = False
-
-                            elif point[1] < 0:
-
-                                if yIt + (yIt + abs(point[1])) < len(booleanTileMap):
-
-                                    booleanTileMap[yIt + (yIt + abs(point[1]))][xIt - (point[0] - xIt)] = False
-
-                    # Wall is in Quadrant 4
-                    elif xIt >= selfTile.x and yIt >= selfTile.y:
-
-                        pointsBlocked = []
-
-                        posY -= abs(wallPosY * 2)
-
-                        wallPosX = abs(wallPosX)
-                        wallPosY = abs(wallPosY)
-
-                        equationTop = float((wallPosY + 1) / wallPosX)
-                        equationBottom = float(wallPosY / (wallPosX + 1))
-
-                        if xIt == selfTile.x + 1:
-
-                            yIndex = yIt + 1
-                            xIndex = xIt
-
-                            for x in range(yIt - selfTile.y):
-
-                                if yIndex >= len(booleanTileMap): break
-
-                                booleanTileMap[yIndex][xIndex] = False
-                                yIndex += 1
-
-                        yIndex = yIt
-                        xIndex = xIt + 1
-
-                        # Checking if the bottom slope is greater than 1.0
-
-                        if equationBottom >= 1.0:
-                            #self.scroll_win.add_content(
-                                #"Bottom is greater than or equal to 1: " + str(equationBottom))
-
-                            # Reassigning the bottom slope so that it's angled slightly more above the wall
-                            equationBottom = float((wallPosY + 1) / (wallPosX + 1))
-                            # Reassigning the yIndex to match where the new slope starts
-                            yIndex = yIt - 1
-
-                        # Checking if the top slope is greater than 1.0
-                        if equationTop > 1.0:
-
-                            #self.scroll_win.add_content("Top is greater than 1: " + str(equationTop))
-
-                            checkTop = True
-
-                            # Reassigning the top slope so that it's angled more above the wall
-                            equationTop = float((wallPosY + 2) / wallPosX)
-
-                            # Reassigning the xIndex to allow the equation to check the x tile we start on
-                            xIndex = xIt
-
-                            if equationBottom < 1.0:
-                                # Reassigning the yIndex to start above the wall, and not on top of it
+                                # Reassigning the bottom slope so that it's angled slightly more above the wall
+                                equationBottom = float((wallPosY + 1) / (wallPosX + 1))
+                                # Reassigning the yIndex to match where the new slope starts
                                 yIndex = yIt - 1
 
-                        if checkTop:
+                            # Checking if the top slope is greater than 1.0
+                            if equationTop > 1.0:
 
-                            # Top of Wall
-                            while ((len(referenceTileMap) - 1) - yIndex) - posY < math.floor(
-                                    equationTop * (xIndex - posX)) and yIndex >= 0:
-                                pointsBlocked.append([xIndex, yIndex])
+                                #self.scroll_win.add_content("Top is greater than 1: " + str(equationTop))
+
+                                checkTop = True
+
+                                # Reassigning the top slope so that it's angled more above the wall
+                                equationTop = float((wallPosY + 2) / wallPosX)
+
+                                # Reassigning the xIndex to allow the equation to check the x tile we start on
+                                xIndex = xIt
+
+                                if equationBottom < 1.0:
+                                    # Reassigning the yIndex to start above the wall, and not on top of it
+                                    yIndex = yIt - 1
+
+                            if checkTop:
+
+                                # Top of Wall
+                                while ((len(tilemap.tilemap) - 1) - yIndex) - posY < math.floor(
+                                        equationTop * (xIndex - posX)) and yIndex >= 0:
+
+                                    tilemap.add(fog, xIndex, yIndex)
+                                    yIndex -= 1
+
+                                floatOutput = equationTop * (xIndex - posX)
+
+                                if math.floor((floatOutput % 1) * 10) / 10 >= .5 and math.floor(
+                                        (floatOutput % 1) * 10) / 10 != 0.0:
+
+                                    if yIndex >= 0:
+
+                                        tilemap.add(fog, xIndex, yIndex)
+                                        testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
+
+                                xIndex += 1
+                                yIndex = (len(tilemap.tilemap) - 1) - (
+                                        math.floor(equationBottom * (xIndex - posX)) + posY)
+
+                            # BottomLine
+                            while xIndex < len(tilemap.tilemap[yIndex]) and yIndex >= 0:
+
+                                # Bottom Line
+                                floatOutput = equationBottom * (xIndex - posX)
+
+                                if math.floor((floatOutput % 1) * 10) / 10 <= .5:
+
+                                    foundWall = False
+
+                                    for obj in tilemap.tilemap[yIndex][xIndex]:
+
+                                        if isinstance(obj, Wall):
+
+                                            foundWall = True
+
+                                    if not foundWall:
+
+                                        tilemap.add(fog, xIndex, yIndex)
+
+
+                                testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
+
                                 yIndex -= 1
+                                # Top Line
 
-                            floatOutput = equationTop * (xIndex - posX)
+                                while yIndex >= 0 and ((len(tilemap.tilemap) - 1) - yIndex) - posY < math.floor(
+                                        equationTop * (xIndex - posX)):
+                                    tilemap.add(fog, xIndex, yIndex)
 
-                            if math.floor((floatOutput % 1) * 10) / 10 >= .5 and math.floor(
-                                    (floatOutput % 1) * 10) / 10 != 0.0:
+                                    testedPoints.append([xIndex, yIndex])
+                                    yIndex -= 1
 
-                                if yIndex >= 0:
+                                floatOutput = equationTop * (xIndex - posX)
+
+                                if math.floor((floatOutput % 1) * 10) / 10 >= .5 and yIndex >= 0:
+                                    tilemap.add(fog, xIndex, yIndex)
+                                    testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
+
+                                xIndex += 1
+                                yIndex = (len(tilemap.tilemap) - 1) - math.floor(
+                                    equationBottom * (xIndex - posX) + posY)
+                                if yIndex < 0:
+                                    break
+
+                        # Wall is in Quadrant 2
+                        elif xIt <= selfTile.x and yIt <= selfTile.y:
+
+                            pointsBlocked = []
+
+                            posX -= (wallPosX * 2) * -1
+
+                            wallPosX = abs(wallPosX)
+                            wallPosY = abs(wallPosY)
+
+                            equationTop = float((wallPosY + 1) / wallPosX)
+                            equationBottom = float(wallPosY / (wallPosX + 1))
+
+                            if xIt == selfTile.x - 1:
+
+                                yIndex = yIt - 1
+                                xIndex = xIt
+
+                                for x in range(selfTile.y - yIt):
+
+                                    if yIndex < 0: break
+
+                                    tilemap.add(fog, xIndex, yIndex)
+                                    yIndex -= 1
+
+                            yIndex = yIt
+                            xIndex = xIt + 1
+
+                            # Checking if the bottom slope is greater than 1.0
+
+                            if equationBottom >= 1.0:
+                                #self.scroll_win.add_content(
+                                    #"Bottom is greater than or equal to 1: " + str(equationBottom))
+
+                                # Reassigning the bottom slope so that it's angled slightly more above the wall
+                                equationBottom = float((wallPosY + 1) / (wallPosX + 1))
+                                # Reassigning the yIndex to match where the new slope starts
+                                yIndex = yIt - 1
+
+                            # Checking if the top slope is greater than 1.0
+                            if equationTop > 1.0:
+
+                                #self.scroll_win.add_content("Top is greater than 1: " + str(equationTop))
+
+                                checkTop = True
+
+                                # Reassigning the top slope so that it's angled more above the wall
+                                equationTop = float((wallPosY + 2) / wallPosX)
+
+                                # Reassigning the xIndex to allow the equation to check the x tile we start on
+                                xIndex = xIt
+
+                                if equationBottom < 1.0:
+                                    # Reassigning the yIndex to start above the wall, and not on top of it
+                                    yIndex = yIt - 1
+
+                            if checkTop:
+
+                                # Top of Wall
+                                while ((len(tilemap.tilemap) - 1) - yIndex) - posY < math.floor(
+                                        equationTop * (xIndex - posX)) and yIndex >= 0:
+                                    pointsBlocked.append([xIndex, yIndex])
+                                    yIndex -= 1
+
+                                floatOutput = equationTop * (xIndex - posX)
+
+                                if math.floor((floatOutput % 1) * 10) / 10 >= .5 and math.floor(
+                                        (floatOutput % 1) * 10) / 10 != 0.0:
+
+                                    if yIndex >= 0:
+                                        pointsBlocked.append([xIndex, yIndex])
+                                        testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
+
+                                xIndex += 1
+                                yIndex = (len(tilemap.tilemap) - 1) - (
+                                        math.floor(equationBottom * (xIndex - posX)) + posY)
+
+                            # BottomLine
+                            while xIndex <= xIt * 2:
+
+                                # Bottom Line
+                                floatOutput = equationBottom * (xIndex - posX)
+
+                                if math.floor((floatOutput % 1) * 10) / 10 <= .5 and yIndex >= 0:
+
+                                    foundWall = False
+
+                                    for obj in tilemap.tilemap[yIndex][xIt - (xIndex - xIt)]:
+
+                                        if isinstance(obj, Wall):
+                                            foundWall = True
+
+                                    if not foundWall:
+                                        pointsBlocked.append([xIndex, yIndex])
+
+                                testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
+
+                                yIndex -= 1
+                                # Top Line
+
+                                while ((len(tilemap.tilemap) - 1) - yIndex) - posY < math.floor(
+                                        equationTop * (xIndex - posX)) and yIndex >= 0:
+                                    pointsBlocked.append([xIndex, yIndex])
+                                    testedPoints.append([xIndex, yIndex])
+                                    yIndex -= 1
+
+                                floatOutput = equationTop * (xIndex - posX)
+
+                                if math.floor((floatOutput % 1) * 10) / 10 >= .5 and yIndex >= 0:
                                     pointsBlocked.append([xIndex, yIndex])
                                     testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
 
-                            xIndex += 1
-                            yIndex = (len(referenceTileMap) - 1) - (
-                                    math.floor(equationBottom * (xIndex - posX)) + posY)
+                                xIndex += 1
+                                yIndex = (len(tilemap.tilemap) - 1) - math.floor(
+                                    equationBottom * (xIndex - posX) + posY)
 
-                        # BottomLine
-                        while xIndex < len(booleanTileMap[yIt]):
+                            # Reflecting points to the other side of the wall
+                            for point in pointsBlocked:
 
-                            if yIndex < 0:
+                                if 0 <= point[1] < len(tilemap.tilemap) and len(tilemap.tilemap[point[1]]) > xIt - (
+                                        point[0] - xIt) >= 0:
 
-                                if yIt + abs(yIndex) >= len(booleanTileMap) - yIt:
-                                    xIndex += 1
-                                    yIndex = (len(referenceTileMap) - 1) - math.floor(
-                                        equationBottom * (xIndex - posX) + posY)
-                                    continue
+                                    tilemap.add(fog, xIt - (point[0] - xIt), point[1])
 
-                            else:
+                        # Wall is in Quadrant 3
+                        elif xIt <= selfTile.x and yIt >= selfTile.y:
 
-                                if yIt + (yIt - yIndex) >= len(booleanTileMap):
-                                    xIndex += 1
-                                    yIndex = (len(referenceTileMap) - 1) - math.floor(
-                                        equationBottom * (xIndex - posX) + posY)
-                                    continue
+                            pointsBlocked = []
 
-                            # Bottom Line
-                            floatOutput = equationBottom * (xIndex - posX)
+                            posY -= (wallPosY * 2) * -1
+                            posX -= (wallPosX * 2) * -1
 
-                            if math.floor((floatOutput % 1) * 10) / 10 <= .5 and \
-                                    referenceTileMap[yIt + (yIt - yIndex)][xIndex] != "W":
-                                pointsBlocked.append([xIndex, yIndex])
+                            wallPosX = abs(wallPosX)
+                            wallPosY = abs(wallPosY)
 
-                            testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
+                            equationTop = float((wallPosY + 1) / wallPosX)
+                            equationBottom = float(wallPosY / (wallPosX + 1))
 
-                            yIndex -= 1
-                            # Top Line
+                            if xIt == selfTile.x - 1:
 
-                            while ((len(referenceTileMap) - 1) - yIndex) - posY < math.floor(
-                                    equationTop * (xIndex - posX)):
+                                yIndex = yIt + 1
+                                xIndex = xIt
+
+                                for x in range(yIt - selfTile.y):
+
+                                    if yIndex >= len(tilemap.tilemap): break
+
+                                    tilemap.add(fog, xIndex, yIndex)
+                                    yIndex += 1
+
+                            yIndex = yIt
+                            xIndex = xIt + 1
+
+                            # Checking if the bottom slope is greater than 1.0
+
+                            if equationBottom >= 1.0:
+
+                                # Reassigning the bottom slope so that it's angled slightly more above the wall
+                                equationBottom = float((wallPosY + 1) / (wallPosX + 1))
+                                # Reassigning the yIndex to match where the new slope starts
+                                yIndex = yIt - 1
+
+                            # Checking if the top slope is greater than 1.0
+                            if equationTop > 1.0:
+
+                                #self.scroll_win.add_content("Top is greater than 1: " + str(equationTop))
+
+                                checkTop = True
+
+                                # Reassigning the top slope so that it's angled more above the wall
+                                equationTop = float((wallPosY + 2) / wallPosX)
+
+                                # Reassigning the xIndex to allow the equation to check the x tile we start on
+                                xIndex = xIt
+
+                                if equationBottom < 1.0:
+                                    # Reassigning the yIndex to start above the wall, and not on top of it
+                                    yIndex = yIt - 1
+
+                            if checkTop:
+
+                                # Top of Wall
+                                while ((len(tilemap.tilemap) - 1) - yIndex) - posY < math.floor(
+                                        equationTop * (xIndex - posX)) and yIndex >= 0:
+                                    pointsBlocked.append([xIndex, yIndex])
+                                    yIndex -= 1
+
+                                floatOutput = equationTop * (xIndex - posX)
+
+                                if math.floor((floatOutput % 1) * 10) / 10 >= .5 and math.floor(
+                                        (floatOutput % 1) * 10) / 10 != 0.0:
+
+                                    if yIndex >= 0:
+                                        pointsBlocked.append([xIndex, yIndex])
+                                        testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
+
+                                xIndex += 1
+                                yIndex = (len(tilemap.tilemap) - 1) - (
+                                        math.floor(equationBottom * (xIndex - posX)) + posY)
+
+                            # BottomLine
+                            while xIndex <= xIt * 2:
 
                                 if yIndex < 0:
 
-                                    if yIt + abs(yIndex) >= len(booleanTileMap) - yIt:
-                                        break
+                                    if yIt + abs(yIndex) >= len(tilemap.tilemap) - yIt:
+                                        xIndex += 1
+                                        yIndex = (len(tilemap.tilemap) - 1) - math.floor(
+                                            equationBottom * (xIndex - posX) + posY)
+                                        continue
 
                                 else:
 
-                                    if yIt + (yIt - yIndex) >= len(booleanTileMap):
-                                        break
+                                    if yIt + (yIt - yIndex) >= len(tilemap.tilemap):
+                                        xIndex += 1
+                                        yIndex = (len(tilemap.tilemap) - 1) - math.floor(
+                                            equationBottom * (xIndex - posX) + posY)
+                                        continue
 
-                                pointsBlocked.append([xIndex, yIndex])
-                                testedPoints.append([xIndex, yIndex])
-                                yIndex -= 1
+                                # Bottom Line
+                                floatOutput = equationBottom * (xIndex - posX)
 
-                            floatOutput = equationTop * (xIndex - posX)
+                                if math.floor((floatOutput % 1) * 10) / 10 <= .5:
 
-                            if yIndex < 0:
+                                    foundWall = False
 
-                                if yIt + abs(yIndex) >= len(booleanTileMap) - yIt:
-                                    xIndex += 1
-                                    yIndex = (len(referenceTileMap) - 1) - math.floor(
-                                        equationBottom * (xIndex - posX) + posY)
-                                    continue
+                                    for obj in tilemap.tilemap[yIt + (yIt - yIndex)][xIt - (xIndex - xIt)]:
 
-                            else:
+                                        if isinstance(obj, Wall):
+                                            foundWall = True
 
-                                if yIt + (yIt - yIndex) >= len(booleanTileMap):
-                                    xIndex += 1
-                                    yIndex = (len(referenceTileMap) - 1) - math.floor(
-                                        equationBottom * (xIndex - posX) + posY)
-                                    continue
+                                    if not foundWall:
+                                        pointsBlocked.append([xIndex, yIndex])
 
-                            if math.floor((floatOutput % 1) * 10) / 10 >= .5 and yIndex >= 0:
-                                pointsBlocked.append([xIndex, yIndex])
                                 testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
 
-                            xIndex += 1
-                            yIndex = (len(referenceTileMap) - 1) - math.floor(
-                                equationBottom * (xIndex - posX) + posY)
+                                yIndex -= 1
+                                # Top Line
 
-                        # Reflecting points to the other side of the wall
-                        for point in pointsBlocked:
+                                while ((len(tilemap.tilemap) - 1) - yIndex) - posY < math.floor(
+                                        equationTop * (xIndex - posX)):
 
-                            if point[0] >= 0 and len(booleanTileMap) > yIt + (yIt - point[1]) >= 0:
+                                    if yIndex < 0:
 
-                                booleanTileMap[yIt + (yIt - point[1])][point[0]] = False
+                                        if yIt + abs(yIndex) >= len(tilemap.tilemap) - yIt:
+                                            break
+
+                                    else:
+
+                                        if yIt + (yIt - yIndex) >= len(tilemap.tilemap):
+                                            break
+
+                                    pointsBlocked.append([xIndex, yIndex])
+                                    testedPoints.append([xIndex, yIndex])
+                                    yIndex -= 1
+
+                                floatOutput = equationTop * (xIndex - posX)
+
+                                if yIndex < 0:
+
+                                    if yIt + abs(yIndex) >= len(tilemap.tilemap) - yIt:
+                                        xIndex += 1
+                                        yIndex = (len(tilemap.tilemap) - 1) - math.floor(
+                                            equationBottom * (xIndex - posX) + posY)
+                                        continue
+
+                                else:
+
+                                    if yIt + (yIt - yIndex) >= len(tilemap.tilemap):
+                                        xIndex += 1
+                                        yIndex = (len(tilemap.tilemap) - 1) - math.floor(
+                                            equationBottom * (xIndex - posX) + posY)
+                                        continue
+
+                                if math.floor((floatOutput % 1) * 10) / 10 >= .5 and yIndex >= 0:
+                                    pointsBlocked.append([xIndex, yIndex])
+                                    testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
+
+                                xIndex += 1
+                                yIndex = (len(tilemap.tilemap) - 1) - math.floor(
+                                    equationBottom * (xIndex - posX) + posY)
+
+                            # Reflecting points to the other side of the wall
+                            for point in pointsBlocked:
+
+                                if 0 <= point[1] < len(tilemap.tilemap):
+
+                                    if yIt + (yIt - point[1]) < len(tilemap.tilemap):
+
+                                        tilemap.add(fog, xIt - (point[0] - xIt), yIt + (yIt - point[1]))
+
+                                elif point[1] < 0:
+
+                                    if yIt + (yIt + abs(point[1])) < len(tilemap.tilemap):
+
+                                        tilemap.add(fog, xIt - (point[0] - xIt), yIt + (yIt + abs(point[1])))
+
+                        # Wall is in Quadrant 4
+                        elif xIt >= selfTile.x and yIt >= selfTile.y:
+
+                            pointsBlocked = []
+
+                            posY -= abs(wallPosY * 2)
+
+                            wallPosX = abs(wallPosX)
+                            wallPosY = abs(wallPosY)
+
+                            equationTop = float((wallPosY + 1) / wallPosX)
+                            equationBottom = float(wallPosY / (wallPosX + 1))
+
+                            if xIt == selfTile.x + 1:
+
+                                yIndex = yIt + 1
+                                xIndex = xIt
+
+                                for x in range(yIt - selfTile.y):
+
+                                    if yIndex >= len(tilemap.tilemap): break
+
+                                    tilemap.add(fog, xIndex, yIndex)
+                                    yIndex += 1
+
+                            yIndex = yIt
+                            xIndex = xIt + 1
+
+                            # Checking if the bottom slope is greater than 1.0
+
+                            if equationBottom >= 1.0:
+                                # self.scroll_win.add_content(
+                                    #"Bottom is greater than or equal to 1: " + str(equationBottom))
+
+                                # Reassigning the bottom slope so that it's angled slightly more above the wall
+                                equationBottom = float((wallPosY + 1) / (wallPosX + 1))
+                                # Reassigning the yIndex to match where the new slope starts
+                                yIndex = yIt - 1
+
+                            # Checking if the top slope is greater than 1.0
+                            if equationTop > 1.0:
+
+                                #self.scroll_win.add_content("Top is greater than 1: " + str(equationTop))
+
+                                checkTop = True
+
+                                # Reassigning the top slope so that it's angled more above the wall
+                                equationTop = float((wallPosY + 2) / wallPosX)
+
+                                # Reassigning the xIndex to allow the equation to check the x tile we start on
+                                xIndex = xIt
+
+                                if equationBottom < 1.0:
+                                    # Reassigning the yIndex to start above the wall, and not on top of it
+                                    yIndex = yIt - 1
+
+                            if checkTop:
+
+                                # Top of Wall
+                                while ((len(tilemap.tilemap) - 1) - yIndex) - posY < math.floor(
+                                        equationTop * (xIndex - posX)) and yIndex >= 0:
+                                    pointsBlocked.append([xIndex, yIndex])
+                                    yIndex -= 1
+
+                                floatOutput = equationTop * (xIndex - posX)
+
+                                if math.floor((floatOutput % 1) * 10) / 10 >= .5 and math.floor(
+                                        (floatOutput % 1) * 10) / 10 != 0.0:
+
+                                    if yIndex >= 0:
+                                        pointsBlocked.append([xIndex, yIndex])
+                                        testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
+
+                                xIndex += 1
+                                yIndex = (len(tilemap.tilemap) - 1) - (
+                                        math.floor(equationBottom * (xIndex - posX)) + posY)
+
+                            # BottomLine
+                            while xIndex < len(tilemap.tilemap[yIt]):
+
+                                if yIndex < 0:
+
+                                    if yIt + abs(yIndex) >= len(tilemap.tilemap) - yIt:
+                                        xIndex += 1
+                                        yIndex = (len(tilemap.tilemap) - 1) - math.floor(
+                                            equationBottom * (xIndex - posX) + posY)
+                                        continue
+
+                                else:
+
+                                    if yIt + (yIt - yIndex) >= len(tilemap.tilemap):
+                                        xIndex += 1
+                                        yIndex = (len(tilemap.tilemap) - 1) - math.floor(
+                                            equationBottom * (xIndex - posX) + posY)
+                                        continue
+
+                                # Bottom Line
+                                floatOutput = equationBottom * (xIndex - posX)
+
+                                if math.floor((floatOutput % 1) * 10) / 10 <= .5:
+
+                                    foundWall = False
+
+                                    for obj in tilemap.tilemap[yIt + (yIt - yIndex)][xIndex]:
+
+                                        if isinstance(obj, Wall):
+                                            foundWall = True
+
+                                    if not foundWall:
+                                        pointsBlocked.append([xIndex, yIndex])
+
+                                testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
+
+                                yIndex -= 1
+                                # Top Line
+
+                                while ((len(tilemap.tilemap) - 1) - yIndex) - posY < math.floor(
+                                        equationTop * (xIndex - posX)):
+
+                                    if yIndex < 0:
+
+                                        if yIt + abs(yIndex) >= len(tilemap.tilemap) - yIt:
+                                            break
+
+                                    else:
+
+                                        if yIt + (yIt - yIndex) >= len(tilemap.tilemap):
+                                            break
+
+                                    pointsBlocked.append([xIndex, yIndex])
+                                    testedPoints.append([xIndex, yIndex])
+                                    yIndex -= 1
+
+                                floatOutput = equationTop * (xIndex - posX)
+
+                                if yIndex < 0:
+
+                                    if yIt + abs(yIndex) >= len(tilemap.tilemap) - yIt:
+                                        xIndex += 1
+                                        yIndex = (len(tilemap.tilemap) - 1) - math.floor(
+                                            equationBottom * (xIndex - posX) + posY)
+                                        continue
+
+                                else:
+
+                                    if yIt + (yIt - yIndex) >= len(tilemap.tilemap):
+                                        xIndex += 1
+                                        yIndex = (len(tilemap.tilemap) - 1) - math.floor(
+                                            equationBottom * (xIndex - posX) + posY)
+                                        continue
+
+                                if math.floor((floatOutput % 1) * 10) / 10 >= .5 and yIndex >= 0:
+                                    pointsBlocked.append([xIndex, yIndex])
+                                    testedPoints.append([xIndex, yIndex, math.floor((floatOutput % 1) * 10) / 10])
+
+                                xIndex += 1
+                                yIndex = (len(tilemap.tilemap) - 1) - math.floor(
+                                    equationBottom * (xIndex - posX) + posY)
+
+                            # Reflecting points to the other side of the wall
+                            for point in pointsBlocked:
+
+                                if point[0] >= 0 and len(tilemap.tilemap) > yIt + (yIt - point[1]) >= 0:
+
+                                    tilemap.add(fog, point[0], yIt + (yIt - point[1]))
 
                 xIt += 1
 
@@ -1192,7 +1234,7 @@ class EntityCharacter(BaseCharacter):
 
              # self.scroll_win.add_content(str(line))
 
-        self.scroll_win._render_content()
+        # self.scroll_win._render_content()
 
         '''
         #Printing out tilemap------------------------------------------------------------------
@@ -1213,7 +1255,7 @@ class EntityCharacter(BaseCharacter):
         #--------------------------------------------------------------------------------------
         '''
 
-        return booleanTileMap
+        # return booleanTileMap
 
     def check_tile(self, x, y):
 
@@ -2557,6 +2599,20 @@ class Floor(BaseCharacter):
     """
 
     def start(self):
+
         self.char = '0'
         self.name = 'Floor'
-        self.attrib.append("gray_blue")
+        self.attrib.append(random.choice(["gray_blue_one", "gray_blue_two"]))
+
+
+class Fog(BaseCharacter):
+
+    def start(self):
+
+        self.char = ' '
+        self.name = 'Fog'
+        self.priority = 1
+
+    def clear(self):
+
+        self.tilemap.remove_obj(self, True)

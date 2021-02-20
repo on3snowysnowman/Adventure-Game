@@ -519,58 +519,6 @@ def master_window_options_test(win):
     opt_win_thread.join()
 
 
-def mapping_text(win):
-
-    # Tests the MasterWindow functionality.
-
-    master = MasterWindow(win)
-
-    # Create menus:
-
-    text_win = TextDisplayWindow.create_subwin_at_pos(master, 35, 40)
-    map_win = DisplayWindow.create_subwin_at_pos(master, 35, 20, position=DisplayWindow.TOP_RIGHT)
-
-    map_win.tilemap.get_all()
-
-    # Add stuff to DisplayWindow:
-
-    map_win.add_callback('f', map_win.stop)
-
-    curses.curs_set(0)
-    # Create Colors
-    map_win.init_colors()
-    text_win.init_colors()
-
-    # Puts a player in top left corner of map:
-
-    player = Player()
-    ground = Floor()
-    wall = Wall()
-
-    player.text_win = text_win
-
-    map_win.tilemap.fill(Floor)
-    add(player, 0, 0, map_win)
-    add(Sword(), 3, 1, map_win)
-    #add(Helmet(), 4, 3, map_win)
-    #add(Chestplate(), 6, 4, map_win)
-    #add(Chest(), 7, 5, map_win)
-    add(TrackerEnemy(), 5, 4, map_win)
-    add(Wall(), 5, 3, map_win)
-
-    for x in range(6):
-
-        add(Wall(), x, 2, map_win)
-
-    # Add the scroll menus to the master window:
-    master.add_subwin(text_win)
-    master.add_subwin(map_win)
-
-    # Start the master window:
-    master.start()
-    map_win.display()
-
-
 def look_test(win):
 
     master = MasterWindow(win)
@@ -584,7 +532,6 @@ def look_test(win):
     map_win.init_colors()
 
     map_win.tilemap.fill(Floor)
-
 
     # Creating random walls on the x axis
     for x in range(map_win.tilemap.get_height()):
@@ -649,6 +596,82 @@ def look_test(win):
     # Start the master window
     scroll_win.add_content("Scroll Window")
     scroll_win._render_content()
+    master.start()
+
+
+def camera_test(win):
+
+    master = MasterWindow(win)
+
+    map_win = DisplayWindow.create_subwin_at_pos(win, 30, 30)
+
+    map_win.add_callback('f', map_win.stop)
+    curses.curs_set(0)
+
+    map_win.init_colors()
+
+    map_win.tilemap.fill(Floor)
+
+    player = Player()
+
+    add(player, int(map_win.tilemap.get_width() / 2), int(map_win.tilemap.get_height() / 2), map_win)
+
+    availableCoordinates = []
+
+    xCount = 0
+    yCount = 0
+
+    exemptFromList = False
+
+    # '''
+    # Searching tilemap for traversable spots
+    for line in map_win.tilemap.tilemap:
+
+        for col in line:
+
+            for tile in col:
+
+                if not tile.can_traverse:
+                    exemptFromList = True
+                    break
+
+            if not exemptFromList:
+                availableCoordinates.append([xCount, yCount])
+
+            exemptFromList = False
+            xCount += 1
+
+        yCount += 1
+        xCount = 0
+
+    # Creating random walls on the x axis
+    for x in range(map_win.tilemap.get_height()):
+
+        fillBool = random.choice([True, False])
+
+        if fillBool:
+
+            numWalls = random.randrange(2, int(map_win.tilemap.get_width(x) / 2))
+            yCoord = x
+            xCoord = random.randrange(0, map_win.tilemap.get_height())
+
+            for i in range(numWalls):
+
+                if map_win.tilemap._bound_check(xCoord, yCoord) and [xCoord, yCoord] in availableCoordinates:
+                    add(Wall(), xCoord, yCoord, map_win)
+                    xCoord += 1
+    # '''
+    # add(Wall(), 3, 3, map_win)
+    # add(Wall(), 6, 6, map_win)
+
+    map_win.camera.set_focus_object(player)
+    map_win.camera.set_radius(6)
+
+    display_thread = threading.Thread(target=map_win.display)
+    display_thread.daemon = True
+    display_thread.start()
+
+    master.add_subwin(map_win)
     master.start()
 
 
@@ -756,4 +779,4 @@ def all_tests(win):
         win.erase()
 
 
-curses.wrapper(look_test)
+curses.wrapper(camera_test)

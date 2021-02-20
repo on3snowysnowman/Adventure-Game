@@ -6,7 +6,7 @@ from inspect import isfunction
 from queue import Queue
 
 from character_classes import *
-from tilemaps import BaseTileMap, Tile
+from tilemaps import BaseTileMap, Camera
 
 """
 Curses wrappings.
@@ -18,7 +18,6 @@ act as the parent for all CHAS curses operations.
 
 
 class BaseWindow:
-
     """
     Custom CURSES wrappings.
 
@@ -100,7 +99,7 @@ class BaseWindow:
 
         # Allow hardware line editing facilities
 
-        #self.win.idlok(True)
+        # self.win.idlok(True)
 
         curses.start_color()
         self.color = True
@@ -164,7 +163,6 @@ class BaseWindow:
         # Check if we are managed:
 
         if self.managed:
-
             # Tell the MasterWindow we are done:
 
             self.master.mark_done(self)
@@ -271,7 +269,6 @@ class BaseWindow:
         # Check if we have special input handling:
 
         if self.managed:
-
             # Wait until input from our queue is received:
 
             return self.input_queue.get()
@@ -295,7 +292,6 @@ class BaseWindow:
         """
 
         if self.managed:
-
             # We are managed, update the virtual screen and prompt for update:
 
             self.win.noutrefresh()
@@ -322,17 +318,14 @@ class BaseWindow:
         :return: Normal curses returncodes
         """
         if attrib is None:
-
             attrib = []
 
         for index, targ in enumerate(attrib):
 
             if type(targ) == str:
-
                 attrib[index] = self.colorPairs[targ]
 
             if isinstance(attrib[index], Color):
-
                 attrib[index] = attrib[index].resolvedColor
 
         if position != -1:
@@ -355,7 +348,6 @@ class BaseWindow:
             self.win.addstr(ystart, xstart, ' ', curses.A_NORMAL)
 
             if position == BaseWindow.BOTTOM_RIGHT and x_len < self.max_x:
-
                 # We have to do some special formatting stuff to get the cursor to work
 
                 return self.win.insstr(ystart, xstart - 1, " ")
@@ -555,25 +547,21 @@ class BaseWindow:
         key = self._get_input()
 
         if not no_calls and self.handle_key(key):
-
             # Key was handled by a callback, return nothing
 
             return False
 
         if key == curses.ERR:
-
             # Curses error value. Return False
 
             return False
 
         if ignore_special and key > 255:
-
             # Key is a special key that we don't care about:
 
             return False
 
         if return_ascii:
-
             return key
 
         return chr(key)
@@ -591,7 +579,8 @@ class BaseWindow:
         brown = Color(15, 7, "brown", 550, 350, 0)
         light_brown = Color(16, 8, "light_brown", 527, 492, 425)
         white = Color(17, 9, "white", 1000, 1000, 1000)
-        gray_blue = Color(18, 10, "gray_blue", 371, 496, 858)
+        gray_blue_one = Color(18, 10, "gray_blue_one", 250, 350, 758)
+        gray_blue_two = Color(19, 20, "gray_blue_two", 110, 280, 450)
 
         self.register_color("blue", blue)
         self.register_color("green", green)
@@ -602,7 +591,8 @@ class BaseWindow:
         self.register_color("brown", brown)
         self.register_color("light_brown", light_brown)
         self.register_color("white", white)
-        self.register_color("gray_blue", gray_blue)
+        self.register_color("gray_blue_one", gray_blue_one)
+        self.register_color("gray_blue_two", gray_blue_two)
 
     @classmethod
     def create_subwin_at_pos(cls, win, y_len, x_len, position=0):
@@ -646,7 +636,6 @@ class BaseWindow:
 
 
 class MasterWindow(BaseWindow):
-
     """
     CHAS Master window.
 
@@ -717,7 +706,7 @@ class MasterWindow(BaseWindow):
 
                 # Key is present in window callbacks already, lets add it:
 
-                #print("Key {} present with {}, adding {}".format(key, self._win_calls[key], subwin))
+                # print("Key {} present with {}, adding {}".format(key, self._win_calls[key], subwin))
 
                 self._win_calls[key].append(subwin)
 
@@ -725,11 +714,11 @@ class MasterWindow(BaseWindow):
 
                 # Key is NOT present, lets make a new entry:
 
-                #print("Adding key {} with {}".format(key, subwin))
+                # print("Adding key {} with {}".format(key, subwin))
 
                 self._win_calls[key] = [subwin]
 
-        #print(self._win_calls)
+        # print(self._win_calls)
 
     def _start_thread(self):
 
@@ -776,13 +765,11 @@ class MasterWindow(BaseWindow):
         # Remove window from focus list, if present:
 
         if win in self.focus:
-
             self.focus.remove(win)
 
         # Check if we are done:
 
         if not self.subwins:
-
             # No more subwindows, let's exit:
 
             self.stop()
@@ -812,7 +799,6 @@ class MasterWindow(BaseWindow):
             # Check if we have to refresh the windows:
 
             if inp is None:
-
                 # Refresh the physical screen:
 
                 curses.doupdate()
@@ -830,7 +816,6 @@ class MasterWindow(BaseWindow):
                 # Focused windows, iterate over them and send input:
 
                 for win in self.focus:
-
                     win.add_input(inp)
 
             else:
@@ -842,7 +827,6 @@ class MasterWindow(BaseWindow):
                     # Key is present, lets send it over:
 
                     for win in self._win_calls[inp]:
-
                         # Add the input to the specified window:
 
                         win.add_input(inp)
@@ -875,12 +859,10 @@ class MasterWindow(BaseWindow):
         """
 
         while self.run:
-
             self.event_queue.put(self.get_input(return_ascii=True, no_calls=True))
 
 
 class DisplayWindow(BaseWindow):
-
     """
     New display window for testing.
 
@@ -896,7 +878,9 @@ class DisplayWindow(BaseWindow):
         # We simply create a tilemap with our width and height,
         # as the DisplayWindow is not smart enough to handle anything different
 
-        self.tilemap = BaseTileMap(self.max_y, self.max_x, self)  # Tilemap storing game info
+        # self.tilemap = BaseTileMap(self.max_y, self.max_x, self)  # Tilemap storing game info
+        self.tilemap = BaseTileMap(21, 21, self)
+        self.camera = Camera(self.tilemap, self)
         self.run = True  # Value determining if we are running
 
         self.thread = None  # Treading instance of the input loop
@@ -904,20 +888,18 @@ class DisplayWindow(BaseWindow):
     def _render(self):
 
         """
-        Renders the tilemap content to our screen.
+        Renders the tilemap content based on the display area of camera to our screen.
         """
 
         self.clear()
 
-        for x, y, z, obj in self.tilemap._iterate():
+        for x, y, z, obj in self.camera.displayArea._iterate():
 
             # Render the character at specified position. We don't care about secondary characters!
 
             if z == 0:
 
-                if self.tilemap.boolList[y][x]:
-
-                    self.addstr(obj.char, y, x, attrib=obj.attrib)
+                self.addstr(obj.char, y, x, attrib=obj.attrib)
 
             continue
 
@@ -942,18 +924,17 @@ class DisplayWindow(BaseWindow):
         self.thread.daemon = True
         self.thread.start()
 
-        #self.tilemap.check_vision()
-
-        #self._render()
-
         while self.run:
 
-            self.tilemap.check_vision()
+            # Update the camera
+            self.camera.update()
 
             self._render()
 
             # Update the tilemap:
             self.tilemap.update()
+
+
 
     def _add_key(self, key, obj):
 
@@ -978,7 +959,6 @@ class DisplayWindow(BaseWindow):
         """
 
         while self.run:
-
             # Get a key and handle it:
 
             inp = self.get_input()
@@ -996,7 +976,6 @@ class DisplayWindow(BaseWindow):
         for key, call in self._calls.items():
 
             if call['call'] == self._add_key:
-
                 # Add 'None' to the input queue:
 
                 call['args'][1].add_input(None)
@@ -1006,58 +985,7 @@ class DisplayWindow(BaseWindow):
         super(DisplayWindow, self).stop()
 
 
-class TextDisplayWindow(BaseWindow):
-
-    def __init__(self, win):
-
-        super(TextDisplayWindow, self).__init__(win)
-        self.attrib = []
-        self.win = win
-        self.run = True
-
-    def add_content(self, content, attrib = "light_blue", newLine = True):
-
-        self.attrib = [attrib]
-
-        if type(content) == str:
-
-            self.addstr(str(content), attrib = self.attrib)
-
-        if type(content) == list:
-
-            if len(content) == 1:
-
-                if isinstance(content[0], Tile):
-
-                    self.addstr(str(content[0].obj.name) + ", " + str(content[0].x) + ", " + str(content[0].y), attrib=self.attrib)
-
-                else:
-
-                    self.addstr(str(content[0]), attrib = self.attrib)
-
-            elif len(content) > 0:
-
-                for x in content:
-
-                    if isinstance(x, Tile):
-
-                        self.addstr(str(x.obj.name) + ", " + str(x.x) + ", " + str(x.y), attrib = self.attrib)
-                        self.addstr("\n")
-
-                    else:
-
-                        self.addstr(str(x), attrib=self.attrib)
-                        self.addstr("\n")
-
-        if newLine:
-
-            self.addstr("\n")
-
-        self.refresh()
-
-
 class InputWindow(BaseWindow):
-
     """
     CHAS Input window
     Allows for the input of multiple characters, and scrolling
@@ -1432,7 +1360,6 @@ class InputWindow(BaseWindow):
 
 
 class ScrollWindow(BaseWindow):
-
     """
     A curses window for handling content scrolling.
     """
@@ -1574,7 +1501,6 @@ class ScrollWindow(BaseWindow):
         # Adding content to the end of the collection
 
         for i in split:
-
             self.content.append(i)
 
         return
@@ -2220,7 +2146,6 @@ class OptionWindow(BaseWindow):
 class Color:
 
     def __init__(self, colorNumber, colorPairNumber, name, r, g, b):
-
         curses.init_color(colorNumber, r, g, b)
         curses.init_pair(colorPairNumber, colorNumber, curses.COLOR_BLACK)
 
