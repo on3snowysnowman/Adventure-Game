@@ -15,8 +15,8 @@ class Item(object):
         self.attrib = ["orange"]
         self.name = ''  # Name of the character
         self.can_traverse = True  # Boolean determining if things can walk their
-        self.can_player_pickup = True # Boolean determining if the player can pickup
-        self.can_entity_pickup = False #Boolean determining if any other than player can pickup
+        self.can_player_pickup = True  # Boolean determining if the player can pickup
+        self.can_entity_pickup = False  # Boolean determining if any other than player can pickup
         self.priority = 20  # Value determining object stacking priority
         self.can_move = False
 
@@ -92,10 +92,10 @@ class Weapon(Item):
 
         super().__init__()
 
-        self.damage_min = 0 # Minimum amount of damage this weapon can deal
-        self.damage_max = 0 # Maximum amount of damage this weapon can deal
-        self.speed = "Normal" # Determines whether the weapon has a chance to attack twice in one turn, or the enemy can attack twice
-        self.damage_type = "" #Type of damage dealt when attacking
+        self.damage_min = 0  # Minimum amount of damage this weapon can deal
+        self.damage_max = 0  # Maximum amount of damage this weapon can deal
+        self.speed = "Normal"  # Determines whether the weapon has a chance to attack twice in one turn, or the enemy can attack twice
+        self.damage_type = ""  # Type of damage dealt when attacking
         self.durability = 0  # Amount of durability
         self.max_durability = 0  # Maximum amount of durability
         self.priority = 19

@@ -5,7 +5,7 @@ from chascurses import *
 from item_classes import *
 import curses
 #from math import ceil
-
+import time
 
 def add(obj, x, y, win):
 
@@ -603,7 +603,7 @@ def camera_test(win):
 
     master = MasterWindow(win)
 
-    map_win = DisplayWindow.create_subwin_at_pos(win, 30, 30)
+    map_win = DisplayWindow.create_subwin_at_pos(win, 50, 50)
 
     map_win.add_callback('f', map_win.stop)
     curses.curs_set(0)
@@ -616,6 +616,8 @@ def camera_test(win):
 
     add(player, int(map_win.tilemap.get_width() / 2), int(map_win.tilemap.get_height() / 2), map_win)
 
+    '''
+
     availableCoordinates = []
 
     xCount = 0
@@ -623,7 +625,6 @@ def camera_test(win):
 
     exemptFromList = False
 
-    # '''
     # Searching tilemap for traversable spots
     for line in map_win.tilemap.tilemap:
 
@@ -659,19 +660,133 @@ def camera_test(win):
 
                 if map_win.tilemap._bound_check(xCoord, yCoord) and [xCoord, yCoord] in availableCoordinates:
                     add(Wall(), xCoord, yCoord, map_win)
+                    availableCoordinates.remove([xCoord, yCoord])
                     xCoord += 1
-    # '''
-    # add(Wall(), 3, 3, map_win)
-    # add(Wall(), 6, 6, map_win)
+                    
+    randomCoord = random.choice(availableCoordinates)
+    availableCoordinates.remove(randomCoord)
+    add(RandomEnemy(), randomCoord[0], randomCoord[1], map_win) 
+    
+    randomCoord = random.choice(availableCoordinates)
+    availableCoordinates.remove(randomCoord)
+    add(TrackerEnemy(), randomCoord[0], randomCoord[1], map_win)
+    
+    randomCoord = random.choice(availableCoordinates)
+    availableCoordinates.remove(randomCoord)
+    add(TrackerEnemy(), randomCoord[0], randomCoord[1], map_win)
+   
+    '''
 
     map_win.camera.set_focus_object(player)
     map_win.camera.set_radius(6)
+    # map_win.camera.set_radius(int(map_win.max_x / 2) - 5)
 
     display_thread = threading.Thread(target=map_win.display)
     display_thread.daemon = True
     display_thread.start()
 
     master.add_subwin(map_win)
+    master.start()
+
+
+def battle_test(win):
+
+    master = MasterWindow(win)
+
+    y, x = win.getmaxyx()
+
+    map_win = DisplayWindow.create_subwin_at_pos(win, y, int(x / 2), BaseWindow.TOP_LEFT)
+
+    scroll_win = ScrollWindow.create_subwin_at_pos(win, 30, map_win.max_x, BaseWindow.TOP_RIGHT)
+
+    map_win.tilemap.set_scroll_win(scroll_win)
+
+    map_win.add_callback('f', master.stop)
+    curses.curs_set(0)
+
+    map_win.init_colors()
+
+    map_win.tilemap.fill(Floor)
+
+    player = Player()
+    player.active_weapon = Sword()
+
+    skeleton = Skeleton()
+
+    '''
+    availableCoordinates = []
+
+    xCount = 0
+    yCount = 0
+
+    exemptFromList = False
+
+    
+    # Searching tilemap for traversable spots
+    for line in map_win.tilemap.tilemap:
+
+        for col in line:
+
+            for tile in col:
+
+                if not tile.can_traverse:
+                    exemptFromList = True
+                    break
+
+            if not exemptFromList:
+                availableCoordinates.append([xCount, yCount])
+
+            exemptFromList = False
+            xCount += 1
+
+        yCount += 1
+        xCount = 0
+
+    # Creating random walls on the x axis
+    for x in range(map_win.tilemap.get_height()):
+
+        fillBool = random.choice([True, False])
+
+        if fillBool:
+
+            numWalls = random.randrange(2, int(map_win.tilemap.get_width(x) / 2))
+            yCoord = x
+            xCoord = random.randrange(0, map_win.tilemap.get_height())
+
+            for i in range(numWalls):
+
+                if map_win.tilemap._bound_check(xCoord, yCoord) and [xCoord, yCoord] in availableCoordinates:
+                    add(Wall(), xCoord, yCoord, map_win)
+                    availableCoordinates.remove([xCoord, yCoord])
+                    xCoord += 1
+    '''
+
+    # add(player, int(map_win.tilemap.height / 2), int(map_win.tilemap.width / 2), map_win)
+    add(player, 0, 0, map_win)
+    # add(Traveler(), 6, 6, map_win)
+    add(skeleton, 99, 99, map_win)
+
+    map_win.camera.set_focus_object(player)
+    map_win.camera.set_radius(20)
+
+    '''
+    totalTime = 0
+
+    for i in range(10):
+
+        totalTime += skeleton.find_quickest_path(skeleton.tilemap.find_object(player))
+
+    print("With 1 : " + str(totalTime / 10))
+    exit()
+    
+    '''
+
+    display_thread = threading.Thread(target=map_win.display)
+    display_thread.daemon = True
+    display_thread.start()
+
+    master.add_subwin(map_win)
+    master.add_subwin(scroll_win)
     master.start()
 
 
@@ -779,4 +894,4 @@ def all_tests(win):
         win.erase()
 
 
-curses.wrapper(camera_test)
+curses.wrapper(battle_test)

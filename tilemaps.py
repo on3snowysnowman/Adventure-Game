@@ -31,12 +31,11 @@ class BaseTileMap(object):
         self.height = height  # Height of the tilemap
         self.width = width  # Width of the tilemap
         self.win = win  # DisplayWindow in use
+        self.scrollWin = None
 
         self.tilemap = None  # 3D array representing the screen
 
-        self.radius = 0
-
-        # Crete out tilemap:
+        # Create out tilemap:
 
         self._init_tilemap()
 
@@ -274,7 +273,6 @@ class BaseTileMap(object):
 
         self.tilemap[y][x].sort(key=self._get_priority)
 
-
     def get_around(self, x, y, radius=1, getSelf=False):
 
         """
@@ -325,7 +323,7 @@ class BaseTileMap(object):
 
         return final
 
-    def add(self, obj, x, y):
+    def add(self, obj, x, y, bind=True):
 
         """
         Adds an object to the tilemap.
@@ -336,11 +334,14 @@ class BaseTileMap(object):
         :type x: int
         :param y: Y cordnet
         :type y: int
+        :param bind: Boolean determining if we bind data to the object
         """
 
         # Binding relevant data to the character:
 
-        obj._bind(self.win, self)
+        if bind:
+
+            obj._bind(self.win, self)
 
         # Check if the object is expecting any keys:
 
@@ -430,9 +431,15 @@ class BaseTileMap(object):
 
         for cord in cords:
 
-            # Call the 'move' method:
+            # Call the 'move' method if the entity is alive:
+            if cord.obj.is_alive:
 
-            cord.obj.move()
+                cord.obj.move()
+
+            else:
+
+                # If the entity is dead, remove it from the tilemap
+                self.remove_obj(cord.obj)
 
     def _iterate(self):
 
@@ -457,7 +464,7 @@ class BaseTileMap(object):
 
                     yield x, y, z, objs
 
-    def _bound_check(self, x, y, z = None):
+    def _bound_check(self, x, y, z=None):
 
         """
         Checks if any of the coordinates are too big.
@@ -529,6 +536,10 @@ class BaseTileMap(object):
 
                 tile.obj.debug_move_toggle()
 
+    def set_scroll_win(self, scrollWin):
+
+        self.scrollWin = scrollWin
+
 
 class Camera(object):
 
@@ -583,11 +594,12 @@ class Camera(object):
         """
         Fills the tilemap with fog to block the player's vision relative to walls
         """
+        playerTile = self.tilemap.find_object_type(Player)
+        # self.radius = playerTile.obj.radius
 
         self.refresh_focus_position()
         self.create_display()
 
-        playerTile = self.tilemap.find_object_type(Player)
         playerTile.obj.look(self.displayArea)
 
     def create_display(self):
@@ -678,15 +690,7 @@ class Camera(object):
 
                 for obj in self.tilemap.tilemap[yIndex + startY][xIndex + startX]:
 
-                    if isinstance(obj, Player):
-
-                        self.displayArea.tilemap[yIndex][xIndex].append(obj)
-
-                        self.displayArea.tilemap[yIndex][xIndex].sort(key=self.tilemap._get_priority)
-
-                    else:
-
-                        self.displayArea.add(obj, xIndex, yIndex)
+                    self.displayArea.add(obj, xIndex, yIndex, bind=False)
 
                 xIndex += 1
 

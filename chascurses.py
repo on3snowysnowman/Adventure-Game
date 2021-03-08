@@ -575,12 +575,12 @@ class BaseWindow:
         yellow = Color(11, 3, "yellow", 1000, 950, 0)
         red = Color(12, 4, "red", 1000, 0, 300)
         orange = Color(13, 5, "orange", 980, 533, 0)
-        light_blue = Color(14, 6, "light_blue", 0, 446, 1000)
+        light_blue = Color(14, 6, "light_blue", 0, 900, 1000)
         brown = Color(15, 7, "brown", 550, 350, 0)
         light_brown = Color(16, 8, "light_brown", 527, 492, 425)
         white = Color(17, 9, "white", 1000, 1000, 1000)
         gray_blue_one = Color(18, 10, "gray_blue_one", 250, 350, 758)
-        gray_blue_two = Color(19, 20, "gray_blue_two", 110, 280, 450)
+        gray_blue_two = Color(19, 20, "gray_blue_two", 110, 280, 600)
 
         self.register_color("blue", blue)
         self.register_color("green", green)
@@ -879,7 +879,7 @@ class DisplayWindow(BaseWindow):
         # as the DisplayWindow is not smart enough to handle anything different
 
         # self.tilemap = BaseTileMap(self.max_y, self.max_x, self)  # Tilemap storing game info
-        self.tilemap = BaseTileMap(21, 21, self)
+        self.tilemap = BaseTileMap(100, 100, self)
         self.camera = Camera(self.tilemap, self)
         self.run = True  # Value determining if we are running
 
@@ -896,6 +896,13 @@ class DisplayWindow(BaseWindow):
         for x, y, z, obj in self.camera.displayArea._iterate():
 
             # Render the character at specified position. We don't care about secondary characters!
+
+            self.tilemap.tilemap[y][x].sort(key=self.tilemap._get_priority)
+
+            if isinstance(obj, Traveler):
+
+                # print(z)
+                pass
 
             if z == 0:
 
@@ -931,10 +938,10 @@ class DisplayWindow(BaseWindow):
 
             self._render()
 
+            self.tilemap.scrollWin._render_content()
+
             # Update the tilemap:
             self.tilemap.update()
-
-
 
     def _add_key(self, key, obj):
 
@@ -2149,5 +2156,6 @@ class Color:
         curses.init_color(colorNumber, r, g, b)
         curses.init_pair(colorPairNumber, colorNumber, curses.COLOR_BLACK)
 
+        self.name = name
         self.colorPairNumber = colorPairNumber
         self.resolvedColor = curses.color_pair(colorPairNumber)
