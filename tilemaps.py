@@ -540,6 +540,166 @@ class BaseTileMap(object):
 
         self.scrollWin = scrollWin
 
+    def traverse_function(self, start_x, start_y, func, num_steps=None, step_size=1, args=None, ignore_bounds=False,
+                          par=False, discrete=True):
+
+        """
+        Generator function that traverses the tilemap based on a given function,
+        where an x cordnet is entered into said function,
+        and the returned y cordnet will be used to determine the tile to return.
+
+        First, the user must specify a starting position, via x and y cordnets.
+        This will act as the origin of the function.
+        The function will be traversed as if it had started at this point.
+
+        For example, if the function simply returns x+1 and the origin is (5, 5),
+        then the tiles returned will look like this:
+
+        x | y
+        -----
+        6 | 7
+        7 | 8
+        8 | 9
+        9 | 10
+
+        And so on. You can use any algebraic concepts in your function.
+        We leave it up to the given function to compute this,
+        so if python can calculate it, it's fair game!
+
+        By default, we operate in discrete mode,
+        meaning that the function ONLY sees the steps away from the origin,
+        and is unaware of our actual position on the board.
+        After the operations is complete, we add the starting x and starting y values
+        to get the true calculated items from the board.
+
+        If your implementation requires the true cordnets, and not the discrete ones,
+        then you can enable the option by setting 'discrete' to false.
+        This will send the true X cordnet to the function, and we will expect the true y corndet in return.
+        If we are in parametric mode, we will still pass the true x cordnet to the function, acting as the step.
+
+        The function MUST have at least one argument, that being the X value inputted.
+        We can optionally pass arguments to the function.
+        You can define these using the 'args' parameter. Arguments must be in a list!
+
+        We also offer a step size,
+        which is how much the X value increases after each calculation.
+        You can also specify the number of steps to take while traversing.
+        If not specified, then we will continue until either the X or Y cordents go out of bounds.
+        Which ever comes first.
+
+        If the user does not care about Y bound checks, then we can ignore them.
+        If the Y value returned is out of bounds, then we can optionally skip them.
+        Essentially, we will continue until our X value is invalid.
+
+        Optionally, the user can specify a parametric function,
+        meaning that the function returns the X and Y value of the position.
+        If this is the case, then the function MUST return two values,
+        te first being the X cordnet, and the second being the Y cordnet.
+
+        Because tilemaps only work with ints,
+        we will automatically convert the returned value into an integer.
+
+        :param start_x: X cordnet to start at
+        :type start_x: int
+        :param start_y: Y cordnet to start at
+        :param func: Function to use when evaluating the Y value
+        :type func: function
+        :param num_steps: Number of steps to take
+        :type num_steps: int, None
+        :param step_size: How much the X value will increase by after each step
+        :type step_size: int
+        :param args: Arguments to pass to the function
+        :type args: list, None
+        :param ignore_bounds: Determines if we should skip returning invalid Y cordnets instead of exiting
+        :type ignore_bounds: bool
+        :param par: Determines if we should operate in parametric mode, where the function determines the X an dY value
+        :type par: bool
+        :param discrete: Determines if we should operate in discrete mode
+        :type discrete: bool
+        """
+
+        if args is None:
+
+            args = []
+
+        # Determine the starting value:
+
+        start = 0
+
+        if not discrete:
+
+            # Function wants absolute cordnet, lets give it to them:
+
+            start = start_x
+
+        steps = 0
+
+        for step in count(start, step=step_size):
+
+            # Check if we are done taking steps:
+
+            if steps == num_steps:
+
+                # Taken out maximum number of steps! Lets return:
+
+                return
+
+            # Check if we are advanced:
+
+            if par:
+
+                # Parametric mode, get X and Y values:
+
+                x, y = func(step, *args)
+                x = int(x)
+                y = int(y)
+
+            else:
+
+                # Calculate our Y value:
+
+                y = int(func(step, *args))
+                x = int(step)
+
+            if discrete:
+
+                # Lets add the starting values to the results:
+
+                y = y + start_y
+                x = x + start_x
+
+            if x >= self.width or x < 0:
+
+                # Invalid X cordnet! Return and exit
+
+                return
+
+            # Check if Y value is out of bounds, and if we even care:
+
+            if y >= self.height or y < 0:
+
+                # Out of bounds! Whats next?
+
+                if ignore_bounds:
+
+                    # Lets continue on:
+
+                    continue
+
+                # Lets exit:
+
+                return
+
+            # Increment our steps value:
+
+            steps += 1
+
+            # Get the item at that position and return it:
+
+            #print("In function: X: {} ; Y: {}".format(x, y))
+
+            yield self.get(x, y)
+
 
 class Camera(object):
 
@@ -761,3 +921,169 @@ class Tile:
     def calc_distance(self, targObj):
 
         return math.sqrt(math.pow(targObj.xPos - self.x, 2) + math.pow(targObj.yPos - self.y, 2))
+
+
+class WalkingFunctions:
+
+    """
+    A collection of useful functions for traversing the tilemap.
+
+    This class provides the the functionality for a few operations:
+
+        - Vertical Lines
+        - Horizontal lines
+        - Lines with a given slope
+
+    All the user has to do is determine which function they wish to call,
+    and then pass the instance of this class onto the tilemap.
+
+    All of these function require 'traverse_function' to be in discrete mode!
+    This is the default operation, so be sure to not turn off discrete mode when using these functions!
+
+    We also require 'traverse_function' to be in parametric mode when using our functions!
+    """
+
+    def __init__(self, func, slope):
+
+        self.step = 0  # Number of steps we have taken
+        self.selection = func  # Function to do our calculations with
+        self.gen = None  # Generator function of the selection
+        self.slope = slope  # Slope of the line
+
+    @classmethod
+    def from_slope(cls, slope):
+
+        """
+        Automatically creates and selects a function based on the slope.
+        This is only relevant for linear equations!
+
+        We will also determine if we need any special functions,
+        such as 'vertical_line', or 'horizontal_line'.
+        """
+
+        if slope == 0:
+
+            # we need a horizontal line, let's select it:
+
+            return cls(cls.horizontal_line, 0)
+
+        if slope == maxsize or slope == maxsize * -1:
+
+            # Right above or below us, let's select vertical line:
+
+            return cls(cls.vertical_line, 0)
+
+        # Otherwise, return our value with the given slope:
+
+        return cls(cls.line, slope)
+
+    def __call__(self, *args):
+
+        """
+        We are being called, most likely by the 'traverse_function' method.
+
+        Let's pass on the step to our selected function and return it!
+
+        :param step: Step we are on
+        :type step: int
+        :return: Tuple containing X and Y values of the step
+        :rtype: tuple
+        """
+
+        print(*args)
+
+        return self.selection(self, *args)
+
+    def vertical_line(self, step):
+
+        """
+        Vertical line function.
+
+        We will generate a vertical line at the given X value!
+
+        We use the given equation:
+
+        X = 0
+        Y = step
+
+        Where:
+
+        step = The step we are currently on
+
+        If we are given the following input, we generate the following output:
+
+        s | x | y
+        ----------
+        0 | 0 | 0
+        1 | 0 | 1
+        2 | 0 | 2
+        3 | 0 | 3
+
+        So on and so forth.
+
+        :param step: Step we are currently on
+        """
+
+        return 0, step
+
+    def horizontal_line(self, step):
+
+        """
+        Horizontal line function.
+
+        We will generate a vertical line at the given X value.
+
+        We use the following equation:
+
+        X = step
+        Y = 0
+
+        If we are given the following input, we generate the following output:
+
+        s | x | y
+        ----------
+        0 | 0 | 0
+        1 | 1 | 0
+        2 | 2 | 0
+        3 | 3 | 0
+
+        So on and so forth.
+
+        :param step: Step we are currently on
+        :type step: int
+        :return: X and Y cordnets of the function at step
+        :rtype: tuple
+        """
+
+        return step, 0
+
+    def line(self, step):
+
+        """
+        Basic line function.
+
+        We will generate a straight line using the given X value.
+
+        We use the following equation:
+
+        X = step
+        Y = step * self.slope
+
+        If we are given the following input, and we have a slope of 1, we generate the following output:
+
+        s | x | y
+        ----------
+        0 | 0 | 0
+        1 | 1 | 1
+        2 | 2 | 2
+        3 | 3 | 3
+
+        So on and so forth.
+
+        :param step: Step we are currently on
+        :type step: int
+        :return: X and Y cordnets of the function at step
+        :rtype: tuple
+        """
+
+        return step, step * self.slope
