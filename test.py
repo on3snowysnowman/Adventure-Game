@@ -3,8 +3,10 @@ from builtins import print
 
 from chascurses import *
 from item_classes import *
+from tilemaps import WalkingFunctions
 import curses
 #from math import ceil
+import sys
 import time
 
 def add(obj, x, y, win):
@@ -519,6 +521,72 @@ def master_window_options_test(win):
     opt_win_thread.join()
 
 
+def trace_test(win):
+
+    # Tests the trace capabilities of the tilemap:
+
+    display = DisplayWindow(win)
+
+    display.tilemap.fill(Floor)
+    display.init_colors()
+
+    # Diagonal down - Top Left
+
+    for tile in display.tilemap.traverse_function(0, 0, WalkingFunctions.from_slope(1), par=True):
+
+        # Draw in a wall in the position:
+
+        display.tilemap.add(Wall(), tile[0].x, tile[0].y)
+
+    # Diagonal down - Top Right
+
+    for tile in display.tilemap.traverse_function(display.tilemap.width-1, 0,
+                                                  WalkingFunctions.from_slope(-1), step_size=-1, par=True):
+
+        # Draw in a wall in the position:
+
+        display.tilemap.add(Wall(), tile[0].x, tile[0].y)
+
+    # Diagonal Up - Bottom Left
+
+    for tile in display.tilemap.traverse_function(0, display.tilemap.height-1, WalkingFunctions.from_slope(-1), par=True):
+
+        # Draw a wall in the position:
+
+        display.tilemap.add(Wall(), tile[0].x, tile[0].y)
+
+    # Diagonal Up - Bottom Right
+
+    for tile in display.tilemap.traverse_function(display.tilemap.width-1, display.tilemap.height-1,
+                                                  WalkingFunctions.from_slope(1), par=True, step_size=-1):
+
+        # Draw a wall in the position:
+
+        display.tilemap.add(Wall(), tile[0].x, tile[0].y)
+
+    # Vertical line:
+
+    for tile in display.tilemap.traverse_function(int(display.tilemap.width/2), 0,
+                                                  WalkingFunctions.from_slope(sys.maxsize), par=True):
+
+        # Draw a wall in the position:
+
+        display.tilemap.add(Wall(), tile[0].x, tile[0].y)
+
+    # Horizontal line:
+
+    for tile in display.tilemap.traverse_function(0, int(display.tilemap.height/2),
+                                                  WalkingFunctions.from_slope(0), par=True):
+
+        # Draw a wall in the position:
+
+        display.tilemap.add(Wall(), tile[0].x, tile[0].y)
+
+    display.add_callback('q', display.stop)
+
+    display.display()
+
+
 def look_test(win):
 
     master = MasterWindow(win)
@@ -894,4 +962,4 @@ def all_tests(win):
         win.erase()
 
 
-curses.wrapper(battle_test)
+curses.wrapper(trace_test)

@@ -6,6 +6,8 @@ tilemaps handle the logic of entity movement, and keeps everything organised.
 """
 
 from character_classes import EntityCharacter, Player, TrackerEnemy, Fog
+import sys
+from itertools import count
 import math
 
 
@@ -967,7 +969,7 @@ class WalkingFunctions:
 
             return cls(cls.horizontal_line, 0)
 
-        if slope == maxsize or slope == maxsize * -1:
+        if slope == sys.maxsize or slope == sys.maxsize * -1:
 
             # Right above or below us, let's select vertical line:
 
