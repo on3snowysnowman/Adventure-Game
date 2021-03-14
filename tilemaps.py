@@ -595,7 +595,7 @@ class Camera(object):
         Fills the tilemap with fog to block the player's vision relative to walls
         """
         playerTile = self.tilemap.find_object_type(Player)
-        # self.radius = playerTile.obj.radius
+        self.radius = playerTile.obj.radius
 
         self.refresh_focus_position()
         self.create_display()

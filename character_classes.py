@@ -189,6 +189,10 @@ class EntityCharacter(BaseCharacter):
         xIt = 0
         yIt = 0
 
+        toTop = False
+
+        count = 0
+
         # Checking Walls
         for line in tilemap.tilemap:
 
@@ -199,6 +203,7 @@ class EntityCharacter(BaseCharacter):
                     if isinstance(objTile, Wall):
 
                         checkTop = False
+                        toTop = False
 
                         # Y Position of character in relation to an origin at the bottom left
                         posY = (len(tilemap.tilemap) - 1) - selfTile.y
@@ -480,217 +485,375 @@ class EntityCharacter(BaseCharacter):
                         # Wall is in Quadrant 1
                         elif xIt >= selfTile.x and yIt <= selfTile.y:
 
-                            equationTop = float((wallPosY + 1) / wallPosX)
-                            equationBottom = float(wallPosY / (wallPosX + 1))
+                            if tilemap._bound_check(xIt - 1, yIt) and xIt - 1 == selfTile.x:
 
-                            if xIt == selfTile.x + 1:
+                                for tile in tilemap.get(xIt - 1, yIt):
 
-                                yIndex = yIt - 1
-                                xIndex = xIt
+                                    if isinstance(tile.obj, Wall):
 
-                                for x in range(selfTile.y - yIt):
+                                        toTop = True
+                                        break
 
-                                    if yIndex < 0: break
+                            # If toTop is False, run like normal
+                            if not toTop:
 
-                                    tilemap.add(fog, xIndex, yIndex)
-                                    yIndex -= 1
+                                equationTop = float((wallPosY + 1) / wallPosX)
+                                equationBottom = float(wallPosY / (wallPosX + 1))
 
-                            yIndex = yIt
-                            xIndex = xIt + 1
+                                if xIt == selfTile.x + 1:
 
-                            # Checking if the bottom slope is greater than 1.0
+                                    yIndex = yIt - 1
+                                    xIndex = xIt
 
-                            if equationBottom >= 1.0:
-            
-                                # Reassigning the bottom slope so that it's angled slightly more above the wall
-                                equationBottom = float((wallPosY + 1) / (wallPosX + 1))
-                                # Reassigning the yIndex to match where the new slope starts
-                                yIndex = yIt - 1
+                                    for x in range(selfTile.y - yIt):
 
-                            # Checking if the top slope is greater than 1.0
-                            if equationTop > 1.0:
+                                        if yIndex < 0: break
 
-                                checkTop = True
+                                        tilemap.add(fog, xIndex, yIndex)
+                                        yIndex -= 1
 
-                                # Reassigning the top slope so that it's angled more above the wall
-                                equationTop = float((wallPosY + 2) / wallPosX)
+                                yIndex = yIt
+                                xIndex = xIt + 1
 
-                                # Reassigning the xIndex to allow the equation to check the x tile we start on
-                                xIndex = xIt
+                                # Checking if the bottom slope is greater than 1.0
+                                if equationBottom >= 1.0:
 
-                                if equationBottom < 1.0:
-                                    # Reassigning the yIndex to start above the wall, and not on top of it
+                                    # Reassigning the bottom slope so that it's angled slightly more above the wall
+                                    equationBottom = float((wallPosY + 1) / (wallPosX + 1))
+                                    # Reassigning the yIndex to match where the new slope starts
                                     yIndex = yIt - 1
 
-                            if checkTop:
+                                # Checking if the top slope is greater than 1.0
+                                if equationTop > 1.0:
 
-                                # Top of Wall
-                                while ((len(tilemap.tilemap) - 1) - yIndex) - posY < math.floor(
-                                        equationTop * (xIndex - posX)) and yIndex >= 0:
+                                    checkTop = True
+
+                                    # Reassigning the top slope so that it's angled more above the wall
+                                    equationTop = float((wallPosY + 2) / wallPosX)
+
+                                    # Reassigning the xIndex to allow the equation to check the x tile we start on
+                                    xIndex = xIt
+
+                                    if equationBottom < 1.0:
+                                        # Reassigning the yIndex to start above the wall, and not on top of it
+                                        yIndex = yIt - 1
+
+                                if checkTop:
+
+                                    # Top of Wall
+                                    while ((len(tilemap.tilemap) - 1) - yIndex) - posY < math.floor(
+                                            equationTop * (xIndex - posX)) and yIndex >= 0:
+
+                                        tilemap.add(fog, xIndex, yIndex)
+                                        yIndex -= 1
+
+                                    floatOutput = equationTop * (xIndex - posX)
+
+                                    if math.floor((floatOutput % 1) * 10) / 10 >= .5 and math.floor(
+                                            (floatOutput % 1) * 10) / 10 != 0.0:
+
+                                        if yIndex >= 0:
+
+                                            tilemap.add(fog, xIndex, yIndex)
+
+                                    xIndex += 1
+                                    yIndex = (len(tilemap.tilemap) - 1) - (
+                                            math.floor(equationBottom * (xIndex - posX)) + posY)
+
+                                # BottomLine
+                                while xIndex < len(tilemap.tilemap[yIndex]) and yIndex >= 0:
+
+                                    # Bottom Line
+                                    floatOutput = equationBottom * (xIndex - posX)
+
+                                    if math.floor((floatOutput % 1) * 10) / 10 <= .5:
+
+                                        foundWall = False
+
+                                        for obj in tilemap.tilemap[yIndex][xIndex]:
+
+                                            if isinstance(obj, Wall):
+
+                                                foundWall = True
+
+                                        if not foundWall:
+
+                                            tilemap.add(fog, xIndex, yIndex)
+
+                                    yIndex -= 1
+                                    # Top Line
+
+                                    while yIndex >= 0 and ((len(tilemap.tilemap) - 1) - yIndex) - posY < math.floor(
+                                            equationTop * (xIndex - posX)):
+                                        tilemap.add(fog, xIndex, yIndex)
+
+                                        yIndex -= 1
+
+                                    floatOutput = equationTop * (xIndex - posX)
+
+                                    if math.floor((floatOutput % 1) * 10) / 10 >= .5 and yIndex >= 0:
+                                        tilemap.add(fog, xIndex, yIndex)
+
+                                    xIndex += 1
+                                    yIndex = (len(tilemap.tilemap) - 1) - math.floor(
+                                        equationBottom * (xIndex - posX) + posY)
+                                    if yIndex < 0:
+                                        break
+
+                            # If toTop is True, fill fog to the top of the screen
+                            else:
+
+                                toTop = False
+
+                                equationBottom = float(wallPosY / (wallPosX + 1))
+
+                                yIndex = yIt - 1
+                                xIndex = xIt
+
+                                while yIndex >= 0:
 
                                     tilemap.add(fog, xIndex, yIndex)
                                     yIndex -= 1
 
-                                floatOutput = equationTop * (xIndex - posX)
+                                yIndex = yIt
+                                xIndex = xIt + 1
 
-                                if math.floor((floatOutput % 1) * 10) / 10 >= .5 and math.floor(
-                                        (floatOutput % 1) * 10) / 10 != 0.0:
+                                # Checking if the bottom slope is greater than 1.0
+                                if equationBottom >= 1.0:
+                                    # Reassigning the bottom slope so that it's angled slightly more above the wall
+                                    equationBottom = float((wallPosY + 1) / (wallPosX + 1))
+                                    # Reassigning the yIndex to match where the new slope starts
+                                    yIndex = yIt - 1
 
-                                    if yIndex >= 0:
+                                # BottomLine
+                                while xIndex < len(tilemap.tilemap[yIndex]) and yIndex >= 0:
 
-                                        tilemap.add(fog, xIndex, yIndex)
-              
-                                xIndex += 1
-                                yIndex = (len(tilemap.tilemap) - 1) - (
-                                        math.floor(equationBottom * (xIndex - posX)) + posY)
+                                    # Bottom Line
+                                    floatOutput = equationBottom * (xIndex - posX)
 
-                            # BottomLine
-                            while xIndex < len(tilemap.tilemap[yIndex]) and yIndex >= 0:
+                                    if math.floor((floatOutput % 1) * 10) / 10 <= .5:
 
-                                # Bottom Line
-                                floatOutput = equationBottom * (xIndex - posX)
+                                        foundWall = False
 
-                                if math.floor((floatOutput % 1) * 10) / 10 <= .5:
+                                        for tile in tilemap.get(xIndex, yIndex):
 
-                                    foundWall = False
+                                            if isinstance(tile.obj, Wall):
+                                                foundWall = True
 
-                                    for obj in tilemap.tilemap[yIndex][xIndex]:
-
-                                        if isinstance(obj, Wall):
-
-                                            foundWall = True
-
-                                    if not foundWall:
-
-                                        tilemap.add(fog, xIndex, yIndex)
-
-                                yIndex -= 1
-                                # Top Line
-
-                                while yIndex >= 0 and ((len(tilemap.tilemap) - 1) - yIndex) - posY < math.floor(
-                                        equationTop * (xIndex - posX)):
-                                    tilemap.add(fog, xIndex, yIndex)
+                                        if not foundWall:
+                                            tilemap.add(fog, xIndex, yIndex)
 
                                     yIndex -= 1
 
-                                floatOutput = equationTop * (xIndex - posX)
+                                    # Top Line
+                                    while yIndex >= 0:
 
-                                if math.floor((floatOutput % 1) * 10) / 10 >= .5 and yIndex >= 0:
-                                    tilemap.add(fog, xIndex, yIndex)
-                                    
-                                xIndex += 1
-                                yIndex = (len(tilemap.tilemap) - 1) - math.floor(
-                                    equationBottom * (xIndex - posX) + posY)
-                                if yIndex < 0:
-                                    break
+                                        tilemap.add(fog, xIndex, yIndex)
+
+                                        yIndex -= 1
+
+                                    xIndex += 1
+                                    yIndex = (len(tilemap.tilemap) - 1) - math.floor(
+                                        equationBottom * (xIndex - posX) + posY)
+
+                                    if yIndex < 0:
+                                        break
 
                         # Wall is in Quadrant 2
                         elif xIt <= selfTile.x and yIt <= selfTile.y:
 
+                            if tilemap._bound_check(xIt + 1, yIt) and xIt + 1 == selfTile.x:
+
+                                for tile in tilemap.get(xIt + 1, yIt):
+
+                                    if isinstance(tile.obj, Wall):
+
+                                        toTop = True
+
+                                        break
+
                             pointsBlocked = []
 
-                            posX -= (wallPosX * 2) * -1
+                            if not toTop:
 
-                            wallPosX = abs(wallPosX)
-                            wallPosY = abs(wallPosY)
+                                posX -= (wallPosX * 2) * -1
 
-                            equationTop = float((wallPosY + 1) / wallPosX)
-                            equationBottom = float(wallPosY / (wallPosX + 1))
+                                wallPosX = abs(wallPosX)
+                                wallPosY = abs(wallPosY)
 
-                            if xIt == selfTile.x - 1:
+                                equationTop = float((wallPosY + 1) / wallPosX)
+                                equationBottom = float(wallPosY / (wallPosX + 1))
 
-                                yIndex = yIt - 1
-                                xIndex = xIt
+                                if xIt == selfTile.x - 1:
 
-                                for x in range(selfTile.y - yIt):
+                                    yIndex = yIt - 1
+                                    xIndex = xIt
 
-                                    if yIndex < 0: break
+                                    for x in range(selfTile.y - yIt):
 
-                                    tilemap.add(fog, xIndex, yIndex)
-                                    yIndex -= 1
+                                        if yIndex < 0: break
 
-                            yIndex = yIt
-                            xIndex = xIt + 1
+                                        tilemap.add(fog, xIndex, yIndex)
+                                        yIndex -= 1
 
-                            # Checking if the bottom slope is greater than 1.0
+                                yIndex = yIt
+                                xIndex = xIt + 1
 
-                            if equationBottom >= 1.0:
+                                # Checking if the bottom slope is greater than 1.0
 
-                                # Reassigning the bottom slope so that it's angled slightly more above the wall
-                                equationBottom = float((wallPosY + 1) / (wallPosX + 1))
-                                # Reassigning the yIndex to match where the new slope starts
-                                yIndex = yIt - 1
+                                if equationBottom >= 1.0:
 
-                            # Checking if the top slope is greater than 1.0
-                            if equationTop > 1.0:
-
-                                checkTop = True
-
-                                # Reassigning the top slope so that it's angled more above the wall
-                                equationTop = float((wallPosY + 2) / wallPosX)
-
-                                # Reassigning the xIndex to allow the equation to check the x tile we start on
-                                xIndex = xIt
-
-                                if equationBottom < 1.0:
-                                    # Reassigning the yIndex to start above the wall, and not on top of it
+                                    # Reassigning the bottom slope so that it's angled slightly more above the wall
+                                    equationBottom = float((wallPosY + 1) / (wallPosX + 1))
+                                    # Reassigning the yIndex to match where the new slope starts
                                     yIndex = yIt - 1
 
-                            if checkTop:
+                                # Checking if the top slope is greater than 1.0
+                                if equationTop > 1.0:
 
-                                # Top of Wall
-                                while ((len(tilemap.tilemap) - 1) - yIndex) - posY < math.floor(
-                                        equationTop * (xIndex - posX)) and yIndex >= 0:
-                                    pointsBlocked.append([xIndex, yIndex])
+                                    checkTop = True
+
+                                    # Reassigning the top slope so that it's angled more above the wall
+                                    equationTop = float((wallPosY + 2) / wallPosX)
+
+                                    # Reassigning the xIndex to allow the equation to check the x tile we start on
+                                    xIndex = xIt
+
+                                    if equationBottom < 1.0:
+                                        # Reassigning the yIndex to start above the wall, and not on top of it
+                                        yIndex = yIt - 1
+
+                                if checkTop:
+
+                                    # Top of Wall
+                                    while ((len(tilemap.tilemap) - 1) - yIndex) - posY < math.floor(
+                                            equationTop * (xIndex - posX)) and yIndex >= 0:
+                                        pointsBlocked.append([xIndex, yIndex])
+                                        yIndex -= 1
+
+                                    floatOutput = equationTop * (xIndex - posX)
+
+                                    if math.floor((floatOutput % 1) * 10) / 10 >= .5 and math.floor(
+                                            (floatOutput % 1) * 10) / 10 != 0.0:
+
+                                        if yIndex >= 0:
+                                            pointsBlocked.append([xIndex, yIndex])
+
+                                    xIndex += 1
+                                    yIndex = (len(tilemap.tilemap) - 1) - (
+                                            math.floor(equationBottom * (xIndex - posX)) + posY)
+
+                                # BottomLine
+                                while xIndex <= xIt * 2:
+
+                                    # Bottom Line
+                                    floatOutput = equationBottom * (xIndex - posX)
+
+                                    if math.floor((floatOutput % 1) * 10) / 10 <= .5 and yIndex >= 0:
+
+                                        foundWall = False
+
+                                        for obj in tilemap.tilemap[yIndex][xIt - (xIndex - xIt)]:
+
+                                            if isinstance(obj, Wall):
+                                                foundWall = True
+
+                                        if not foundWall:
+
+                                            pointsBlocked.append([xIndex, yIndex])
+
+                                    yIndex -= 1
+                                    # Top Line
+
+                                    while ((len(tilemap.tilemap) - 1) - yIndex) - posY < math.floor(
+                                            equationTop * (xIndex - posX)) and yIndex >= 0:
+                                        pointsBlocked.append([xIndex, yIndex])
+
+                                        yIndex -= 1
+
+                                    floatOutput = equationTop * (xIndex - posX)
+
+                                    if math.floor((floatOutput % 1) * 10) / 10 >= .5 and yIndex >= 0:
+                                        pointsBlocked.append([xIndex, yIndex])
+
+                                    xIndex += 1
+                                    yIndex = (len(tilemap.tilemap) - 1) - math.floor(
+                                        equationBottom * (xIndex - posX) + posY)
+
+                            else:
+
+                                posX -= (wallPosX * 2) * -1
+
+                                wallPosX = abs(wallPosX)
+                                wallPosY = abs(wallPosY)
+
+                                equationBottom = float(wallPosY / (wallPosX + 1))
+
+                                yIndex = yIt - 1
+
+                                xIndex = xIt
+
+                                while yIndex >= 0:
+
+                                    tilemap.add(fog, xIndex, yIndex)
+
                                     yIndex -= 1
 
-                                floatOutput = equationTop * (xIndex - posX)
+                                yIndex = yIt
 
-                                if math.floor((floatOutput % 1) * 10) / 10 >= .5 and math.floor(
-                                        (floatOutput % 1) * 10) / 10 != 0.0:
+                                xIndex = xIt + 1
 
-                                    if yIndex >= 0:
-                                        pointsBlocked.append([xIndex, yIndex])
-                                        
-                                xIndex += 1
-                                yIndex = (len(tilemap.tilemap) - 1) - (
-                                        math.floor(equationBottom * (xIndex - posX)) + posY)
+                                # Checking if the bottom slope is greater than 1.0
 
-                            # BottomLine
-                            while xIndex <= xIt * 2:
+                                if equationBottom >= 1.0:
+                                    # Reassigning the bottom slope so that it's angled slightly more above the wall
 
-                                # Bottom Line
-                                floatOutput = equationBottom * (xIndex - posX)
+                                    equationBottom = float((wallPosY + 1) / (wallPosX + 1))
 
-                                if math.floor((floatOutput % 1) * 10) / 10 <= .5 and yIndex >= 0:
+                                    # Reassigning the yIndex to match where the new slope starts
 
-                                    foundWall = False
+                                    yIndex = yIt - 1
 
-                                    for obj in tilemap.tilemap[yIndex][xIt - (xIndex - xIt)]:
+                                # BottomLine
 
-                                        if isinstance(obj, Wall):
-                                            foundWall = True
+                                while xIndex <= xIt * 2:
 
-                                    if not foundWall:
-                                        pointsBlocked.append([xIndex, yIndex])
+                                    # Bottom Line
 
-                                yIndex -= 1
-                                # Top Line
+                                    floatOutput = equationBottom * (xIndex - posX)
 
-                                while ((len(tilemap.tilemap) - 1) - yIndex) - posY < math.floor(
-                                        equationTop * (xIndex - posX)) and yIndex >= 0:
-                                    pointsBlocked.append([xIndex, yIndex])
-                                    
+                                    if math.floor((floatOutput % 1) * 10) / 10 <= .5:
+
+                                        foundWall = False
+
+                                        for tile in tilemap.get(xIt - (xIndex - xIt), yIndex):
+
+                                            if isinstance(tile.obj, Wall):
+                                                foundWall = True
+
+                                        if not foundWall:
+
+                                            pointsBlocked.append([xIndex, yIndex])
+
                                     yIndex -= 1
 
-                                floatOutput = equationTop * (xIndex - posX)
+                                    # Top Line
 
-                                if math.floor((floatOutput % 1) * 10) / 10 >= .5 and yIndex >= 0:
-                                    pointsBlocked.append([xIndex, yIndex])
-                                    
-                                xIndex += 1
-                                yIndex = (len(tilemap.tilemap) - 1) - math.floor(
-                                    equationBottom * (xIndex - posX) + posY)
+                                    while yIndex >= 0:
+
+                                        pointsBlocked.append([xIndex, yIndex])
+
+                                        yIndex -= 1
+
+
+                                    xIndex += 1
+
+                                    yIndex = (len(tilemap.tilemap) - 1) - math.floor(
+
+                                        equationBottom * (xIndex - posX) + posY)
+
+                                    if yIndex < 0:
+                                        break
 
                             # Reflecting points to the other side of the wall
                             for point in pointsBlocked:
@@ -703,154 +866,234 @@ class EntityCharacter(BaseCharacter):
                         # Wall is in Quadrant 3
                         elif xIt <= selfTile.x and yIt >= selfTile.y:
 
+                            if tilemap._bound_check(xIt + 1, yIt) and xIt + 1 == selfTile.x:
+
+                                for tile in tilemap.get(xIt + 1, yIt):
+
+                                    if isinstance(tile.obj, Wall):
+
+                                        toTop = True
+
+                                        break
+
                             pointsBlocked = []
 
-                            posY -= (wallPosY * 2) * -1
-                            posX -= (wallPosX * 2) * -1
+                            if not toTop:
 
-                            wallPosX = abs(wallPosX)
-                            wallPosY = abs(wallPosY)
+                                posY -= (wallPosY * 2) * -1
+                                posX -= (wallPosX * 2) * -1
 
-                            equationTop = float((wallPosY + 1) / wallPosX)
-                            equationBottom = float(wallPosY / (wallPosX + 1))
+                                wallPosX = abs(wallPosX)
+                                wallPosY = abs(wallPosY)
 
-                            if xIt == selfTile.x - 1:
+                                equationTop = float((wallPosY + 1) / wallPosX)
+                                equationBottom = float(wallPosY / (wallPosX + 1))
 
-                                yIndex = yIt + 1
-                                xIndex = xIt
+                                if xIt == selfTile.x - 1:
 
-                                for x in range(yIt - selfTile.y):
+                                    yIndex = yIt + 1
+                                    xIndex = xIt
 
-                                    if yIndex >= len(tilemap.tilemap): break
+                                    for x in range(yIt - selfTile.y):
 
-                                    tilemap.add(fog, xIndex, yIndex)
-                                    yIndex += 1
+                                        if yIndex >= len(tilemap.tilemap): break
 
-                            yIndex = yIt
-                            xIndex = xIt + 1
+                                        tilemap.add(fog, xIndex, yIndex)
+                                        yIndex += 1
 
-                            # Checking if the bottom slope is greater than 1.0
+                                yIndex = yIt
+                                xIndex = xIt + 1
 
-                            if equationBottom >= 1.0:
+                                # Checking if the bottom slope is greater than 1.0
 
-                                # Reassigning the bottom slope so that it's angled slightly more above the wall
-                                equationBottom = float((wallPosY + 1) / (wallPosX + 1))
-                                # Reassigning the yIndex to match where the new slope starts
-                                yIndex = yIt - 1
+                                if equationBottom >= 1.0:
 
-                            # Checking if the top slope is greater than 1.0
-                            if equationTop > 1.0:
-
-                                checkTop = True
-
-                                # Reassigning the top slope so that it's angled more above the wall
-                                equationTop = float((wallPosY + 2) / wallPosX)
-
-                                # Reassigning the xIndex to allow the equation to check the x tile we start on
-                                xIndex = xIt
-
-                                if equationBottom < 1.0:
-                                    # Reassigning the yIndex to start above the wall, and not on top of it
+                                    # Reassigning the bottom slope so that it's angled slightly more above the wall
+                                    equationBottom = float((wallPosY + 1) / (wallPosX + 1))
+                                    # Reassigning the yIndex to match where the new slope starts
                                     yIndex = yIt - 1
 
-                            if checkTop:
+                                # Checking if the top slope is greater than 1.0
+                                if equationTop > 1.0:
 
-                                # Top of Wall
-                                while ((len(tilemap.tilemap) - 1) - yIndex) - posY < math.floor(
-                                        equationTop * (xIndex - posX)) and yIndex >= 0:
-                                    pointsBlocked.append([xIndex, yIndex])
-                                    yIndex -= 1
+                                    checkTop = True
 
-                                floatOutput = equationTop * (xIndex - posX)
+                                    # Reassigning the top slope so that it's angled more above the wall
+                                    equationTop = float((wallPosY + 2) / wallPosX)
 
-                                if math.floor((floatOutput % 1) * 10) / 10 >= .5 and math.floor(
-                                        (floatOutput % 1) * 10) / 10 != 0.0:
+                                    # Reassigning the xIndex to allow the equation to check the x tile we start on
+                                    xIndex = xIt
 
-                                    if yIndex >= 0:
+                                    if equationBottom < 1.0:
+                                        # Reassigning the yIndex to start above the wall, and not on top of it
+                                        yIndex = yIt - 1
+
+                                if checkTop:
+
+                                    # Top of Wall
+                                    while ((len(tilemap.tilemap) - 1) - yIndex) - posY < math.floor(
+                                            equationTop * (xIndex - posX)) and yIndex >= 0:
                                         pointsBlocked.append([xIndex, yIndex])
-                                        
-                                xIndex += 1
-                                yIndex = (len(tilemap.tilemap) - 1) - (
-                                        math.floor(equationBottom * (xIndex - posX)) + posY)
+                                        yIndex -= 1
 
-                            # BottomLine
-                            while xIndex <= xIt * 2:
+                                    floatOutput = equationTop * (xIndex - posX)
 
-                                if yIndex < 0:
+                                    if math.floor((floatOutput % 1) * 10) / 10 >= .5 and math.floor(
+                                            (floatOutput % 1) * 10) / 10 != 0.0:
 
-                                    if yIt + abs(yIndex) >= len(tilemap.tilemap) - yIt:
-                                        xIndex += 1
-                                        yIndex = (len(tilemap.tilemap) - 1) - math.floor(
-                                            equationBottom * (xIndex - posX) + posY)
-                                        continue
+                                        if yIndex >= 0:
+                                            pointsBlocked.append([xIndex, yIndex])
 
-                                else:
+                                    xIndex += 1
+                                    yIndex = (len(tilemap.tilemap) - 1) - (
+                                            math.floor(equationBottom * (xIndex - posX)) + posY)
 
-                                    if yIt + (yIt - yIndex) >= len(tilemap.tilemap):
-                                        xIndex += 1
-                                        yIndex = (len(tilemap.tilemap) - 1) - math.floor(
-                                            equationBottom * (xIndex - posX) + posY)
-                                        continue
-
-                                # Bottom Line
-                                floatOutput = equationBottom * (xIndex - posX)
-
-                                if math.floor((floatOutput % 1) * 10) / 10 <= .5:
-
-                                    foundWall = False
-
-                                    for obj in tilemap.tilemap[yIt + (yIt - yIndex)][xIt - (xIndex - xIt)]:
-
-                                        if isinstance(obj, Wall):
-                                            foundWall = True
-
-                                    if not foundWall:
-                                        pointsBlocked.append([xIndex, yIndex])
-
-                                yIndex -= 1
-                                # Top Line
-
-                                while ((len(tilemap.tilemap) - 1) - yIndex) - posY < math.floor(
-                                        equationTop * (xIndex - posX)):
+                                # BottomLine
+                                while xIndex <= xIt * 2:
 
                                     if yIndex < 0:
 
                                         if yIt + abs(yIndex) >= len(tilemap.tilemap) - yIt:
-                                            break
+                                            xIndex += 1
+                                            yIndex = (len(tilemap.tilemap) - 1) - math.floor(
+                                                equationBottom * (xIndex - posX) + posY)
+                                            continue
 
                                     else:
 
                                         if yIt + (yIt - yIndex) >= len(tilemap.tilemap):
-                                            break
+                                            xIndex += 1
+                                            yIndex = (len(tilemap.tilemap) - 1) - math.floor(
+                                                equationBottom * (xIndex - posX) + posY)
+                                            continue
 
-                                    pointsBlocked.append([xIndex, yIndex])
-                                    
+                                    # Bottom Line
+                                    floatOutput = equationBottom * (xIndex - posX)
+
+                                    if math.floor((floatOutput % 1) * 10) / 10 <= .5:
+
+                                        foundWall = False
+
+                                        for obj in tilemap.tilemap[yIt + (yIt - yIndex)][xIt - (xIndex - xIt)]:
+
+                                            if isinstance(obj, Wall):
+                                                foundWall = True
+
+                                        if not foundWall:
+                                            pointsBlocked.append([xIndex, yIndex])
+
                                     yIndex -= 1
+                                    # Top Line
 
-                                floatOutput = equationTop * (xIndex - posX)
+                                    while ((len(tilemap.tilemap) - 1) - yIndex) - posY < math.floor(
+                                            equationTop * (xIndex - posX)):
 
-                                if yIndex < 0:
+                                        if yIndex < 0:
 
-                                    if yIt + abs(yIndex) >= len(tilemap.tilemap) - yIt:
-                                        xIndex += 1
-                                        yIndex = (len(tilemap.tilemap) - 1) - math.floor(
-                                            equationBottom * (xIndex - posX) + posY)
-                                        continue
+                                            if yIt + abs(yIndex) >= len(tilemap.tilemap) - yIt:
+                                                break
 
-                                else:
+                                        else:
 
-                                    if yIt + (yIt - yIndex) >= len(tilemap.tilemap):
-                                        xIndex += 1
-                                        yIndex = (len(tilemap.tilemap) - 1) - math.floor(
-                                            equationBottom * (xIndex - posX) + posY)
-                                        continue
+                                            if yIt + (yIt - yIndex) >= len(tilemap.tilemap):
+                                                break
 
-                                if math.floor((floatOutput % 1) * 10) / 10 >= .5 and yIndex >= 0:
-                                    pointsBlocked.append([xIndex, yIndex])
-                                    
-                                xIndex += 1
-                                yIndex = (len(tilemap.tilemap) - 1) - math.floor(
-                                    equationBottom * (xIndex - posX) + posY)
+                                        pointsBlocked.append([xIndex, yIndex])
+
+                                        yIndex -= 1
+
+                                    floatOutput = equationTop * (xIndex - posX)
+
+                                    if yIndex < 0:
+
+                                        if yIt + abs(yIndex) >= len(tilemap.tilemap) - yIt:
+                                            xIndex += 1
+                                            yIndex = (len(tilemap.tilemap) - 1) - math.floor(
+                                                equationBottom * (xIndex - posX) + posY)
+                                            continue
+
+                                    else:
+
+                                        if yIt + (yIt - yIndex) >= len(tilemap.tilemap):
+                                            xIndex += 1
+                                            yIndex = (len(tilemap.tilemap) - 1) - math.floor(
+                                                equationBottom * (xIndex - posX) + posY)
+                                            continue
+
+                                    if math.floor((floatOutput % 1) * 10) / 10 >= .5 and yIndex >= 0:
+                                        pointsBlocked.append([xIndex, yIndex])
+
+                                    xIndex += 1
+                                    yIndex = (len(tilemap.tilemap) - 1) - math.floor(
+                                        equationBottom * (xIndex - posX) + posY)
+
+                            else:
+
+                                posY -= (wallPosY * 2) * -1
+                                posX -= (wallPosX * 2) * -1
+
+                                wallPosX = abs(wallPosX)
+                                wallPosY = abs(wallPosY)
+
+                                equationBottom = float(wallPosY / (wallPosX + 1))
+
+                                yIndex = yIt + 1
+                                xIndex = xIt
+
+                                while yIndex < tilemap.height:
+
+                                    tilemap.add(fog, xIndex, yIndex)
+
+                                    yIndex += 1
+
+                                yIndex = yIt
+                                xIndex = xIt + 1
+
+                                # Checking if the bottom slope is greater than 1.0
+
+                                if equationBottom >= 1.0:
+
+                                    # Reassigning the bottom slope so that it's angled slightly more above the wall
+                                    equationBottom = float((wallPosY + 1) / (wallPosX + 1))
+                                    # Reassigning the yIndex to match where the new slope starts
+                                    yIndex = yIt - 1
+
+                                # BottomLine
+                                while xIndex <= xIt * 2 and yIt + (yIt - yIndex) < tilemap.height:
+
+                                    # Bottom Line
+                                    floatOutput = equationBottom * (xIndex - posX)
+
+                                    if math.floor((floatOutput % 1) * 10) / 10 <= .5:
+
+                                        foundWall = False
+
+                                        for obj in tilemap.tilemap[yIt + (yIt - yIndex)][xIt - (xIndex - xIt)]:
+
+                                            if isinstance(obj, Wall):
+                                                foundWall = True
+
+                                        if not foundWall:
+                                            pointsBlocked.append([xIndex, yIndex])
+
+                                    yIndex -= 1
+                                    # Top Line
+
+                                    while yIndex >= yIt - (tilemap.height - yIt):
+
+                                        pointsBlocked.append([xIndex, yIndex])
+
+                                        yIndex -= 1
+
+                                    xIndex += 1
+                                    yIndex = (len(tilemap.tilemap) - 1) - math.floor(
+                                        equationBottom * (xIndex - posX) + posY)
+
+                                    if yIndex <= yIt - (tilemap.height - yIt):
+
+                                        if yIt + (yIt + abs(yIndex)) >= tilemap.height:
+
+                                            break
 
                             # Reflecting points to the other side of the wall
                             for point in pointsBlocked:
@@ -870,153 +1113,234 @@ class EntityCharacter(BaseCharacter):
                         # Wall is in Quadrant 4
                         elif xIt >= selfTile.x and yIt >= selfTile.y:
 
+                            if tilemap._bound_check(xIt - 1, yIt) and xIt - 1 == selfTile.x:
+
+                                for tile in tilemap.get(xIt - 1, yIt):
+
+                                    if isinstance(tile.obj, Wall):
+
+                                        toTop = True
+
+                                        break
+
                             pointsBlocked = []
 
-                            posY -= abs(wallPosY * 2)
+                            if not toTop:
 
-                            wallPosX = abs(wallPosX)
-                            wallPosY = abs(wallPosY)
+                                pointsBlocked = []
 
-                            equationTop = float((wallPosY + 1) / wallPosX)
-                            equationBottom = float(wallPosY / (wallPosX + 1))
+                                posY -= abs(wallPosY * 2)
 
-                            if xIt == selfTile.x + 1:
+                                wallPosX = abs(wallPosX)
+                                wallPosY = abs(wallPosY)
 
-                                yIndex = yIt + 1
-                                xIndex = xIt
+                                equationTop = float((wallPosY + 1) / wallPosX)
+                                equationBottom = float(wallPosY / (wallPosX + 1))
 
-                                for x in range(yIt - selfTile.y):
+                                if xIt == selfTile.x + 1:
 
-                                    if yIndex >= len(tilemap.tilemap): break
+                                    yIndex = yIt + 1
+                                    xIndex = xIt
 
-                                    tilemap.add(fog, xIndex, yIndex)
-                                    yIndex += 1
+                                    for x in range(yIt - selfTile.y):
 
-                            yIndex = yIt
-                            xIndex = xIt + 1
+                                        if yIndex >= len(tilemap.tilemap): break
 
-                            # Checking if the bottom slope is greater than 1.0
+                                        tilemap.add(fog, xIndex, yIndex)
+                                        yIndex += 1
 
-                            if equationBottom >= 1.0:
+                                yIndex = yIt
+                                xIndex = xIt + 1
 
-                                # Reassigning the bottom slope so that it's angled slightly more above the wall
-                                equationBottom = float((wallPosY + 1) / (wallPosX + 1))
-                                # Reassigning the yIndex to match where the new slope starts
-                                yIndex = yIt - 1
+                                # Checking if the bottom slope is greater than 1.0
 
-                            # Checking if the top slope is greater than 1.0
-                            if equationTop > 1.0:
+                                if equationBottom >= 1.0:
 
-                                checkTop = True
-
-                                # Reassigning the top slope so that it's angled more above the wall
-                                equationTop = float((wallPosY + 2) / wallPosX)
-
-                                # Reassigning the xIndex to allow the equation to check the x tile we start on
-                                xIndex = xIt
-
-                                if equationBottom < 1.0:
-                                    # Reassigning the yIndex to start above the wall, and not on top of it
+                                    # Reassigning the bottom slope so that it's angled slightly more above the wall
+                                    equationBottom = float((wallPosY + 1) / (wallPosX + 1))
+                                    # Reassigning the yIndex to match where the new slope starts
                                     yIndex = yIt - 1
 
-                            if checkTop:
+                                # Checking if the top slope is greater than 1.0
+                                if equationTop > 1.0:
 
-                                # Top of Wall
-                                while ((len(tilemap.tilemap) - 1) - yIndex) - posY < math.floor(
-                                        equationTop * (xIndex - posX)) and yIndex >= 0:
-                                    pointsBlocked.append([xIndex, yIndex])
-                                    yIndex -= 1
+                                    checkTop = True
 
-                                floatOutput = equationTop * (xIndex - posX)
+                                    # Reassigning the top slope so that it's angled more above the wall
+                                    equationTop = float((wallPosY + 2) / wallPosX)
 
-                                if math.floor((floatOutput % 1) * 10) / 10 >= .5 and math.floor(
-                                        (floatOutput % 1) * 10) / 10 != 0.0:
+                                    # Reassigning the xIndex to allow the equation to check the x tile we start on
+                                    xIndex = xIt
 
-                                    if yIndex >= 0:
+                                    if equationBottom < 1.0:
+                                        # Reassigning the yIndex to start above the wall, and not on top of it
+                                        yIndex = yIt - 1
+
+                                if checkTop:
+
+                                    # Top of Wall
+                                    while ((len(tilemap.tilemap) - 1) - yIndex) - posY < math.floor(
+                                            equationTop * (xIndex - posX)) and yIndex >= 0:
                                         pointsBlocked.append([xIndex, yIndex])
-                                        
-                                xIndex += 1
-                                yIndex = (len(tilemap.tilemap) - 1) - (
-                                        math.floor(equationBottom * (xIndex - posX)) + posY)
+                                        yIndex -= 1
 
-                            # BottomLine
-                            while xIndex < len(tilemap.tilemap[yIt]):
+                                    floatOutput = equationTop * (xIndex - posX)
 
-                                if yIndex < 0:
+                                    if math.floor((floatOutput % 1) * 10) / 10 >= .5 and math.floor(
+                                            (floatOutput % 1) * 10) / 10 != 0.0:
 
-                                    if yIt + abs(yIndex) >= len(tilemap.tilemap) - yIt:
-                                        xIndex += 1
-                                        yIndex = (len(tilemap.tilemap) - 1) - math.floor(
-                                            equationBottom * (xIndex - posX) + posY)
-                                        continue
+                                        if yIndex >= 0:
+                                            pointsBlocked.append([xIndex, yIndex])
 
-                                else:
+                                    xIndex += 1
+                                    yIndex = (len(tilemap.tilemap) - 1) - (
+                                            math.floor(equationBottom * (xIndex - posX)) + posY)
 
-                                    if yIt + (yIt - yIndex) >= len(tilemap.tilemap):
-                                        xIndex += 1
-                                        yIndex = (len(tilemap.tilemap) - 1) - math.floor(
-                                            equationBottom * (xIndex - posX) + posY)
-                                        continue
-
-                                # Bottom Line
-                                floatOutput = equationBottom * (xIndex - posX)
-
-                                if math.floor((floatOutput % 1) * 10) / 10 <= .5:
-
-                                    foundWall = False
-
-                                    for obj in tilemap.tilemap[yIt + (yIt - yIndex)][xIndex]:
-
-                                        if isinstance(obj, Wall):
-                                            foundWall = True
-
-                                    if not foundWall:
-                                        pointsBlocked.append([xIndex, yIndex])
-
-                                yIndex -= 1
-                                # Top Line
-
-                                while ((len(tilemap.tilemap) - 1) - yIndex) - posY < math.floor(
-                                        equationTop * (xIndex - posX)):
+                                # BottomLine
+                                while xIndex < len(tilemap.tilemap[yIt]):
 
                                     if yIndex < 0:
 
                                         if yIt + abs(yIndex) >= len(tilemap.tilemap) - yIt:
-                                            break
+                                            xIndex += 1
+                                            yIndex = (len(tilemap.tilemap) - 1) - math.floor(
+                                                equationBottom * (xIndex - posX) + posY)
+                                            continue
 
                                     else:
 
                                         if yIt + (yIt - yIndex) >= len(tilemap.tilemap):
-                                            break
+                                            xIndex += 1
+                                            yIndex = (len(tilemap.tilemap) - 1) - math.floor(
+                                                equationBottom * (xIndex - posX) + posY)
+                                            continue
 
-                                    pointsBlocked.append([xIndex, yIndex])
-                                    
+                                    # Bottom Line
+                                    floatOutput = equationBottom * (xIndex - posX)
+
+                                    if math.floor((floatOutput % 1) * 10) / 10 <= .5:
+
+                                        foundWall = False
+
+                                        for obj in tilemap.tilemap[yIt + (yIt - yIndex)][xIndex]:
+
+                                            if isinstance(obj, Wall):
+                                                foundWall = True
+
+                                        if not foundWall:
+                                            pointsBlocked.append([xIndex, yIndex])
+
                                     yIndex -= 1
+                                    # Top Line
 
-                                floatOutput = equationTop * (xIndex - posX)
+                                    while ((len(tilemap.tilemap) - 1) - yIndex) - posY < math.floor(
+                                            equationTop * (xIndex - posX)):
 
-                                if yIndex < 0:
+                                        if yIndex < 0:
 
-                                    if yIt + abs(yIndex) >= len(tilemap.tilemap) - yIt:
-                                        xIndex += 1
-                                        yIndex = (len(tilemap.tilemap) - 1) - math.floor(
-                                            equationBottom * (xIndex - posX) + posY)
-                                        continue
+                                            if yIt + abs(yIndex) >= len(tilemap.tilemap) - yIt:
+                                                break
 
-                                else:
+                                        else:
 
-                                    if yIt + (yIt - yIndex) >= len(tilemap.tilemap):
-                                        xIndex += 1
-                                        yIndex = (len(tilemap.tilemap) - 1) - math.floor(
-                                            equationBottom * (xIndex - posX) + posY)
-                                        continue
+                                            if yIt + (yIt - yIndex) >= len(tilemap.tilemap):
+                                                break
 
-                                if math.floor((floatOutput % 1) * 10) / 10 >= .5 and yIndex >= 0:
-                                    pointsBlocked.append([xIndex, yIndex])
-    
-                                xIndex += 1
-                                yIndex = (len(tilemap.tilemap) - 1) - math.floor(
-                                    equationBottom * (xIndex - posX) + posY)
+                                        pointsBlocked.append([xIndex, yIndex])
+
+                                        yIndex -= 1
+
+                                    floatOutput = equationTop * (xIndex - posX)
+
+                                    if yIndex < 0:
+
+                                        if yIt + abs(yIndex) >= len(tilemap.tilemap) - yIt:
+                                            xIndex += 1
+                                            yIndex = (len(tilemap.tilemap) - 1) - math.floor(
+                                                equationBottom * (xIndex - posX) + posY)
+                                            continue
+
+                                    else:
+
+                                        if yIt + (yIt - yIndex) >= len(tilemap.tilemap):
+                                            xIndex += 1
+                                            yIndex = (len(tilemap.tilemap) - 1) - math.floor(
+                                                equationBottom * (xIndex - posX) + posY)
+                                            continue
+
+                                    if math.floor((floatOutput % 1) * 10) / 10 >= .5 and yIndex >= 0:
+                                        pointsBlocked.append([xIndex, yIndex])
+
+                                    xIndex += 1
+                                    yIndex = (len(tilemap.tilemap) - 1) - math.floor(
+                                        equationBottom * (xIndex - posX) + posY)
+
+                            else:
+
+                                posY -= abs(wallPosY * 2)
+
+                                wallPosX = abs(wallPosX)
+                                wallPosY = abs(wallPosY)
+
+                                equationBottom = float(wallPosY / (wallPosX + 1))
+
+                                yIndex = yIt + 1
+                                xIndex = xIt
+
+                                while yIndex < tilemap.height:
+
+                                    tilemap.add(fog, xIndex, yIndex)
+
+                                    yIndex += 1
+
+                                yIndex = yIt
+                                xIndex = xIt + 1
+
+                                # Checking if the bottom slope is greater than 1.0
+
+                                if equationBottom >= 1.0:
+
+                                    # Reassigning the bottom slope so that it's angled slightly more above the wall
+                                    equationBottom = float((wallPosY + 1) / (wallPosX + 1))
+                                    # Reassigning the yIndex to match where the new slope starts
+                                    yIndex = yIt - 1
+
+                                # BottomLine
+                                while xIndex < tilemap.width and yIt + (yIt - yIndex) < tilemap.height:
+
+                                    # Bottom Line
+                                    floatOutput = equationBottom * (xIndex - posX)
+
+                                    if math.floor((floatOutput % 1) * 10) / 10 <= .5:
+
+                                        foundWall = False
+
+                                        for obj in tilemap.tilemap[yIt + (yIt - yIndex)][xIndex]:
+
+                                            if isinstance(obj, Wall):
+                                                foundWall = True
+
+                                        if not foundWall:
+                                            pointsBlocked.append([xIndex, yIndex])
+
+                                    yIndex -= 1
+                                    # Top Line
+
+                                    while yIndex >= yIt - (tilemap.height - yIt):
+
+                                        pointsBlocked.append([xIndex, yIndex])
+
+                                        yIndex -= 1
+
+                                    xIndex += 1
+                                    yIndex = (len(tilemap.tilemap) - 1) - math.floor(
+                                        equationBottom * (xIndex - posX) + posY)
+
+                                    if yIndex <= yIt - (tilemap.height - yIt):
+
+                                        if yIt + (yIt + abs(yIndex)) >= tilemap.height:
+
+                                            break
 
                             # Reflecting points to the other side of the wall
                             for point in pointsBlocked:
@@ -1024,6 +1348,8 @@ class EntityCharacter(BaseCharacter):
                                 if point[0] >= 0 and len(tilemap.tilemap) > yIt + (yIt - point[1]) >= 0:
 
                                     tilemap.add(fog, point[0], yIt + (yIt - point[1]))
+
+                        break
 
                 xIt += 1
 
@@ -1050,19 +1376,28 @@ class EntityCharacter(BaseCharacter):
 
         return True
 
-    def find_quickest_path(self, targObj):
-
-        initTime = time.time()
+    def find_quickest_path(self, targObj, blocked=False):
 
         selfTile = self.tilemap.find_object(self)
+        limit = 0
+        count = 0
 
-        startPosX, startPosY = targObj.x, targObj.y
+        if type(targObj) is list:
+
+            startPosX = targObj[0][0]
+            startPosY = targObj[0][1]
+            limit = targObj[1]
+
+        else:
+
+            startPosX = targObj.x
+            startPosY = targObj.y
 
         numberTileMap = []
 
-        # Number of tiles we can fill
-        numMoves = 0
+        surroundingTiles = {}
 
+        '''
         # Finding number of tiles we can fill
         for line in self.tilemap.tilemap:
 
@@ -1070,18 +1405,65 @@ class EntityCharacter(BaseCharacter):
 
                 for tile in col:
 
-                    if tile.can_traverse:
+                    if not tile.can_traverse:
 
-                        numMoves += 1
+                        foundObstacle = True
                         break
 
+                if foundObstacle:
+
+                    foundObstacle = False
+                    continue
+
+                numMoves += 1
+        '''
+
+        x, y = 0, 0
+
+        foundObstacle = False
+
         # Creating NumberTileMap
-        for line in range(self.tilemap.height):
+        if blocked:
 
-            numberTileMap.append([])
+            for y in range(self.tilemap.height):
 
-            for col in range(self.tilemap.width):
-                numberTileMap[line].append(-1)
+                numberTileMap.append([])
+
+                for x in range(self.tilemap.width):
+
+                    numberTileMap[y].append(-1)
+
+        else:
+
+            for line in range(self.tilemap.height):
+
+                numberTileMap.append([])
+
+                for col in range(self.tilemap.width):
+
+                    for tile in self.tilemap.get(x, y):
+
+                        if not tile.obj.can_traverse and not isinstance(tile.obj, Enemy):
+
+                            numberTileMap[line].append(-2)
+                            foundObstacle = True
+                            break
+
+                    if foundObstacle:
+
+                        foundObstacle = False
+                        x += 1
+                        continue
+
+                    numberTileMap[line].append(-1)
+
+                    x += 1
+
+                x = 0
+                y += 1
+
+        numberCoords = {}
+        numberCoords.clear()
 
         # Dictionary for the position of each number
         numberCoords = {0: [startPosX, startPosY]}
@@ -1097,6 +1479,1122 @@ class EntityCharacter(BaseCharacter):
         # Y position of the number we are cycling around
         currentY = numberCoords[0][1]
 
+        if not blocked:
+
+            # '''
+            # Printing tilemap------------------------------------------------------------------
+            print("\n" * 2)
+            for line in numberTileMap:
+
+                for col in line:
+
+                    if len(str(col)) == 1:
+                        print(str(col) + "   ", end="")
+
+                    elif len(str(col)) == 2:
+                        print(str(col) + "  ", end="")
+
+                    elif len(str(col)) == 3:
+                        print(str(col) + " ", end="")
+
+                print("\n")
+            # -----------------------------------------------------------------------------
+            # '''
+
+            # If Enemy is left of the target
+            if selfTile.x <= startPosX:
+
+                numberTileMap[currentY][currentX] = currentNum
+
+                while True:
+
+                    if currentX - 1 != selfTile.x or currentY != selfTile.y:
+
+                        # Check Left
+                        if self.tilemap._bound_check(currentX - 1, currentY) and numberTileMap[currentY][currentX - 1] == -1:
+                            numberTileMap[currentY][currentX - 1] = nextNum
+                            numberCoords[nextNum] = [currentX - 1, currentY]
+                            nextNum += 1
+
+                    else:
+
+                        break
+
+                    # Check Down Left
+                    if self.tilemap._bound_check(currentX - 1, currentY + 1) and numberTileMap[currentY + 1][
+                        currentX - 1] == -1:
+                        numberTileMap[currentY + 1][currentX - 1] = nextNum
+                        numberCoords[nextNum] = [currentX - 1, currentY + 1]
+                        nextNum += 1
+
+                    # Check Down
+                    if self.tilemap._bound_check(currentX, currentY + 1) and numberTileMap[currentY + 1][currentX] == -1:
+                        numberTileMap[currentY + 1][currentX] = nextNum
+                        numberCoords[nextNum] = [currentX, currentY + 1]
+                        nextNum += 1
+
+                    # Check Down Right
+                    if self.tilemap._bound_check(currentX + 1, currentY + 1) and numberTileMap[currentY + 1][
+                        currentX + 1] == -1:
+                        numberTileMap[currentY + 1][currentX + 1] = nextNum
+                        numberCoords[nextNum] = [currentX + 1, currentY + 1]
+                        nextNum += 1
+
+                    # Check Right
+                    if self.tilemap._bound_check(currentX + 1, currentY) and numberTileMap[currentY][currentX + 1] == -1:
+                        numberTileMap[currentY][currentX + 1] = nextNum
+                        numberCoords[nextNum] = [currentX + 1, currentY]
+                        nextNum += 1
+
+                    # Check Right Up
+                    if self.tilemap._bound_check(currentX + 1, currentY - 1) and numberTileMap[currentY - 1][
+                        currentX + 1] == -1:
+                        numberTileMap[currentY - 1][currentX + 1] = nextNum
+                        numberCoords[nextNum] = [currentX + 1, currentY - 1]
+                        nextNum += 1
+
+                    # Check Up
+                    if self.tilemap._bound_check(currentX, currentY - 1) and numberTileMap[currentY - 1][currentX] == -1:
+                        numberTileMap[currentY - 1][currentX] = nextNum
+                        numberCoords[nextNum] = [currentX, currentY - 1]
+                        nextNum += 1
+
+                    # Check Left Up
+                    if self.tilemap._bound_check(currentX - 1, currentY - 1) and numberTileMap[currentY - 1][
+                        currentX - 1] == -1:
+
+                        numberTileMap[currentY - 1][currentX - 1] = nextNum
+                        numberCoords[nextNum] = [currentX - 1, currentY - 1]
+                        nextNum += 1
+
+                    currentNum += 1
+                    currentX = numberCoords[currentNum][0]
+                    currentY = numberCoords[currentNum][1]
+
+                    if currentNum == nextNum - 1:
+
+                        break
+
+            # If Enemy is right of the target
+            elif selfTile.x >= startPosX:
+
+                numberTileMap[currentY][currentX] = currentNum
+
+                while True:
+
+                    if currentX + 1 != selfTile.x or currentY != selfTile.y:
+
+                        # Check Right
+                        if self.tilemap._bound_check(currentX + 1, currentY) and numberTileMap[currentY][currentX + 1] == -1:
+                            numberTileMap[currentY][currentX + 1] = nextNum
+                            numberCoords[nextNum] = [currentX + 1, currentY]
+                            nextNum += 1
+
+                    else:
+
+                        break
+
+                    # Check Right Up
+                    if self.tilemap._bound_check(currentX + 1, currentY - 1) and numberTileMap[currentY - 1][
+                        currentX + 1] == -1:
+                        numberTileMap[currentY - 1][currentX + 1] = nextNum
+                        numberCoords[nextNum] = [currentX + 1, currentY - 1]
+                        nextNum += 1
+
+                    # Check Up
+                    if self.tilemap._bound_check(currentX, currentY - 1) and numberTileMap[currentY - 1][currentX] == -1:
+                        numberTileMap[currentY - 1][currentX] = nextNum
+                        numberCoords[nextNum] = [currentX, currentY - 1]
+                        nextNum += 1
+
+                    # Check Left Up
+                    if self.tilemap._bound_check(currentX - 1, currentY - 1) and numberTileMap[currentY - 1][
+                        currentX - 1] == -1:
+                        numberTileMap[currentY - 1][currentX - 1] = nextNum
+                        numberCoords[nextNum] = [currentX - 1, currentY - 1]
+                        nextNum += 1
+
+                    # Check Left
+                    if self.tilemap._bound_check(currentX - 1, currentY) and numberTileMap[currentY][currentX - 1] == -1:
+                        numberTileMap[currentY][currentX - 1] = nextNum
+                        numberCoords[nextNum] = [currentX - 1, currentY]
+                        nextNum += 1
+
+                    # Check Down Left
+                    if self.tilemap._bound_check(currentX - 1, currentY + 1) and numberTileMap[currentY + 1][
+                        currentX - 1] == -1:
+                        numberTileMap[currentY + 1][currentX - 1] = nextNum
+                        numberCoords[nextNum] = [currentX - 1, currentY + 1]
+                        nextNum += 1
+
+                    # Check Down
+                    if self.tilemap._bound_check(currentX, currentY + 1) and numberTileMap[currentY + 1][currentX] == -1:
+                        numberTileMap[currentY + 1][currentX] = nextNum
+                        numberCoords[nextNum] = [currentX, currentY + 1]
+                        nextNum += 1
+
+                    # Check Down Right
+                    if self.tilemap._bound_check(currentX + 1, currentY + 1) and numberTileMap[currentY + 1][currentX + 1] == -1:
+                        numberTileMap[currentY + 1][currentX + 1] = nextNum
+                        numberCoords[nextNum] = [currentX + 1, currentY + 1]
+                        nextNum += 1
+
+                    currentNum += 1
+                    currentX = numberCoords[currentNum][0]
+                    currentY = numberCoords[currentNum][1]
+
+                    if currentNum == nextNum - 1:
+
+                        break
+
+        else:
+
+            # If Enemy is above target
+            if selfTile.y < startPosY and selfTile.x == startPosX:
+
+                numberTileMap[currentY][currentX] = currentNum
+
+                while True:
+
+                    # Check Up
+                    if self.check_tile(currentX, currentY - 1) and numberTileMap[currentY - 1][currentX] == -1:
+
+                        numberTileMap[currentY - 1][currentX] = nextNum
+                        numberCoords[nextNum] = [currentX, currentY - 1]
+                        nextNum += 1
+
+                        if self.check_tile(currentX, currentY - 1):
+
+                            count += 1
+
+                            if count == limit:
+
+                                break
+
+                    # Check Left Up
+                    if self.tilemap._bound_check(currentX - 1, currentY - 1) and numberTileMap[currentY - 1][currentX] == -1:
+
+                        numberTileMap[currentY - 1][currentX - 1] = nextNum
+                        numberCoords[nextNum] = [currentX - 1, currentY - 1]
+                        nextNum += 1
+
+                        if self.check_tile(currentX - 1, currentY - 1):
+
+                            count += 1
+
+                            if count == limit:
+
+                                break
+
+                    # Check Left
+                    if self.tilemap._bound_check(currentX - 1, currentY) and numberTileMap[currentY][currentX - 1] == -1:
+
+                        numberTileMap[currentY][currentX - 1] = nextNum
+                        numberCoords[nextNum] = [currentX - 1, currentY]
+                        nextNum += 1
+                        if self.check_tile(currentX - 1, currentY):
+
+                            count += 1
+
+                            if count == limit:
+
+                                break
+
+                    # Check Down Left
+                    if self.tilemap._bound_check(currentX - 1, currentY + 1) and numberTileMap[currentY + 1][currentX - 1] == -1:
+
+                        numberTileMap[currentY + 1][currentX - 1] = nextNum
+                        numberCoords[nextNum] = [currentX - 1, currentY + 1]
+                        nextNum += 1
+
+                        if self.check_tile(currentX - 1, currentY + 1):
+
+                            count += 1
+
+                            if count == limit:
+
+                                break
+
+                    # Check Down
+                    if self.tilemap._bound_check(currentX, currentY + 1) and numberTileMap[currentY + 1][currentX] == -1:
+
+                        numberTileMap[currentY + 1][currentX] = nextNum
+                        numberCoords[nextNum] = [currentX, currentY + 1]
+                        nextNum += 1
+
+                        if self.check_tile(currentX, currentY + 1):
+
+                            count += 1
+
+                            if count == limit:
+
+                                break
+
+                    # Check Down Right
+                    if self.tilemap._bound_check(currentX + 1, currentY + 1) and numberTileMap[currentY + 1][currentX + 1] == -1:
+
+                        numberTileMap[currentY + 1][currentX + 1] = nextNum
+                        numberCoords[nextNum] = [currentX + 1, currentY + 1]
+                        nextNum += 1
+
+                        if self.check_tile(currentX + 1, currentY + 1):
+
+                            count += 1
+
+                            if count == limit:
+
+                                break
+
+                    # Check Right
+                    if self.tilemap._bound_check(currentX + 1, currentY) and numberTileMap[currentY][currentX + 1] == -1:
+
+                        numberTileMap[currentY][currentX + 1] = nextNum
+                        numberCoords[nextNum] = [currentX + 1, currentY]
+                        nextNum += 1
+
+                        if self.check_tile(currentX + 1, currentY):
+
+                            count += 1
+
+                            if count == limit:
+
+                                break
+
+                    # Check Right Up
+                    if self.tilemap._bound_check(currentX + 1, currentY - 1) and numberTileMap[currentY - 1][currentX + 1] == -1:
+
+                        numberTileMap[currentY - 1][currentX + 1] = nextNum
+                        numberCoords[nextNum] = [currentX + 1, currentY - 1]
+                        nextNum += 1
+
+                        if self.check_tile(currentX + 1, currentY - 1):
+
+                            count += 1
+
+                            if count == limit:
+
+                                break
+
+                    currentNum += 1
+                    currentX = numberCoords[currentNum][0]
+                    currentY = numberCoords[currentNum][1]
+
+                surroundingTiles = self.find_quickest_path([numberCoords[nextNum - 1], 0], blocked=False)
+
+                if len(surroundingTiles) > 0:
+
+                    return surroundingTiles
+
+            # If Enemy is left above the target
+            elif selfTile.y < startPosY and selfTile.x < startPosX:
+
+                numberTileMap[currentY][currentX] = currentNum
+
+                while True:
+
+                    if currentX - 1 != selfTile.x or currentY - 1 != selfTile.y:
+
+                        # Check Left Up
+                        if self.tilemap._bound_check(currentX - 1, currentY - 1) and numberTileMap[currentY - 1][currentX - 1] == -1:
+
+                            numberTileMap[currentY - 1][currentX - 1] = nextNum
+                            numberCoords[nextNum] = [currentX - 1, currentY - 1]
+                            nextNum += 1
+
+                    else:
+
+                        break
+
+                    # Check Left
+                    if self.tilemap._bound_check(currentX - 1, currentY) and numberTileMap[currentY][currentX - 1] == -1:
+
+                        if currentY == selfTile.y and currentX - 1 == selfTile.x:
+
+                            break
+
+                        numberTileMap[currentY][currentX - 1] = nextNum
+                        numberCoords[nextNum] = [currentX - 1, currentY]
+                        # booleanTileMap[currentY][currentX - 1] = False
+                        nextNum += 1
+
+                    # Check Down Left
+                    if self.tilemap._bound_check(currentX - 1, currentY + 1) and numberTileMap[currentY + 1][currentX - 1] == -1:
+
+                        if currentY + 1 == selfTile.y and currentX - 1 == selfTile.x:
+
+                            break
+
+                        numberTileMap[currentY + 1][currentX - 1] = nextNum
+                        numberCoords[nextNum] = [currentX - 1, currentY + 1]
+                        # booleanTileMap[currentY + 1][currentX - 1] = False
+                        nextNum += 1
+
+                    # Check Down
+                    if self.tilemap._bound_check(currentX, currentY + 1) and numberTileMap[currentY + 1][currentX] == -1:
+
+                        if currentY + 1 == selfTile.y and currentX == selfTile.x:
+                            break
+
+                        numberTileMap[currentY + 1][currentX] = nextNum
+                        numberCoords[nextNum] = [currentX, currentY + 1]
+                        # booleanTileMap[currentY + 1][currentX] = False
+                        nextNum += 1
+
+                    # Check Down Right
+                    if self.tilemap._bound_check(currentX + 1, currentY + 1) and numberTileMap[currentY + 1][currentX + 1] == -1:
+
+                        if currentY + 1 == selfTile.y and currentX + 1 == selfTile.x:
+
+                            break
+
+                        numberTileMap[currentY + 1][currentX + 1] = nextNum
+                        numberCoords[nextNum] = [currentX + 1, currentY + 1]
+                        # booleanTileMap[currentY + 1][currentX + 1] = False
+                        nextNum += 1
+
+                    # Check Right
+                    if self.tilemap._bound_check(currentX + 1, currentY) and numberTileMap[currentY][currentX + 1] == -1:
+
+                        if currentY == selfTile.y and currentX + 1 == selfTile.x:
+                            break
+
+                        numberTileMap[currentY][currentX + 1] = nextNum
+                        numberCoords[nextNum] = [currentX + 1, currentY]
+                        # booleanTileMap[currentY][currentX + 1] = False
+                        nextNum += 1
+
+                    # Check Right Up
+                    if self.tilemap._bound_check(currentX + 1, currentY - 1) and numberTileMap[currentY - 1][currentX + 1] == -1:
+
+                        if currentY - 1 == selfTile.y and currentX + 1 == selfTile.x:
+                            break
+
+                        numberTileMap[currentY - 1][currentX + 1] = nextNum
+                        numberCoords[nextNum] = [currentX + 1, currentY - 1]
+                        # booleanTileMap[currentY - 1][currentX + 1] = False
+                        nextNum += 1
+
+                    # Check Up
+                    if self.tilemap._bound_check(currentX, currentY - 1) and numberTileMap[currentY - 1][currentX] == -1:
+
+                        if currentY - 1 == selfTile.y and currentX == selfTile.x:
+                            break
+
+                        numberTileMap[currentY - 1][currentX] = nextNum
+                        numberCoords[nextNum] = [currentX, currentY - 1]
+                        # booleanTileMap[currentY - 1][currentX] = False
+                        nextNum += 1
+
+                    currentNum += 1
+                    currentX = numberCoords[currentNum][0]
+                    currentY = numberCoords[currentNum][1]
+
+                    if currentNum == nextNum - 1:
+
+                        break
+
+            # If Enemy is left of the target
+            elif selfTile.y == startPosY and selfTile.x < startPosX:
+
+                numberTileMap[currentY][currentX] = currentNum
+
+                while True:
+
+                    if currentX - 1 != selfTile.x or currentY != selfTile.y:
+
+                        # Check Left
+                        if self.tilemap._bound_check(currentX - 1, currentY) and numberTileMap[currentY][currentX - 1] == -1:
+
+                            numberTileMap[currentY][currentX - 1] = nextNum
+                            numberCoords[nextNum] = [currentX - 1, currentY]
+                            nextNum += 1
+
+                    else:
+
+                        break
+
+                    # Check Down Left
+                    if self.tilemap._bound_check(currentX - 1, currentY + 1) and numberTileMap[currentY + 1][currentX - 1] == 1:
+
+                        numberTileMap[currentY + 1][currentX - 1] = nextNum
+                        numberCoords[nextNum] = [currentX - 1, currentY + 1]
+                        nextNum += 1
+
+                    # Check Down
+                    if self.tilemap._bound_check(currentX, currentY + 1) and numberTileMap[currentY + 1][currentX] == -1:
+
+                        numberTileMap[currentY + 1][currentX] = nextNum
+                        numberCoords[nextNum] = [currentX, currentY + 1]
+                        nextNum += 1
+
+                    # Check Down Right
+                    if self.tilemap._bound_check(currentX + 1, currentY + 1) and numberTileMap[currentY + 1][currentX + 1] == -1:
+
+                        numberTileMap[currentY + 1][currentX + 1] = nextNum
+                        numberCoords[nextNum] = [currentX + 1, currentY + 1]
+                        nextNum += 1
+
+                    # Check Right
+                    if self.tilemap._bound_check(currentX + 1, currentY) and numberTileMap[currentY][currentX + 1] == -1:
+
+                        numberTileMap[currentY][currentX + 1] = nextNum
+                        numberCoords[nextNum] = [currentX + 1, currentY]
+                        nextNum += 1
+
+                    # Check Right Up
+                    if self.tilemap._bound_check(currentX + 1, currentY - 1) and numberTileMap[currentY - 1][currentX + 1] == -1:
+
+                        numberTileMap[currentY - 1][currentX + 1] = nextNum
+                        numberCoords[nextNum] = [currentX + 1, currentY - 1]
+                        nextNum += 1
+
+                    # Check Up
+                    if self.tilemap._bound_check(currentX, currentY - 1) and numberTileMap[currentY - 1][currentX] == -1:
+
+                        numberTileMap[currentY - 1][currentX] = nextNum
+                        numberCoords[nextNum] = [currentX, currentY - 1]
+                        nextNum += 1
+
+                    # Check Left Up
+                    if self.tilemap._bound_check(currentX - 1, currentY - 1) and numberTileMap[currentY - 1][currentX - 1] == -1:
+
+                        numberTileMap[currentY - 1][currentX - 1] = nextNum
+                        numberCoords[nextNum] = [currentX - 1, currentY - 1]
+                        nextNum += 1
+
+                    currentNum += 1
+                    currentX = numberCoords[currentNum][0]
+                    currentY = numberCoords[currentNum][1]
+
+                    if currentNum == nextNum - 1:
+
+                        break
+
+            # If Enemy is left down of the target
+            elif selfTile.y > startPosY and selfTile.x < startPosX:
+
+                numberTileMap[currentY][currentX] = currentNum
+
+                while True:
+
+                    if currentX - 1 != selfTile.x or currentY + 1 != selfTile.y:
+
+                        # Check Down Left
+                        if self.tilemap._bound_check(currentX - 1, currentY + 1) and numberTileMap[currentY + 1][currentX - 1] == -1:
+
+                            numberTileMap[currentY + 1][currentX - 1] = nextNum
+                            numberCoords[nextNum] = [currentX - 1, currentY + 1]
+                            nextNum += 1
+
+                    else:
+
+                        break
+
+                    # Check Down
+                    if self.tilemap._bound_check(currentX, currentY + 1) and numberTileMap[currentY + 1][currentX] == -1:
+
+                        numberTileMap[currentY + 1][currentX] = nextNum
+                        numberCoords[nextNum] = [currentX, currentY + 1]
+                        nextNum += 1
+
+                    # Check Down Right
+                    if self.tilemap._bound_check(currentX + 1, currentY + 1) and numberTileMap[currentY + 1][currentX + 1] == -1:
+
+                        numberTileMap[currentY + 1][currentX + 1] = nextNum
+                        numberCoords[nextNum] = [currentX + 1, currentY + 1]
+                        nextNum += 1
+
+                    # Check Right
+                    if self.tilemap._bound_check(currentX + 1, currentY) and numberTileMap[currentY][currentX + 1] == -1:
+
+                        numberTileMap[currentY][currentX + 1] = nextNum
+                        numberCoords[nextNum] = [currentX + 1, currentY]
+                        nextNum += 1
+
+                    # Check Right Up
+                    if self.tilemap._bound_check(currentX + 1, currentY - 1) and numberTileMap[currentY - 1][currentX + 1] == -1:
+
+                        numberTileMap[currentY - 1][currentX + 1] = nextNum
+                        numberCoords[nextNum] = [currentX + 1, currentY - 1]
+                        nextNum += 1
+
+                    # Check Up
+                    if self.tilemap._bound_check(currentX, currentY - 1) and numberTileMap[currentY - 1][currentX] == -1:
+
+                        numberTileMap[currentY - 1][currentX] = nextNum
+                        numberCoords[nextNum] = [currentX, currentY - 1]
+                        nextNum += 1
+
+                    # Check Left Up
+                    if self.tilemap._bound_check(currentX - 1, currentY - 1) and numberTileMap[currentY - 1][currentX - 1] == -1:
+
+                        numberTileMap[currentY - 1][currentX - 1] = nextNum
+                        numberCoords[nextNum] = [currentX - 1, currentY - 1]
+                        nextNum += 1
+
+                    # Check Left
+                    if self.tilemap._bound_check(currentX - 1, currentY) and numberTileMap[currentY][currentX - 1] == -1:
+                        numberTileMap[currentY][currentX - 1] = nextNum
+                        numberCoords[nextNum] = [currentX - 1, currentY]
+                        nextNum += 1
+
+                    currentNum += 1
+                    currentX = numberCoords[currentNum][0]
+                    currentY = numberCoords[currentNum][1]
+
+                    if currentNum == nextNum - 1:
+
+                        break
+
+            # If Enemy is down of the target
+            elif selfTile.y > startPosY and selfTile.x == startPosX:
+
+                numberTileMap[currentY][currentX] = currentNum
+
+                while True:
+
+                    if currentX != selfTile.x or currentY + 1 != selfTile.y:
+
+                        # Check Down
+                        if self.tilemap._bound_check(currentX, currentY + 1) and numberTileMap[currentY + 1][currentX] == -1:
+
+                            numberTileMap[currentY + 1][currentX] = nextNum
+                            numberCoords[nextNum] = [currentX, currentY + 1]
+                            nextNum += 1
+
+                    else:
+
+                        break
+
+                    # Check Down Right
+                    if self.tilemap._bound_check(currentX + 1, currentY + 1) and numberTileMap[currentY + 1][currentX + 1] == -1:
+
+                        numberTileMap[currentY + 1][currentX + 1] = nextNum
+                        numberCoords[nextNum] = [currentX + 1, currentY + 1]
+                        nextNum += 1
+
+                    # Check Right
+                    if self.tilemap._bound_check(currentX + 1, currentY) and numberTileMap[currentY][currentX + 1] == -1:
+
+                        numberTileMap[currentY][currentX + 1] = nextNum
+                        numberCoords[nextNum] = [currentX + 1, currentY]
+                        nextNum += 1
+
+                    # Check Right Up
+                    if self.tilemap._bound_check(currentX + 1, currentY - 1) and numberTileMap[currentY - 1][currentX + 1] == -1:
+
+                        numberTileMap[currentY - 1][currentX + 1] = nextNum
+                        numberCoords[nextNum] = [currentX + 1, currentY - 1]
+                        nextNum += 1
+
+                    # Check Up
+                    if self.tilemap._bound_check(currentX, currentY - 1) and numberTileMap[currentY - 1][currentX] == -1:
+
+                        numberTileMap[currentY - 1][currentX] = nextNum
+                        numberCoords[nextNum] = [currentX, currentY - 1]
+                        nextNum += 1
+
+                    # Check Left Up
+                    if self.tilemap._bound_check(currentX - 1, currentY - 1) and numberTileMap[currentY - 1][currentX - 1] == -1:
+
+                        numberTileMap[currentY - 1][currentX - 1] = nextNum
+                        numberCoords[nextNum] = [currentX - 1, currentY - 1]
+                        nextNum += 1
+
+                    # Check Left
+                    if self.tilemap._bound_check(currentX - 1, currentY) and numberTileMap[currentY][currentX - 1] == -1:
+                        numberTileMap[currentY][currentX - 1] = nextNum
+                        numberCoords[nextNum] = [currentX - 1, currentY]
+                        nextNum += 1
+
+                    # Check Down Left
+                    if self.tilemap._bound_check(currentX - 1, currentY + 1) and numberTileMap[currentY + 1][currentX - 1] == -1:
+                        numberTileMap[currentY + 1][currentX - 1] = nextNum
+                        numberCoords[nextNum] = [currentX - 1, currentY + 1]
+                        nextNum += 1
+
+                    currentNum += 1
+                    currentX = numberCoords[currentNum][0]
+                    currentY = numberCoords[currentNum][1]
+
+                    if currentNum == nextNum - 1:
+
+                        break
+
+            # If Enemy is right down of the target
+            elif selfTile.y > startPosY and selfTile.x > startPosX:
+
+                numberTileMap[currentY][currentX] = currentNum
+
+                while True:
+
+                    # Check Down Right
+                    if self.tilemap._bound_check(currentX + 1, currentY + 1) and numberTileMap[currentY + 1][currentX + 1] == -1:
+
+                        numberTileMap[currentY + 1][currentX + 1] = nextNum
+                        numberCoords[nextNum] = [currentX + 1, currentY + 1]
+                        nextNum += 1
+
+                        if self.check_tile(currentX + 1, currentY + 1):
+
+                            count += 1
+
+                            if count == limit:
+
+                                break
+
+                    # Check Right
+                    if self.tilemap._bound_check(currentX + 1, currentY) and numberTileMap[currentY][currentX + 1] == -1:
+
+                        numberTileMap[currentY][currentX + 1] = nextNum
+                        numberCoords[nextNum] = [currentX + 1, currentY]
+                        nextNum += 1
+                        if self.check_tile(currentX + 1, currentY):
+                            count += 1
+
+                            if count == limit:
+
+                                break
+
+                    # Check Right Up
+                    if self.tilemap._bound_check(currentX + 1, currentY - 1) and numberTileMap[currentY - 1][currentX + 1] == -1:
+
+                        numberTileMap[currentY - 1][currentX + 1] = nextNum
+                        numberCoords[nextNum] = [currentX + 1, currentY - 1]
+                        nextNum += 1
+                        if self.check_tile(currentX + 1, currentY - 1):
+
+                            count += 1
+                            if count == limit:
+                                break
+
+                    # Check Up
+                    if self.tilemap._bound_check(currentX, currentY - 1) and numberTileMap[currentY - 1][currentX] == -1:
+
+                        numberTileMap[currentY - 1][currentX] = nextNum
+                        numberCoords[nextNum] = [currentX, currentY - 1]
+                        nextNum += 1
+                        if self.check_tile(currentX, currentY - 1):
+                            count += 1
+                            if count == limit:
+                                break
+
+                    # Check Left Up
+                    if self.tilemap._bound_check(currentX - 1, currentY - 1) and numberTileMap[currentY - 1][currentX - 1] == -1:
+
+                        numberTileMap[currentY - 1][currentX - 1] = nextNum
+                        numberCoords[nextNum] = [currentX - 1, currentY - 1]
+                        nextNum += 1
+                        if self.check_tile(currentX - 1, currentY - 1):
+                            count += 1
+                            if count == limit:
+                                break
+
+                    # Check Left
+                    if self.tilemap._bound_check(currentX - 1, currentY) and numberTileMap[currentY][currentX - 1] == -1:
+
+                        numberTileMap[currentY][currentX - 1] = nextNum
+                        numberCoords[nextNum] = [currentX - 1, currentY]
+                        nextNum += 1
+                        if self.check_tile(currentX - 1, currentY):
+
+                            count += 1
+                            if count == limit:
+                                break
+
+                    # Check Down Left
+                    if self.tilemap._bound_check(currentX - 1, currentY + 1) and numberTileMap[currentY + 1][currentX - 1] == -1:
+
+                        numberTileMap[currentY + 1][currentX - 1] = nextNum
+                        numberCoords[nextNum] = [currentX - 1, currentY + 1]
+                        nextNum += 1
+                        if self.check_tile(currentX - 1, currentY + 1):
+                            count += 1
+                            if count == limit:
+                                break
+
+                    # Check Down
+                    if self.tilemap._bound_check(currentX, currentY + 1) and numberTileMap[currentY + 1][currentX] == -1:
+
+                        numberTileMap[currentY + 1][currentX] = nextNum
+                        numberCoords[nextNum] = [currentX, currentY + 1]
+                        nextNum += 1
+                        if self.check_tile(currentX, currentY + 1):
+                            count += 1
+                            if count == limit:
+                                break
+
+                    currentNum += 1
+                    currentX = numberCoords[currentNum][0]
+                    currentY = numberCoords[currentNum][1]
+
+                surroundingTiles = self.find_quickest_path([numberCoords[nextNum - 1], 0], blocked=False)
+
+                if len(surroundingTiles) > 0:
+
+                    return surroundingTiles
+
+            # If Enemy is right of the target
+            elif selfTile.y == startPosY and selfTile.x > startPosX:
+
+                numberTileMap[currentY][currentX] = currentNum
+
+                while True:
+
+                    # Check Right
+                    if self.tilemap._bound_check(currentX + 1, currentY) and numberTileMap[currentY][currentX + 1] == -1:
+
+                        numberTileMap[currentY][currentX + 1] = nextNum
+                        numberCoords[nextNum] = [currentX + 1, currentY]
+                        nextNum += 1
+
+                        if self.check_tile(currentX + 1, currentY):
+
+                            count += 1
+
+                            if count == limit:
+
+                                break
+
+                    # Check Right Up
+                    if self.tilemap._bound_check(currentX + 1, currentY - 1) and numberTileMap[currentY - 1][currentX + 1] == -1:
+
+                        numberTileMap[currentY - 1][currentX + 1] = nextNum
+                        numberCoords[nextNum] = [currentX + 1, currentY - 1]
+                        nextNum += 1
+
+                        if self.check_tile(currentX + 1, currentY - 1):
+
+                            count += 1
+
+                            if count == limit:
+
+                                break
+
+                    # Check Up
+                    if self.tilemap._bound_check(currentX, currentY - 1) and numberTileMap[currentY - 1][currentX] == -1:
+
+                        numberTileMap[currentY - 1][currentX] = nextNum
+                        numberCoords[nextNum] = [currentX, currentY - 1]
+                        nextNum += 1
+
+                        if self.check_tile(currentX, currentY - 1):
+
+                            count += 1
+
+                            if count == limit:
+
+                                break
+
+                    # Check Left Up
+                    if self.tilemap._bound_check(currentX - 1, currentY - 1) and numberTileMap[currentY - 1][currentX - 1] == -1:
+
+                        numberTileMap[currentY - 1][currentX - 1] = nextNum
+                        numberCoords[nextNum] = [currentX - 1, currentY - 1]
+                        nextNum += 1
+
+                        if self.check_tile(currentX - 1, currentY - 1):
+
+                            count += 1
+
+                            if count == limit:
+
+                                break
+
+                    # Check Left
+                    if self.tilemap._bound_check(currentX - 1, currentY) and numberTileMap[currentY][currentX - 1] == -1:
+
+                        numberTileMap[currentY][currentX - 1] = nextNum
+                        numberCoords[nextNum] = [currentX - 1, currentY]
+                        nextNum += 1
+
+                        if self.check_tile(currentX - 1, currentY):
+
+                            count += 1
+
+                            if count == limit:
+
+                                break
+
+                    # Check Down Left
+                    if self.tilemap._bound_check(currentX - 1, currentY + 1) and numberTileMap[currentY + 1][currentX - 1] == -1:
+
+                        numberTileMap[currentY + 1][currentX - 1] = nextNum
+                        numberCoords[nextNum] = [currentX - 1, currentY + 1]
+                        nextNum += 1
+
+                        if self.check_tile(currentX - 1, currentY + 1):
+
+                            count += 1
+
+                            if count == limit:
+
+                                break
+
+                    # Check Down
+                    if self.tilemap._bound_check(currentX, currentY + 1) and numberTileMap[currentY + 1][currentX] == -1:
+
+                        numberTileMap[currentY + 1][currentX] = nextNum
+                        numberCoords[nextNum] = [currentX, currentY + 1]
+                        nextNum += 1
+
+                        if self.check_tile(currentX, currentY + 1):
+
+                            count += 1
+
+                            if count == limit:
+
+                                break
+
+                    # Check Down Right
+                    if self.tilemap._bound_check(currentX + 1, currentY + 1) and numberTileMap[currentY + 1][currentX + 1] == -1:
+
+                        numberTileMap[currentY + 1][currentX + 1] = nextNum
+                        numberCoords[nextNum] = [currentX + 1, currentY + 1]
+                        nextNum += 1
+
+                        if self.check_tile(currentX + 1, currentY + 1):
+
+                            count += 1
+
+                            if count == limit:
+
+                                break
+
+                    currentNum += 1
+                    currentX = numberCoords[currentNum][0]
+                    currentY = numberCoords[currentNum][1]
+
+                # '''
+                x, y = 0, 0
+
+                # Printing tilemap------------------------------------------------------------------
+                print("\n" * 2)
+                for line in numberTileMap:
+
+                    for col in line:
+
+                        if isinstance(self.tilemap.get(x, y)[0].obj, Player):
+
+                            print("C   ", end="")
+                            foundPlayer = True
+
+                        elif isinstance(self.tilemap.get(x, y)[0].obj, Enemy):
+
+                            print("E   ", end="")
+
+                        else:
+
+                            if len(str(col)) == 1:
+                                print(str(col) + "   ", end="")
+
+                            elif len(str(col)) == 2:
+                                print(str(col) + "  ", end="")
+
+                            elif len(str(col)) == 3:
+                                print(str(col) + " ", end="")
+
+                        x += 1
+
+                    x = 0
+                    y += 1
+
+                    print("\n")
+                # -----------------------------------------------------------------------------
+                # '''
+
+                surroundingTiles = self.find_quickest_path([numberCoords[nextNum - 1], 0], blocked=False)
+
+                '''
+                # Printing tilemap------------------------------------------------------------------
+                print("\n" * 2)
+                for line in numberTileMap:
+
+                    for col in line:
+
+                        if len(str(col)) == 1:
+                            print(str(col) + "   ", end="")
+
+                        elif len(str(col)) == 2:
+                            print(str(col) + "  ", end="")
+
+                        elif len(str(col)) == 3:
+                            print(str(col) + " ", end="")
+
+                    print("\n")
+                # -----------------------------------------------------------------------------
+                # '''
+
+                if len(surroundingTiles) > 0:
+
+                    print(surroundingTiles)
+                    return surroundingTiles
+
+            # If Enemy is right up of the target
+            elif selfTile.y < startPosY and selfTile.x > startPosX:
+
+                numberTileMap[currentY][currentX] = currentNum
+
+                while True:
+
+                    if currentX + 1 != selfTile.x or currentY - 1 != selfTile.y:
+
+                        # Check Right Up
+                        if self.tilemap._bound_check(currentX + 1, currentY - 1) and numberTileMap[currentY - 1][currentX + 1] == -1:
+
+                            numberTileMap[currentY - 1][currentX + 1] = nextNum
+                            numberCoords[nextNum] = [currentX + 1, currentY - 1]
+                            nextNum += 1
+
+                    else:
+
+                        break
+
+                    # Check Up
+                    if self.tilemap._bound_check(currentX, currentY - 1) and numberTileMap[currentY - 1][currentX] == -1:
+
+                        numberTileMap[currentY - 1][currentX] = nextNum
+                        numberCoords[nextNum] = [currentX, currentY - 1]
+                        nextNum += 1
+
+                    # Check Left Up
+                    if self.tilemap._bound_check(currentX - 1, currentY - 1) and numberTileMap[currentY - 1][currentX - 1] == -1:
+
+                        numberTileMap[currentY - 1][currentX - 1] = nextNum
+                        numberCoords[nextNum] = [currentX - 1, currentY - 1]
+                        nextNum += 1
+
+                    # Check Left
+                    if self.tilemap._bound_check(currentX - 1, currentY) and numberTileMap[currentY][currentX - 1] == -1:
+                        numberTileMap[currentY][currentX - 1] = nextNum
+                        numberCoords[nextNum] = [currentX - 1, currentY]
+                        nextNum += 1
+
+                    # Check Down Left
+                    if self.tilemap._bound_check(currentX - 1, currentY + 1) and numberTileMap[currentY + 1][currentX - 1] == -1:
+                        numberTileMap[currentY + 1][currentX - 1] = nextNum
+                        numberCoords[nextNum] = [currentX - 1, currentY + 1]
+                        nextNum += 1
+
+                    # Check Down
+                    if self.tilemap._bound_check(currentX, currentY + 1) and numberTileMap[currentY + 1][currentX] == -1:
+
+                        numberTileMap[currentY + 1][currentX] = nextNum
+                        numberCoords[nextNum] = [currentX, currentY + 1]
+                        nextNum += 1
+
+                    # Check Down Right
+                    if self.tilemap._bound_check(currentX + 1, currentY + 1) and numberTileMap[currentY + 1][currentX + 1] == -1:
+
+                        numberTileMap[currentY + 1][currentX + 1] = nextNum
+                        numberCoords[nextNum] = [currentX + 1, currentY + 1]
+                        nextNum += 1
+
+                    # Check Right
+                    if self.tilemap._bound_check(currentX + 1, currentY) and numberTileMap[currentY][currentX + 1] == -1:
+
+                        numberTileMap[currentY][currentX + 1] = nextNum
+                        numberCoords[nextNum] = [currentX + 1, currentY]
+                        nextNum += 1
+
+                    currentNum += 1
+                    currentX = numberCoords[currentNum][0]
+                    currentY = numberCoords[currentNum][1]
+
+                    if currentNum == nextNum - 1:
+
+                        break
+
+        posX = selfTile.x
+        posY = selfTile.y
+
+        startX = posX - 1 if posX - 1 >= 0 else 0
+        endX = posX + 1 if posX + 1 < self.tilemap.width else self.tilemap.width - 1
+
+        startY = posY - 1 if posY - 1 >= 0 else 0
+        endY = posY + 1 if posY + 1 < self.tilemap.height else self.tilemap.height - 1
+
+        xIndex = startX
+        yIndex = startY
+
+        while yIndex <= endY:
+
+            while xIndex <= endX:
+
+                if yIndex != posY or xIndex != posX:
+
+                    if numberTileMap[yIndex][xIndex] >= 0:
+
+                        surroundingTiles[numberTileMap[yIndex][xIndex]] = [xIndex, yIndex]
+
+                xIndex += 1
+
+            xIndex = startX
+            yIndex += 1
+
+        '''
+        x, y = 0, 0
+ 
+        # Printing tilemap------------------------------------------------------------------
+        print("\n" * 2)
+        for line in numberTileMap:
+
+            for col in line:
+
+                if isinstance(self.tilemap.get(x, y)[0].obj, Player):
+
+                    print("C   ", end="")
+                    foundPlayer = True
+
+                elif isinstance(self.tilemap.get(x, y)[0].obj, Enemy):
+
+                    print("E   ", end="")
+
+                else:
+
+                    if len(str(col)) == 1:
+                        print(str(col) + "   ", end="")
+
+                    elif len(str(col)) == 2:
+                        print(str(col) + "  ", end="")
+
+                    elif len(str(col)) == 3:
+                        print(str(col) + " ", end="")
+
+                x += 1
+
+            x = 0
+            y += 1
+
+            print("\n")
+        # -----------------------------------------------------------------------------
+        # '''
+
+        '''
+        # Printing tilemap------------------------------------------------------------------
+        print("\n" * 2)
+        for line in numberTileMap:
+
+            for col in line:
+
+                if len(str(col)) == 1:
+                    print(str(col) + "   ", end="")
+
+                elif len(str(col)) == 2:
+                    print(str(col) + "  ", end="")
+
+                elif len(str(col)) == 3:
+                    print(str(col) + " ", end="")
+
+            print("\n")
+        # -----------------------------------------------------------------------------
+        # '''
+
+        if len(surroundingTiles) == 0:
+
+            surroundingTiles = self.find_quickest_path([numberCoords[1], currentNum], blocked=True)
+
+        '''
         # If Enemy is above target
         if selfTile.y < startPosY and selfTile.x == startPosX:
 
@@ -1116,49 +2614,49 @@ class EntityCharacter(BaseCharacter):
                     break
 
                 # Check Left Up
-                if self.check_tile(currentX - 1, currentY - 1) and numberTileMap[currentY - 1][currentX] == -1:
+                if self.tilemap._bound_check(currentX - 1, currentY - 1) and numberTileMap[currentY - 1][currentX] == -1:
 
                     numberTileMap[currentY - 1][currentX - 1] = nextNum
                     numberCoords[nextNum] = [currentX - 1, currentY - 1]
                     nextNum += 1
 
                 # Check Left
-                if self.check_tile(currentX - 1, currentY) and numberTileMap[currentY][currentX - 1] == -1:
+                if self.tilemap._bound_check(currentX - 1, currentY) and numberTileMap[currentY][currentX - 1] == -1:
 
                     numberTileMap[currentY][currentX - 1] = nextNum
                     numberCoords[nextNum] = [currentX - 1, currentY]
                     nextNum += 1
 
                 # Check Down Left
-                if self.check_tile(currentX - 1, currentY + 1) and numberTileMap[currentY + 1][currentX - 1] == -1:
+                if self.tilemap._bound_check(currentX - 1, currentY + 1) and numberTileMap[currentY + 1][currentX - 1] == -1:
 
                     numberTileMap[currentY + 1][currentX - 1] = nextNum
                     numberCoords[nextNum] = [currentX - 1, currentY + 1]
                     nextNum += 1
 
                 # Check Down
-                if self.check_tile(currentX, currentY + 1) and numberTileMap[currentY + 1][currentX] == -1:
+                if self.tilemap._bound_check(currentX, currentY + 1) and numberTileMap[currentY + 1][currentX] == -1:
 
                     numberTileMap[currentY + 1][currentX] = nextNum
                     numberCoords[nextNum] = [currentX, currentY + 1]
                     nextNum += 1
 
                 # Check Down Right
-                if self.check_tile(currentX + 1, currentY + 1) and numberTileMap[currentY + 1][currentX + 1] == -1:
+                if self.tilemap._bound_check(currentX + 1, currentY + 1) and numberTileMap[currentY + 1][currentX + 1] == -1:
 
                     numberTileMap[currentY + 1][currentX + 1] = nextNum
                     numberCoords[nextNum] = [currentX + 1, currentY + 1]
                     nextNum += 1
 
                 # Check Right
-                if self.check_tile(currentX + 1, currentY) and numberTileMap[currentY][currentX + 1] == -1:
+                if self.tilemap._bound_check(currentX + 1, currentY) and numberTileMap[currentY][currentX + 1] == -1:
 
                     numberTileMap[currentY][currentX + 1] = nextNum
                     numberCoords[nextNum] = [currentX + 1, currentY]
                     nextNum += 1
 
                 # Check Right Up
-                if self.check_tile(currentX + 1, currentY - 1) and numberTileMap[currentY - 1][currentX + 1] == -1:
+                if self.tilemap._bound_check(currentX + 1, currentY - 1) and numberTileMap[currentY - 1][currentX + 1] == -1:
 
                     numberTileMap[currentY - 1][currentX + 1] = nextNum
                     numberCoords[nextNum] = [currentX + 1, currentY - 1]
@@ -1178,7 +2676,7 @@ class EntityCharacter(BaseCharacter):
                 if currentX - 1 != selfTile.x or currentY - 1 != selfTile.y:
 
                     # Check Left Up
-                    if self.check_tile(currentX - 1, currentY - 1) and numberTileMap[currentY - 1][currentX - 1] == -1:
+                    if self.tilemap._bound_check(currentX - 1, currentY - 1) and numberTileMap[currentY - 1][currentX - 1] == -1:
 
                         numberTileMap[currentY - 1][currentX - 1] = nextNum
                         numberCoords[nextNum] = [currentX - 1, currentY - 1]
@@ -1189,7 +2687,7 @@ class EntityCharacter(BaseCharacter):
                     break
 
                 # Check Left
-                if self.check_tile(currentX - 1, currentY) and numberTileMap[currentY][currentX - 1] == -1:
+                if self.tilemap._bound_check(currentX - 1, currentY) and numberTileMap[currentY][currentX - 1] == -1:
 
                     if currentY == selfTile.y and currentX - 1 == selfTile.x:
 
@@ -1201,7 +2699,7 @@ class EntityCharacter(BaseCharacter):
                     nextNum += 1
 
                 # Check Down Left
-                if self.check_tile(currentX - 1, currentY + 1) and numberTileMap[currentY + 1][currentX - 1] == -1:
+                if self.tilemap._bound_check(currentX - 1, currentY + 1) and numberTileMap[currentY + 1][currentX - 1] == -1:
 
                     if currentY + 1 == selfTile.y and currentX - 1 == selfTile.x:
 
@@ -1213,7 +2711,7 @@ class EntityCharacter(BaseCharacter):
                     nextNum += 1
 
                 # Check Down
-                if self.check_tile(currentX, currentY + 1) and numberTileMap[currentY + 1][currentX] == -1:
+                if self.tilemap._bound_check(currentX, currentY + 1) and numberTileMap[currentY + 1][currentX] == -1:
 
                     if currentY + 1 == selfTile.y and currentX == selfTile.x:
                         break
@@ -1224,7 +2722,7 @@ class EntityCharacter(BaseCharacter):
                     nextNum += 1
 
                 # Check Down Right
-                if self.check_tile(currentX + 1, currentY + 1) and numberTileMap[currentY + 1][currentX + 1] == -1:
+                if self.tilemap._bound_check(currentX + 1, currentY + 1) and numberTileMap[currentY + 1][currentX + 1] == -1:
 
                     if currentY + 1 == selfTile.y and currentX + 1 == selfTile.x:
 
@@ -1236,7 +2734,7 @@ class EntityCharacter(BaseCharacter):
                     nextNum += 1
 
                 # Check Right
-                if self.check_tile(currentX + 1, currentY) and numberTileMap[currentY][currentX + 1] == -1:
+                if self.tilemap._bound_check(currentX + 1, currentY) and numberTileMap[currentY][currentX + 1] == -1:
 
                     if currentY == selfTile.y and currentX + 1 == selfTile.x:
                         break
@@ -1247,7 +2745,7 @@ class EntityCharacter(BaseCharacter):
                     nextNum += 1
 
                 # Check Right Up
-                if self.check_tile(currentX + 1, currentY - 1) and numberTileMap[currentY - 1][currentX + 1] == -1:
+                if self.tilemap._bound_check(currentX + 1, currentY - 1) and numberTileMap[currentY - 1][currentX + 1] == -1:
 
                     if currentY - 1 == selfTile.y and currentX + 1 == selfTile.x:
                         break
@@ -1258,7 +2756,7 @@ class EntityCharacter(BaseCharacter):
                     nextNum += 1
 
                 # Check Up
-                if self.check_tile(currentX, currentY - 1) and numberTileMap[currentY - 1][currentX] == -1:
+                if self.tilemap._bound_check(currentX, currentY - 1) and numberTileMap[currentY - 1][currentX] == -1:
 
                     if currentY - 1 == selfTile.y and currentX == selfTile.x:
                         break
@@ -1272,28 +2770,6 @@ class EntityCharacter(BaseCharacter):
                 currentX = numberCoords[currentNum][0]
                 currentY = numberCoords[currentNum][1]
 
-            # print(time.time() - initTime)
-
-            '''
-            # Printing tilemap------------------------------------------------------------------
-            print("\n" * 2)
-            for line in numberTileMap:
-
-                for col in line:
-
-                    if len(str(col)) == 1:
-                        print(str(col) + "   ", end="")
-
-                    elif len(str(col)) == 2:
-                        print(str(col) + "  ", end="")
-
-                    elif len(str(col)) == 3:
-                        print(str(col) + " ", end="")
-
-                print("\n")
-            # -----------------------------------------------------------------------------
-            '''
-
             return numberTileMap
 
         # If Enemy is left of the target
@@ -1304,7 +2780,7 @@ class EntityCharacter(BaseCharacter):
                 if currentX - 1 != selfTile.x or currentY != selfTile.y:
 
                     # Check Left
-                    if self.check_tile(currentX - 1, currentY) and numberTileMap[currentY][currentX - 1] == -1:
+                    if self.tilemap._bound_check(currentX - 1, currentY) and numberTileMap[currentY][currentX - 1] == -1:
 
                         numberTileMap[currentY][currentX - 1] = nextNum
                         numberCoords[nextNum] = [currentX - 1, currentY]
@@ -1315,49 +2791,49 @@ class EntityCharacter(BaseCharacter):
                     break
 
                 # Check Down Left
-                if self.check_tile(currentX - 1, currentY + 1) and numberTileMap[currentY + 1][currentX - 1] == 1:
+                if self.tilemap._bound_check(currentX - 1, currentY + 1) and numberTileMap[currentY + 1][currentX - 1] == 1:
 
                     numberTileMap[currentY + 1][currentX - 1] = nextNum
                     numberCoords[nextNum] = [currentX - 1, currentY + 1]
                     nextNum += 1
 
                 # Check Down
-                if self.check_tile(currentX, currentY + 1) and numberTileMap[currentY + 1][currentX] == -1:
+                if self.tilemap._bound_check(currentX, currentY + 1) and numberTileMap[currentY + 1][currentX] == -1:
 
                     numberTileMap[currentY + 1][currentX] = nextNum
                     numberCoords[nextNum] = [currentX, currentY + 1]
                     nextNum += 1
 
                 # Check Down Right
-                if self.check_tile(currentX + 1, currentY + 1) and numberTileMap[currentY + 1][currentX + 1] == -1:
+                if self.tilemap._bound_check(currentX + 1, currentY + 1) and numberTileMap[currentY + 1][currentX + 1] == -1:
 
                     numberTileMap[currentY + 1][currentX + 1] = nextNum
                     numberCoords[nextNum] = [currentX + 1, currentY + 1]
                     nextNum += 1
 
                 # Check Right
-                if self.check_tile(currentX + 1, currentY) and numberTileMap[currentY][currentX + 1] == -1:
+                if self.tilemap._bound_check(currentX + 1, currentY) and numberTileMap[currentY][currentX + 1] == -1:
 
                     numberTileMap[currentY][currentX + 1] = nextNum
                     numberCoords[nextNum] = [currentX + 1, currentY]
                     nextNum += 1
 
                 # Check Right Up
-                if self.check_tile(currentX + 1, currentY - 1) and numberTileMap[currentY - 1][currentX + 1] == -1:
+                if self.tilemap._bound_check(currentX + 1, currentY - 1) and numberTileMap[currentY - 1][currentX + 1] == -1:
 
                     numberTileMap[currentY - 1][currentX + 1] = nextNum
                     numberCoords[nextNum] = [currentX + 1, currentY - 1]
                     nextNum += 1
 
                 # Check Up
-                if self.check_tile(currentX, currentY - 1) and numberTileMap[currentY - 1][currentX] == -1:
+                if self.tilemap._bound_check(currentX, currentY - 1) and numberTileMap[currentY - 1][currentX] == -1:
 
                     numberTileMap[currentY - 1][currentX] = nextNum
                     numberCoords[nextNum] = [currentX, currentY - 1]
                     nextNum += 1
 
                 # Check Left Up
-                if self.check_tile(currentX - 1, currentY - 1) and numberTileMap[currentY - 1][currentX - 1] == -1:
+                if self.tilemap._bound_check(currentX - 1, currentY - 1) and numberTileMap[currentY - 1][currentX - 1] == -1:
 
                     numberTileMap[currentY - 1][currentX - 1] = nextNum
                     numberCoords[nextNum] = [currentX - 1, currentY - 1]
@@ -1379,7 +2855,7 @@ class EntityCharacter(BaseCharacter):
                 if currentX - 1 != selfTile.x or currentY + 1 != selfTile.y:
 
                     # Check Down Left
-                    if self.check_tile(currentX - 1, currentY + 1) and numberTileMap[currentY + 1][currentX - 1] == -1:
+                    if self.tilemap._bound_check(currentX - 1, currentY + 1) and numberTileMap[currentY + 1][currentX - 1] == -1:
 
                         numberTileMap[currentY + 1][currentX - 1] = nextNum
                         numberCoords[nextNum] = [currentX - 1, currentY + 1]
@@ -1390,49 +2866,49 @@ class EntityCharacter(BaseCharacter):
                     break
 
                 # Check Down
-                if self.check_tile(currentX, currentY + 1) and numberTileMap[currentY + 1][currentX] == -1:
+                if self.tilemap._bound_check(currentX, currentY + 1) and numberTileMap[currentY + 1][currentX] == -1:
 
                     numberTileMap[currentY + 1][currentX] = nextNum
                     numberCoords[nextNum] = [currentX, currentY + 1]
                     nextNum += 1
 
                 # Check Down Right
-                if self.check_tile(currentX + 1, currentY + 1) and numberTileMap[currentY + 1][currentX + 1] == -1:
+                if self.tilemap._bound_check(currentX + 1, currentY + 1) and numberTileMap[currentY + 1][currentX + 1] == -1:
 
                     numberTileMap[currentY + 1][currentX + 1] = nextNum
                     numberCoords[nextNum] = [currentX + 1, currentY + 1]
                     nextNum += 1
 
                 # Check Right
-                if self.check_tile(currentX + 1, currentY) and numberTileMap[currentY][currentX + 1] == -1:
+                if self.tilemap._bound_check(currentX + 1, currentY) and numberTileMap[currentY][currentX + 1] == -1:
 
                     numberTileMap[currentY][currentX + 1] = nextNum
                     numberCoords[nextNum] = [currentX + 1, currentY]
                     nextNum += 1
 
                 # Check Right Up
-                if self.check_tile(currentX + 1, currentY - 1) and numberTileMap[currentY - 1][currentX + 1] == -1:
+                if self.tilemap._bound_check(currentX + 1, currentY - 1) and numberTileMap[currentY - 1][currentX + 1] == -1:
 
                     numberTileMap[currentY - 1][currentX + 1] = nextNum
                     numberCoords[nextNum] = [currentX + 1, currentY - 1]
                     nextNum += 1
 
                 # Check Up
-                if self.check_tile(currentX, currentY - 1) and numberTileMap[currentY - 1][currentX] == -1:
+                if self.tilemap._bound_check(currentX, currentY - 1) and numberTileMap[currentY - 1][currentX] == -1:
 
                     numberTileMap[currentY - 1][currentX] = nextNum
                     numberCoords[nextNum] = [currentX, currentY - 1]
                     nextNum += 1
 
                 # Check Left Up
-                if self.check_tile(currentX - 1, currentY - 1) and numberTileMap[currentY - 1][currentX - 1] == -1:
+                if self.tilemap._bound_check(currentX - 1, currentY - 1) and numberTileMap[currentY - 1][currentX - 1] == -1:
 
                     numberTileMap[currentY - 1][currentX - 1] = nextNum
                     numberCoords[nextNum] = [currentX - 1, currentY - 1]
                     nextNum += 1
 
                 # Check Left
-                if self.check_tile(currentX - 1, currentY) and numberTileMap[currentY][currentX - 1] == -1:
+                if self.tilemap._bound_check(currentX - 1, currentY) and numberTileMap[currentY][currentX - 1] == -1:
                     numberTileMap[currentY][currentX - 1] = nextNum
                     numberCoords[nextNum] = [currentX - 1, currentY]
                     nextNum += 1
@@ -1451,7 +2927,7 @@ class EntityCharacter(BaseCharacter):
                 if currentX != selfTile.x or currentY + 1 != selfTile.y:
 
                     # Check Down
-                    if self.check_tile(currentX, currentY + 1) and numberTileMap[currentY + 1][currentX] == -1:
+                    if self.tilemap._bound_check(currentX, currentY + 1) and numberTileMap[currentY + 1][currentX] == -1:
 
                         numberTileMap[currentY + 1][currentX] = nextNum
                         numberCoords[nextNum] = [currentX, currentY + 1]
@@ -1462,55 +2938,69 @@ class EntityCharacter(BaseCharacter):
                     break
 
                 # Check Down Right
-                if self.check_tile(currentX + 1, currentY + 1) and numberTileMap[currentY + 1][currentX + 1] == -1:
+                if self.tilemap._bound_check(currentX + 1, currentY + 1) and numberTileMap[currentY + 1][currentX + 1] == -1:
 
                     numberTileMap[currentY + 1][currentX + 1] = nextNum
                     numberCoords[nextNum] = [currentX + 1, currentY + 1]
                     nextNum += 1
 
                 # Check Right
-                if self.check_tile(currentX + 1, currentY) and numberTileMap[currentY][currentX + 1] == -1:
+                if self.tilemap._bound_check(currentX + 1, currentY) and numberTileMap[currentY][currentX + 1] == -1:
 
                     numberTileMap[currentY][currentX + 1] = nextNum
                     numberCoords[nextNum] = [currentX + 1, currentY]
                     nextNum += 1
 
                 # Check Right Up
-                if self.check_tile(currentX + 1, currentY - 1) and numberTileMap[currentY - 1][currentX + 1] == -1:
+                if self.tilemap._bound_check(currentX + 1, currentY - 1) and numberTileMap[currentY - 1][currentX + 1] == -1:
 
                     numberTileMap[currentY - 1][currentX + 1] = nextNum
                     numberCoords[nextNum] = [currentX + 1, currentY - 1]
                     nextNum += 1
 
                 # Check Up
-                if self.check_tile(currentX, currentY - 1) and numberTileMap[currentY - 1][currentX] == -1:
+                if self.tilemap._bound_check(currentX, currentY - 1) and numberTileMap[currentY - 1][currentX] == -1:
 
                     numberTileMap[currentY - 1][currentX] = nextNum
                     numberCoords[nextNum] = [currentX, currentY - 1]
                     nextNum += 1
 
                 # Check Left Up
-                if self.check_tile(currentX - 1, currentY - 1) and numberTileMap[currentY - 1][currentX - 1] == -1:
+                if self.tilemap._bound_check(currentX - 1, currentY - 1) and numberTileMap[currentY - 1][currentX - 1] == -1:
 
                     numberTileMap[currentY - 1][currentX - 1] = nextNum
                     numberCoords[nextNum] = [currentX - 1, currentY - 1]
                     nextNum += 1
 
                 # Check Left
-                if self.check_tile(currentX - 1, currentY) and numberTileMap[currentY][currentX - 1] == -1:
+                if self.tilemap._bound_check(currentX - 1, currentY) and numberTileMap[currentY][currentX - 1] == -1:
                     numberTileMap[currentY][currentX - 1] = nextNum
                     numberCoords[nextNum] = [currentX - 1, currentY]
                     nextNum += 1
 
                 # Check Down Left
-                if self.check_tile(currentX - 1, currentY + 1) and numberTileMap[currentY + 1][currentX - 1] == -1:
+                if self.tilemap._bound_check(currentX - 1, currentY + 1) and numberTileMap[currentY + 1][currentX - 1] == -1:
                     numberTileMap[currentY + 1][currentX - 1] = nextNum
                     numberCoords[nextNum] = [currentX - 1, currentY + 1]
                     nextNum += 1
 
-                currentNum += 1
-                currentX = numberCoords[currentNum][0]
-                currentY = numberCoords[currentNum][1]
+                try:
+
+                    currentNum += 1
+                    currentX = numberCoords[currentNum][0]
+                    currentY = numberCoords[currentNum][1]
+
+                except KeyError:
+
+                    numSpaces = 0
+
+                    for line in self.tilemap.tilemap:
+
+                        for col in line:
+
+                            if not isinstance(col, Wall) and not isinstance(col, Player):
+
+                                numSpaces += 1
 
             return numberTileMap
 
@@ -1522,7 +3012,7 @@ class EntityCharacter(BaseCharacter):
                 if currentX + 1 != selfTile.x or currentY + 1 != selfTile.y:
 
                     # Check Down Right
-                    if self.check_tile(currentX + 1, currentY + 1) and numberTileMap[currentY + 1][currentX + 1] == -1:
+                    if self.tilemap._bound_check(currentX + 1, currentY + 1) and numberTileMap[currentY + 1][currentX + 1] == -1:
 
                         numberTileMap[currentY + 1][currentX + 1] = nextNum
                         numberCoords[nextNum] = [currentX + 1, currentY + 1]
@@ -1533,49 +3023,49 @@ class EntityCharacter(BaseCharacter):
                     break
 
                 # Check Right
-                if self.check_tile(currentX + 1, currentY) and numberTileMap[currentY][currentX + 1] == -1:
+                if self.tilemap._bound_check(currentX + 1, currentY) and numberTileMap[currentY][currentX + 1] == -1:
 
                     numberTileMap[currentY][currentX + 1] = nextNum
                     numberCoords[nextNum] = [currentX + 1, currentY]
                     nextNum += 1
 
                 # Check Right Up
-                if self.check_tile(currentX + 1, currentY - 1) and numberTileMap[currentY - 1][currentX + 1] == -1:
+                if self.tilemap._bound_check(currentX + 1, currentY - 1) and numberTileMap[currentY - 1][currentX + 1] == -1:
 
                     numberTileMap[currentY - 1][currentX + 1] = nextNum
                     numberCoords[nextNum] = [currentX + 1, currentY - 1]
                     nextNum += 1
 
                 # Check Up
-                if self.check_tile(currentX, currentY - 1) and numberTileMap[currentY - 1][currentX] == -1:
+                if self.tilemap._bound_check(currentX, currentY - 1) and numberTileMap[currentY - 1][currentX] == -1:
 
                     numberTileMap[currentY - 1][currentX] = nextNum
                     numberCoords[nextNum] = [currentX, currentY - 1]
                     nextNum += 1
 
                 # Check Left Up
-                if self.check_tile(currentX - 1, currentY - 1) and numberTileMap[currentY - 1][currentX - 1] == -1:
+                if self.tilemap._bound_check(currentX - 1, currentY - 1) and numberTileMap[currentY - 1][currentX - 1] == -1:
 
                     numberTileMap[currentY - 1][currentX - 1] = nextNum
                     numberCoords[nextNum] = [currentX - 1, currentY - 1]
                     nextNum += 1
 
                 # Check Left
-                if self.check_tile(currentX - 1, currentY) and numberTileMap[currentY][currentX - 1] == -1:
+                if self.tilemap._bound_check(currentX - 1, currentY) and numberTileMap[currentY][currentX - 1] == -1:
 
                     numberTileMap[currentY][currentX - 1] = nextNum
                     numberCoords[nextNum] = [currentX - 1, currentY]
                     nextNum += 1
 
                 # Check Down Left
-                if self.check_tile(currentX - 1, currentY + 1) and numberTileMap[currentY + 1][currentX - 1] == -1:
+                if self.tilemap._bound_check(currentX - 1, currentY + 1) and numberTileMap[currentY + 1][currentX - 1] == -1:
 
                     numberTileMap[currentY + 1][currentX - 1] = nextNum
                     numberCoords[nextNum] = [currentX - 1, currentY + 1]
                     nextNum += 1
 
                 # Check Down
-                if self.check_tile(currentX, currentY + 1) and numberTileMap[currentY + 1][currentX] == -1:
+                if self.tilemap._bound_check(currentX, currentY + 1) and numberTileMap[currentY + 1][currentX] == -1:
 
                     numberTileMap[currentY + 1][currentX] = nextNum
                     numberCoords[nextNum] = [currentX, currentY + 1]
@@ -1597,7 +3087,7 @@ class EntityCharacter(BaseCharacter):
                 if currentX + 1 != selfTile.x or currentY != selfTile.y:
 
                     # Check Right
-                    if self.check_tile(currentX + 1, currentY) and numberTileMap[currentY][currentX + 1] == -1:
+                    if self.tilemap._bound_check(currentX + 1, currentY) and numberTileMap[currentY][currentX + 1] == -1:
 
                         numberTileMap[currentY][currentX + 1] = nextNum
                         numberCoords[nextNum] = [currentX + 1, currentY]
@@ -1608,49 +3098,49 @@ class EntityCharacter(BaseCharacter):
                     break
 
                 # Check Right Up
-                if self.check_tile(currentX + 1, currentY - 1) and numberTileMap[currentY - 1][currentX + 1] == -1:
+                if self.tilemap._bound_check(currentX + 1, currentY - 1) and numberTileMap[currentY - 1][currentX + 1] == -1:
 
                     numberTileMap[currentY - 1][currentX + 1] = nextNum
                     numberCoords[nextNum] = [currentX + 1, currentY - 1]
                     nextNum += 1
 
                 # Check Up
-                if self.check_tile(currentX, currentY - 1) and numberTileMap[currentY - 1][currentX] == -1:
+                if self.tilemap._bound_check(currentX, currentY - 1) and numberTileMap[currentY - 1][currentX] == -1:
 
                     numberTileMap[currentY - 1][currentX] = nextNum
                     numberCoords[nextNum] = [currentX, currentY - 1]
                     nextNum += 1
 
                 # Check Left Up
-                if self.check_tile(currentX - 1, currentY - 1) and numberTileMap[currentY - 1][currentX - 1] == -1:
+                if self.tilemap._bound_check(currentX - 1, currentY - 1) and numberTileMap[currentY - 1][currentX - 1] == -1:
 
                     numberTileMap[currentY - 1][currentX - 1] = nextNum
                     numberCoords[nextNum] = [currentX - 1, currentY - 1]
                     nextNum += 1
 
                 # Check Left
-                if self.check_tile(currentX - 1, currentY) and numberTileMap[currentY][currentX - 1] == -1:
+                if self.tilemap._bound_check(currentX - 1, currentY) and numberTileMap[currentY][currentX - 1] == -1:
 
                     numberTileMap[currentY][currentX - 1] = nextNum
                     numberCoords[nextNum] = [currentX - 1, currentY]
                     nextNum += 1
 
                 # Check Down Left
-                if self.check_tile(currentX - 1, currentY + 1) and numberTileMap[currentY + 1][currentX - 1] == -1:
+                if self.tilemap._bound_check(currentX - 1, currentY + 1) and numberTileMap[currentY + 1][currentX - 1] == -1:
 
                     numberTileMap[currentY + 1][currentX - 1] = nextNum
                     numberCoords[nextNum] = [currentX - 1, currentY + 1]
                     nextNum += 1
 
                 # Check Down
-                if self.check_tile(currentX, currentY + 1) and numberTileMap[currentY + 1][currentX] == -1:
+                if self.tilemap._bound_check(currentX, currentY + 1) and numberTileMap[currentY + 1][currentX] == -1:
 
                     numberTileMap[currentY + 1][currentX] = nextNum
                     numberCoords[nextNum] = [currentX, currentY + 1]
                     nextNum += 1
 
                 # Check Down Right
-                if self.check_tile(currentX + 1, currentY + 1) and numberTileMap[currentY + 1][currentX + 1] == -1:
+                if self.tilemap._bound_check(currentX + 1, currentY + 1) and numberTileMap[currentY + 1][currentX + 1] == -1:
 
                     numberTileMap[currentY + 1][currentX + 1] = nextNum
                     numberCoords[nextNum] = [currentX + 1, currentY + 1]
@@ -1670,7 +3160,7 @@ class EntityCharacter(BaseCharacter):
                 if currentX + 1 != selfTile.x or currentY - 1 != selfTile.y:
 
                     # Check Right Up
-                    if self.check_tile(currentX + 1, currentY - 1) and numberTileMap[currentY - 1][currentX + 1] == -1:
+                    if self.tilemap._bound_check(currentX + 1, currentY - 1) and numberTileMap[currentY - 1][currentX + 1] == -1:
 
                         numberTileMap[currentY - 1][currentX + 1] = nextNum
                         numberCoords[nextNum] = [currentX + 1, currentY - 1]
@@ -1681,47 +3171,47 @@ class EntityCharacter(BaseCharacter):
                     break
 
                 # Check Up
-                if self.check_tile(currentX, currentY - 1) and numberTileMap[currentY - 1][currentX] == -1:
+                if self.tilemap._bound_check(currentX, currentY - 1) and numberTileMap[currentY - 1][currentX] == -1:
 
                     numberTileMap[currentY - 1][currentX] = nextNum
                     numberCoords[nextNum] = [currentX, currentY - 1]
                     nextNum += 1
 
                 # Check Left Up
-                if self.check_tile(currentX - 1, currentY - 1) and numberTileMap[currentY - 1][currentX - 1] == -1:
+                if self.tilemap._bound_check(currentX - 1, currentY - 1) and numberTileMap[currentY - 1][currentX - 1] == -1:
 
                     numberTileMap[currentY - 1][currentX - 1] = nextNum
                     numberCoords[nextNum] = [currentX - 1, currentY - 1]
                     nextNum += 1
 
                 # Check Left
-                if self.check_tile(currentX - 1, currentY) and numberTileMap[currentY][currentX - 1] == -1:
+                if self.tilemap._bound_check(currentX - 1, currentY) and numberTileMap[currentY][currentX - 1] == -1:
                     numberTileMap[currentY][currentX - 1] = nextNum
                     numberCoords[nextNum] = [currentX - 1, currentY]
                     nextNum += 1
 
                 # Check Down Left
-                if self.check_tile(currentX - 1, currentY + 1) and numberTileMap[currentY + 1][currentX - 1] == -1:
+                if self.tilemap._bound_check(currentX - 1, currentY + 1) and numberTileMap[currentY + 1][currentX - 1] == -1:
                     numberTileMap[currentY + 1][currentX - 1] = nextNum
                     numberCoords[nextNum] = [currentX - 1, currentY + 1]
                     nextNum += 1
 
                 # Check Down
-                if self.check_tile(currentX, currentY + 1) and numberTileMap[currentY + 1][currentX] == -1:
+                if self.tilemap._bound_check(currentX, currentY + 1) and numberTileMap[currentY + 1][currentX] == -1:
 
                     numberTileMap[currentY + 1][currentX] = nextNum
                     numberCoords[nextNum] = [currentX, currentY + 1]
                     nextNum += 1
 
                 # Check Down Right
-                if self.check_tile(currentX + 1, currentY + 1) and numberTileMap[currentY + 1][currentX + 1] == -1:
+                if self.tilemap._bound_check(currentX + 1, currentY + 1) and numberTileMap[currentY + 1][currentX + 1] == -1:
 
                     numberTileMap[currentY + 1][currentX + 1] = nextNum
                     numberCoords[nextNum] = [currentX + 1, currentY + 1]
                     nextNum += 1
 
                 # Check Right
-                if self.check_tile(currentX + 1, currentY) and numberTileMap[currentY][currentX + 1] == -1:
+                if self.tilemap._bound_check(currentX + 1, currentY) and numberTileMap[currentY][currentX + 1] == -1:
 
                     numberTileMap[currentY][currentX + 1] = nextNum
                     numberCoords[nextNum] = [currentX + 1, currentY]
@@ -1733,6 +3223,9 @@ class EntityCharacter(BaseCharacter):
 
             return numberTileMap
 
+        '''
+
+        return surroundingTiles
 
 # Custom CharacterClasses - probably wont live here
 
@@ -2202,12 +3695,196 @@ class TrackerEnemy(Enemy):
 
         if self.debug_move:
 
-            numberTileMap = self.find_quickest_path(self.tilemap.find_object_type(Player))
             selfTile = self.tilemap.find_object(self)
 
             posX = selfTile.x
             posY = selfTile.y
 
+            startX = posX - 1 if posX - 1 >= 0 else 0
+            endX = posX + 1 if posX + 1 < self.tilemap.width else self.tilemap.width - 1
+
+            startY = posY - 1 if posY - 1 >= 0 else 0
+            endY = posY + 1 if posY + 1 < self.tilemap.height else self.tilemap.height - 1
+
+            surroundingTiles = self.find_quickest_path(self.tilemap.find_object_type(Player))
+            smallestNum = 0
+
+            for element in surroundingTiles:
+
+                smallestNum = element
+                break
+
+            for num in surroundingTiles:
+
+                if num < smallestNum:
+
+                    smallestNum = num
+
+            if len(surroundingTiles) != 0:
+
+                xMove = surroundingTiles[smallestNum][0]
+                yMove = surroundingTiles[smallestNum][1]
+
+                if self.check_tile(xMove, yMove):
+
+                    self.tilemap.move(self, xMove, yMove)
+
+                else:
+
+                    playerTile = self.tilemap.find_object_type(Player)
+
+                    # Player is left below Enemy
+                    if playerTile.x <= selfTile.x and playerTile.y >= selfTile.y:
+
+                        if self.check_tile(xMove, yMove + 1):
+
+                            self.tilemap.move(self, xMove, yMove + 1)
+
+                        elif self.check_tile(xMove - 1, yMove):
+
+                            self.tilemap.move(self, xMove - 1, yMove)
+
+                    # Player is left above Enemy
+                    if playerTile.x <= selfTile.x and playerTile.y <= selfTile.y:
+
+                        if self.check_tile(xMove, yMove - 1):
+
+                            self.tilemap.move(self, xMove, yMove - 1)
+
+                        elif self.check_tile(xMove - 1, yMove):
+
+                            self.tilemap.move(self, xMove - 1, yMove)
+
+                    # Player is right above Enemy
+                    if playerTile.x >= selfTile.x and playerTile.y <= selfTile.y:
+
+                        if self.check_tile(xMove, yMove - 1):
+
+                            self.tilemap.move(self, xMove, yMove - 1)
+
+                        elif self.check_tile(xMove + 1, yMove):
+
+                            self.tilemap.move(self, xMove + 1, yMove)
+
+                    # Player is right below Enemy
+                    if playerTile.x >= selfTile.x and playerTile.y >= selfTile.y:
+
+                        if self.check_tile(xMove, yMove + 1):
+
+                            self.tilemap.move(self, xMove, yMove + 1)
+
+                        elif self.check_tile(xMove + 1, yMove):
+
+                            self.tilemap.move(self, xMove + 1, yMove)
+
+            else:
+
+                numberTileMap = self.find_quickest_path(self.tilemap.find_object_type(Player), blocked=True)
+
+                # '''
+                # Printing tilemap------------------------------------------------------------------
+                print("\n" * 2)
+                for line in numberTileMap:
+
+                    for col in line:
+
+                        if len(str(col)) == 1:
+                            print(str(col) + "   ", end="")
+
+                        elif len(str(col)) == 2:
+                            print(str(col) + "  ", end="")
+
+                        elif len(str(col)) == 3:
+                            print(str(col) + " ", end="")
+
+                    print("\n")
+                # -----------------------------------------------------------------------------
+                # '''
+
+                '''
+                # Printing tilemap------------------------------------------------------------------
+                print("\n" * 2)
+                for line in numberTileMap:
+
+                    for col in line:
+
+                        if isinstance(self.tilemap.get(x, y)[0].obj, Player):
+
+                            print("C   ", end="")
+                            foundPlayer = True
+
+                        elif isinstance(self.tilemap.get(x, y)[0].obj, Enemy):
+
+                            print("E   ", end="")
+
+                        elif isinstance(self.tilemap.get(x, y)[0].obj, Wall):
+
+                            print("W   ", end="")
+
+                        else:
+
+                            if len(str(col)) == 1:
+                                print(str(col) + "   ", end="")
+
+                            elif len(str(col)) == 2:
+                                print(str(col) + "  ", end="")
+
+                            elif len(str(col)) == 3:
+                                print(str(col) + " ", end="")
+
+                        x += 1
+
+                    x = 0
+                    y += 1
+
+                    print("\n")
+                # -----------------------------------------------------------------------------
+                # '''
+
+                dictCopy = []
+
+                xIndex = startX
+                yIndex = startY
+
+                while yIndex <= endY:
+
+                    while xIndex <= endX:
+
+                        if yIndex != posY or xIndex != posX:
+
+                            if numberTileMap[yIndex][xIndex] > 0:
+
+                                surroundingTiles[numberTileMap[yIndex][xIndex]] = [xIndex, yIndex]
+                                dictCopy.append(numberTileMap[yIndex][xIndex])
+
+                        xIndex += 1
+
+                    xIndex = startX
+                    yIndex += 1
+
+                while len(dictCopy) > 0:
+
+                    smallestNum = dictCopy[0]
+
+                    for num in dictCopy:
+
+                        if num < smallestNum:
+
+                            smallestNum = num
+
+                    xMove = surroundingTiles[smallestNum][0]
+                    yMove = surroundingTiles[smallestNum][1]
+
+                    if self.check_tile(xMove, yMove):
+
+                        self.tilemap.move(self, xMove, yMove)
+                        break
+
+                    else:
+
+                        dictCopy.remove(smallestNum)
+
+            '''
             final = []
 
             for x in range(8):
@@ -2216,6 +3893,7 @@ class TrackerEnemy(Enemy):
             index = 0
 
             # Iterate over each value:
+            # Plus 2, because builtin range function will stop at that number, and not include it
 
             for cur_y in range(posY - 1, posY + 2):
 
@@ -2229,6 +3907,7 @@ class TrackerEnemy(Enemy):
                     else:
 
                         if self.check_tile(cur_x, cur_y):
+
                             final[index] = (numberTileMap[cur_y][cur_x])
 
                     index += 1
@@ -2298,12 +3977,7 @@ class TrackerEnemy(Enemy):
 
                     if self.check_tile(posX - 1, posY): self.tilemap.move(self, posX - 1, posY)
 
-            playerTile = self.tilemap.find_object_type(Player)
-
-            xPos = 0
-            yPos = 0
-
-            '''
+            
             print("\n" * 2)
             for line in numberTileMap:
     
@@ -2322,6 +3996,8 @@ class TrackerEnemy(Enemy):
                 yPos += 1
                 xPos = 0
                 print("\n")
+            
+
             '''
 
     def debug_move_toggle(self):
@@ -2339,6 +4015,19 @@ class Skeleton(TrackerEnemy):
     def start(self):
 
         self.name = 'Skeleton'
+        self.hp = 24
+        self.damage_min = 8
+        self.damage_max = 12
+        self.damage_type = "physical"
+        self.armor = .1
+        self.description = ""
+
+
+class Goblin(TrackerEnemy):
+
+    def start(self):
+
+        self.name = 'Goblin'
         self.hp = 24
         self.damage_min = 8
         self.damage_max = 12

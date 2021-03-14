@@ -697,7 +697,7 @@ def battle_test(win):
 
     map_win = DisplayWindow.create_subwin_at_pos(win, y, int(x / 2), BaseWindow.TOP_LEFT)
 
-    scroll_win = ScrollWindow.create_subwin_at_pos(win, 30, map_win.max_x, BaseWindow.TOP_RIGHT)
+    scroll_win = ScrollWindow.create_subwin_at_pos(win, y, map_win.max_x, BaseWindow.TOP_RIGHT)
 
     map_win.tilemap.set_scroll_win(scroll_win)
 
@@ -711,9 +711,6 @@ def battle_test(win):
     player = Player()
     player.active_weapon = Sword()
 
-    skeleton = Skeleton()
-
-    '''
     availableCoordinates = []
 
     xCount = 0
@@ -721,7 +718,21 @@ def battle_test(win):
 
     exemptFromList = False
 
-    
+    add(player, 0, 0, map_win)
+
+    add(Skeleton(), 4, 4, map_win)
+
+    add(Wall(), 3, 0, map_win)
+    add(Wall(), 3, 1, map_win)
+    add(Wall(), 3, 2, map_win)
+    add(Wall(), 3, 3, map_win)
+
+    add(Wall(), 0, 3, map_win)
+    add(Wall(), 1, 3, map_win)
+    add(Wall(), 2, 3, map_win)
+    add(Wall(), 0, 3, map_win)
+
+    '''
     # Searching tilemap for traversable spots
     for line in map_win.tilemap.tilemap:
 
@@ -742,6 +753,12 @@ def battle_test(win):
         yCount += 1
         xCount = 0
 
+    spot = random.choice(availableCoordinates)
+
+    add(Skeleton(), spot[0], spot[1], map_win)
+
+    availableCoordinates.remove(spot)
+
     # Creating random walls on the x axis
     for x in range(map_win.tilemap.get_height()):
 
@@ -759,27 +776,10 @@ def battle_test(win):
                     add(Wall(), xCoord, yCoord, map_win)
                     availableCoordinates.remove([xCoord, yCoord])
                     xCoord += 1
-    '''
-
-    # add(player, int(map_win.tilemap.height / 2), int(map_win.tilemap.width / 2), map_win)
-    add(player, 0, 0, map_win)
-    # add(Traveler(), 6, 6, map_win)
-    add(skeleton, 99, 99, map_win)
+    # '''
 
     map_win.camera.set_focus_object(player)
-    map_win.camera.set_radius(20)
-
-    '''
-    totalTime = 0
-
-    for i in range(10):
-
-        totalTime += skeleton.find_quickest_path(skeleton.tilemap.find_object(player))
-
-    print("With 1 : " + str(totalTime / 10))
-    exit()
-    
-    '''
+    player.radius = 20
 
     display_thread = threading.Thread(target=map_win.display)
     display_thread.daemon = True
@@ -789,6 +789,15 @@ def battle_test(win):
     master.add_subwin(scroll_win)
     master.start()
 
+    '''
+    for line in player.tilemap.tilemap:
+
+        for col in line:
+
+            print(col[0].char, end='')
+
+        print()
+    '''
 
 def large_test(win):
 

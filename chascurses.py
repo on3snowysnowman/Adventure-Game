@@ -879,7 +879,7 @@ class DisplayWindow(BaseWindow):
         # as the DisplayWindow is not smart enough to handle anything different
 
         # self.tilemap = BaseTileMap(self.max_y, self.max_x, self)  # Tilemap storing game info
-        self.tilemap = BaseTileMap(100, 100, self)
+        self.tilemap = BaseTileMap(5, 5, self)
         self.camera = Camera(self.tilemap, self)
         self.run = True  # Value determining if we are running
 
@@ -893,18 +893,17 @@ class DisplayWindow(BaseWindow):
 
         self.clear()
 
-        for x, y, z, obj in self.camera.displayArea._iterate():
+        for x, y, z, obj in self.tilemap._iterate():
 
             # Render the character at specified position. We don't care about secondary characters!
 
             self.tilemap.tilemap[y][x].sort(key=self.tilemap._get_priority)
 
-            if isinstance(obj, Traveler):
-
-                # print(z)
-                pass
-
             if z == 0:
+
+                if isinstance(self.tilemap.tilemap[y][x][z], Fog):
+
+                    continue
 
                 self.addstr(obj.char, y, x, attrib=obj.attrib)
 
