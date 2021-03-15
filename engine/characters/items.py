@@ -5,7 +5,7 @@ class Item(object):
     """
     Item class all sub-characters must inherit.
 
-    Instanciates basic variables of every Item
+    Instantiates basic variables of every Item
     """
 
     def __init__(self):

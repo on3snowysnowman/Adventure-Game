@@ -2,7 +2,7 @@
 Classes representing certain tilemaps.
 
 tielmaps contain characters drawn at certain positions on the screen.
-tilemaps handle the logic of entity movement, and keeps everything organised.
+tilemaps handle the logic of entity movement, and keeps everything organized.
 """
 
 from character_classes import EntityCharacter, Player, TrackerEnemy, Fog

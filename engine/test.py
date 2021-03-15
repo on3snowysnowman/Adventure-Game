@@ -1,9 +1,14 @@
-#from chascurses import *
-from builtins import print
+from engine.curses.input import *
+from engine.curses.display import *
+from engine.curses.base import *
 
-from chascurses import *
-from item_classes import *
-from tilemaps import WalkingFunctions
+from engine.characters.tiles import *
+from engine.characters.enemy import *
+from engine.characters.input import *
+from engine.characters.npcs import *
+
+from engine.tilemaps import WalkingFunctions, BaseTileMap
+
 import curses
 #from math import ceil
 import sys
@@ -364,41 +369,6 @@ def map_window_test(win):
     map_win.tilemap.add(TrackerEnemy(), 6, 4)
 
     map_win.display()
-
-
-def master_window_test_theory(win):
-
-    # Tests the master window concept
-
-    chas = BaseWindow.create_subwin_at_pos(win, win.getmaxyx()[0], win.getmaxyx()[1])
-
-    print(chas)
-
-    scroll_win1 = ScrollWindow.create_subwin_at_pos(chas, 10, 40)
-    scroll_win2 = ScrollWindow.create_subwin_at_pos(chas, 10, 40, position=BaseWindow.TOP_RIGHT)
-
-    content = []
-
-    for i in range(100):
-
-        content.append("This is value: {}".format(i))
-
-    scroll_win1.pause_input()
-    scroll_win2.pause_input()
-
-    chas.add_callback('s', scroll_win1._increment_scroll)
-    chas.add_callback('w', scroll_win1._decrement_scroll)
-    chas.add_callback('q', scroll_win1._render_content)
-    chas.add_callback(curses.KEY_UP, scroll_win2._decrement_scroll)
-    chas.add_callback(curses.KEY_DOWN, scroll_win2._increment_scroll)
-    chas.add_callback('e', scroll_win2._render_content)
-
-    scroll_win1.run_display(content)
-    scroll_win2.run_display(content)
-
-    while True:
-
-        chas.get_input()
 
 
 def master_window_test(win):
