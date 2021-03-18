@@ -22,10 +22,11 @@ Entities are PROACTIVE,
 they have the option to do things each round based upon their state and environment.
 
 All characters should inherit these classes, as the class they inherit will
-# determine how they are interpreted by the engine.
+determine how they are interpreted by the engine.
 """
 
 import math
+import random
 
 from queue import SimpleQueue
 
@@ -176,6 +177,7 @@ class BaseCharacter(object):
 
 
 class EntityCharacter(BaseCharacter):
+
     """
     Class representing an entity that can move across the screen.
     """

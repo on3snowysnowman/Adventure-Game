@@ -18,6 +18,8 @@ from queue import Queue
 from math import ceil
 
 from engine.curses.base import BaseWindow
+from engine.tilemaps import BaseTileMap, Camera
+from engine.characters.tiles import Fog
 
 
 class DisplayWindow(BaseWindow):

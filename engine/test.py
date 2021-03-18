@@ -837,6 +837,7 @@ def battle_test(win):
         print()
     '''
 
+
 def large_test(win):
 
     # Tests to make sure we can handle very large windows:
