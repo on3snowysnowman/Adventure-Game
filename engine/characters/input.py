@@ -13,6 +13,8 @@ import random
 
 from engine.characters.base import EntityCharacter
 from engine.characters.items import *
+from engine.characters.tiles import *
+
 
 class Player(EntityCharacter):
     
