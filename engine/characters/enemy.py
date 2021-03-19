@@ -22,7 +22,7 @@ and load them into the engine? What would this look like?
 import random
 
 from engine.characters.base import EntityCharacter
-from engine.characters.input import Player
+#from engine.characters.input import Player
 
 
 class Enemy(EntityCharacter):
@@ -39,6 +39,7 @@ class Enemy(EntityCharacter):
         self.char = 'E'
         self.attrib.append("red")
         self.priority = 18
+        self.radius = 20
 
         self.debug_move = True
         self.hp = 0

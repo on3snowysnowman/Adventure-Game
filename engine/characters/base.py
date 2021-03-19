@@ -30,6 +30,8 @@ import random
 
 from queue import SimpleQueue
 
+from engine.characters.auto.base import AutoRunHandler
+
 
 class BaseCharacter(object):
 
@@ -191,6 +193,16 @@ class EntityCharacter(BaseCharacter):
         self.can_move = True  # Enabling move mode
         self.can_traverse = False  # Disabling traversal mode
         self.is_alive = True  # Enabling the object to act
+
+        self.auto = AutoRunHandler(self)  # Autorun handler for managing autoruns
+
+    def _run(self):
+
+        """
+        Executes the autoruns attached to this entity.
+        """
+
+        self.auto.run()
 
     def move(self):
 

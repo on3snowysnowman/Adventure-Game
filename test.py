@@ -6,6 +6,7 @@ from engine.characters.tiles import *
 from engine.characters.enemy import *
 from engine.characters.input import *
 from engine.characters.npcs import *
+from engine.characters.auto.move import RandomMove
 
 from engine.tilemaps import WalkingFunctions, BaseTileMap
 
@@ -927,6 +928,61 @@ def curses_standard_test(win):
         count += 1
 
 
+def autorun_test(win):
+
+    # Tests the autorun feature
+
+    # Create our windows:
+
+    master = MasterWindow(win)
+
+    display = DisplayWindow.create_subwin_at_pos(win, 20, 20, DisplayWindow.TOP_LEFT)
+    scoll_win = ScrollWindow.create_subwin_at_pos(win, 10, 10, ScrollWindow.TOP_RIGHT)
+
+    # Add them to the master window:
+
+    master.add_subwin(display)
+    master.add_subwin(scoll_win)
+
+    # Final window configuration:
+
+    display.init_colors()
+
+    display.tilemap.fill(Floor)
+
+    display.tilemap.set_scroll_win(scoll_win)
+
+    display.add_callback('f', master.stop)
+
+    # Create an entity:
+
+    enemy = Enemy()
+
+    # +==============================================+
+    # Attach the RandomMove autorun to the character to enable random movement
+    # This is how attaching any autorun will work.
+    # Autoruns can optionally ask for arguments
+
+    enemy.auto.add(RandomMove())
+
+    # +==============================================+
+
+
+    # Add the random enemy:
+
+    add(enemy, 1, 1, display)
+
+    display.camera.set_focus_object(enemy)
+    enemy.radius = 20
+
+    # Run the windows:
+
+    display_thread = threading.Thread(target=display.display)
+    display_thread.daemon = True
+    display_thread.start()
+
+    master.start()
+
 def all_tests(win):
 
     # Runs all tests
@@ -942,4 +998,4 @@ def all_tests(win):
         win.erase()
 
 
-curses.wrapper(trace_test)
+curses.wrapper(battle_test)

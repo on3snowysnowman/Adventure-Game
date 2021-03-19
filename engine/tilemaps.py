@@ -5,7 +5,11 @@ tielmaps contain characters drawn at certain positions on the screen.
 tilemaps handle the logic of entity movement, and keeps everything organized.
 """
 
-from character_classes import EntityCharacter, Player, TrackerEnemy, Fog
+from engine.characters.base import EntityCharacter
+from engine.characters.input import Player
+from engine.characters.enemy import TrackerEnemy
+from engine.characters.tiles import Fog
+
 import sys
 from itertools import count
 import math
@@ -423,6 +427,7 @@ class BaseTileMap(object):
 
         """
         Calls the 'move' method on all entities and refreshes our collection.
+        We also invoke the autoruns attached to the entities.
         """
 
         cords = self.find_object_type(EntityCharacter, findall=True)
@@ -435,6 +440,12 @@ class BaseTileMap(object):
 
             # Call the 'move' method if the entity is alive:
             if cord.obj.is_alive:
+
+                # Invoke the autoruns:
+
+                cord.obj._run()
+
+                # Run the user move function:
 
                 cord.obj.move()
 
@@ -756,13 +767,19 @@ class Camera(object):
         """
         Fills the tilemap with fog to block the player's vision relative to walls
         """
-        playerTile = self.tilemap.find_object_type(Player)
-        self.radius = playerTile.obj.radius
+        #playerTile = self.tilemap.find_object_type(Player)
+        #self.radius = playerTile.obj.radius
+
+        # TODO: Is the correct implementation?:
+
+        self.radius = self.focusObject.obj.radius
 
         self.refresh_focus_position()
         self.create_display()
 
-        playerTile.obj.look(self.displayArea)
+        #playerTile.obj.look(self.displayArea)
+
+        self.focusObject.obj.look(self.displayArea)
 
     def create_display(self):
 
