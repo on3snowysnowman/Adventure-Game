@@ -983,6 +983,7 @@ def autorun_test(win):
 
     master.start()
 
+
 def all_tests(win):
 
     # Runs all tests

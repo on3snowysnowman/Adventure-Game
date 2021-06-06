@@ -22,6 +22,7 @@ and load them into the engine? What would this look like?
 import random
 
 from engine.characters.base import EntityCharacter
+from engine.characters.auto.move import TrackerMove
 #from engine.characters.input import Player
 
 
@@ -114,10 +115,8 @@ class RandomEnemy(Enemy):
             self.tilemap.move(self, choice[0], choice[1])
 
 
+"""
 class TrackerEnemy(Enemy):
-    """
-    Enemy that follows the player
-    """
 
     def move(self):
 
@@ -436,9 +435,10 @@ class TrackerEnemy(Enemy):
 
         else:
             self.debug_move = True
+"""
 
 
-class Skeleton(TrackerEnemy):
+class Skeleton(Enemy):
 
     def start(self):
 
@@ -450,8 +450,10 @@ class Skeleton(TrackerEnemy):
         self.armor = .1
         self.description = ""
 
+        self.auto.add(TrackerMove())
 
-class Goblin(TrackerEnemy):
+
+class Goblin(Enemy):
 
     def start(self):
 
@@ -462,3 +464,5 @@ class Goblin(TrackerEnemy):
         self.damage_type = "physical"
         self.armor = .1
         self.description = ""
+
+        self.auto.add(TrackerMove())

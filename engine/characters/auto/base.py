@@ -43,7 +43,8 @@ class BaseAutoRun(object):
 
     def __init__(self) -> None:
         
-        self.char = None  # Character we are bound to 
+        self.char = None  # Character we are bound to
+        self.tilemap = None # Tilemap we are bound to
         self.name = ''  # Name of this Autorun
         self.priority = 20  # Ordering priority of the autorun
 
@@ -83,7 +84,7 @@ class AutoRunHandler:
 
     def __init__(self, char) -> None:
         
-        self._runs = []  # List of autoruns
+        self._runs = []  # List of autoruns attached to the Handler
         self.char = char  # Instance of the character we are bound to
 
     def _get_priority(self, run):
@@ -118,6 +119,8 @@ class AutoRunHandler:
         # Add the char to the autorun:
 
         run.char = self.char
+
+        run.tilemap = self.char.tilemap
 
         # Add it to the list:
 
