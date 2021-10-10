@@ -3,17 +3,33 @@ from engine.curses.display import *
 from engine.curses.base import *
 
 from engine.characters.tiles import *
-from engine.characters.enemy import *
 from engine.characters.input import *
 from engine.characters.npcs import *
-from engine.characters.auto.move import RandomMove
+from engine.characters.auto.move import RandomMove, TrackerMove
 
 from engine.tilemaps import WalkingFunctions, BaseTileMap
 
 import curses
 #from math import ceil
 import sys
-import time
+
+# ------------------------
+# Some classes that MUST be defined:
+
+class Skeleton(EntityCharacter):
+
+    def start(self):
+
+        self.name = 'Skeleton'
+        self.hp = 24
+        self.damage_min = 8
+        self.damage_max = 12
+        self.damage_type = "physical"
+        self.armor = .1
+        self.description = ""
+
+        self.auto.add(TrackerMove(Player))
+
 
 def add(obj, x, y, win):
 
@@ -956,7 +972,7 @@ def autorun_test(win):
 
     # Create an entity:
 
-    enemy = Enemy()
+    enemy = EntityCharacter()
 
     # +==============================================+
     # Attach the RandomMove autorun to the character to enable random movement
@@ -999,4 +1015,4 @@ def all_tests(win):
         win.erase()
 
 
-curses.wrapper(battle_test)
+curses.wrapper(trace_test)

@@ -25,9 +25,9 @@ This will require some deliberating and talk, and this can get very complicated 
 
 import random
 
-from engine.characters.base import BaseCharacter
+from engine.characters.base import BaseCharacter, EntityCharacter
 from engine.characters.items import *
-from engine.characters.enemy import Enemy
+
 
 class Wall(BaseCharacter):
     
@@ -61,7 +61,7 @@ class Chest(BaseCharacter):
     def open_chest(self):
         posTile = self.tilemap.find_object(self)
         contents = [Sword(), Chestplate()]
-        self.tilemap.add(Enemy(), posTile.x, posTile.y)
+        self.tilemap.add(EntityCharacter(), posTile.x, posTile.y)
         self.tilemap.removeObj(self)
         return random.choice(contents)
 

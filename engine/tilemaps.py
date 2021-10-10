@@ -7,7 +7,6 @@ tilemaps handle the logic of entity movement, and keeps everything organized.
 
 from engine.characters.base import EntityCharacter
 from engine.characters.input import Player
-from engine.characters.enemy import TrackerEnemy
 from engine.characters.tiles import Fog
 
 import sys
@@ -411,10 +410,6 @@ class BaseTileMap(object):
             for tile in self.tilemap.find_object_type(obj, True):
                 self.tilemap[tile.y][tile.x].remove(obj)
 
-    def remove_fog(self):
-
-        self.remove_obj_by_type(Fog, findall=True)
-
     def remove_obj_by_coords(self, x, y, z=0):
 
         if isinstance(self.tilemap[y][x][z], Player):
@@ -545,7 +540,7 @@ class BaseTileMap(object):
 
         for tile in self.get_all():
 
-            if isinstance(tile.obj, TrackerEnemy):
+            if isinstance(tile.obj, EntityCharacter):
 
                 tile.obj.debug_move_toggle()
 
