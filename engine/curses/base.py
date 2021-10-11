@@ -24,7 +24,7 @@ class Color:
     This class aims to simplify color developmen,
     and to make the process of displaying colors and attributes much easier.
 
-    # TODO: This method might need some changes 
+    # TODO: This method might need some changes
     """
 
     def __init__(self, colorNumber, colorPairNumber, name, r, g, b):
@@ -278,6 +278,7 @@ class BaseWindow:
         """
 
         if key in self._calls:
+
             func = self._calls[key]['call']
             args = self._calls[key]['args']
 

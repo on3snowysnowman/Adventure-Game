@@ -113,7 +113,7 @@ class TrackerMove(BaseAutoRun):
 
                     for tile in self.tilemap.get(x, y):
 
-                        if not tile.obj.can_traverse and not isinstance(tile.obj, type(self)):
+                        if not tile.obj.can_traverse and not isinstance(tile.obj, type(self.char)):
                             numberTileMap[line].append(-2)
                             foundObstacle = True
                             break
