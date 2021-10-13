@@ -25,8 +25,6 @@ All characters should inherit these classes, as the class they inherit will
 determine how they are interpreted by the engine.
 """
 
-import math
-
 from queue import SimpleQueue
 
 from engine.characters.auto.base import AutoRunHandler
@@ -45,10 +43,7 @@ class BaseCharacter(object):
     """
 
     def __init__(self):
-        """
 
-        :rtype: object
-        """
         self.char = ''  # Character to draw
         self.contains_color = True  # Determines if this character has color attributes
         self.color = ""  # Color of this object

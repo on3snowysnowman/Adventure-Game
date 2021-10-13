@@ -29,6 +29,13 @@ class BaseTileMap(object):
 
     Top left hand corner is (0, 0), bottom right hand corner is (width - 1, height -1).
     We use (X, Y) corndets to locate, and identify, characters on the screen.
+
+    TODO: Look at these future steps:
+
+    - EntityCharacter optimization, keep a list of all loaded entities so we don't have to keep searching
+    - Figure out camera stuff
+    - Remove is_alive() checks, should be a bit more abstract
+    - REMOVE DEBUG_MOVE() STUFF! Again, should have a more abstract way of doing that
     """
 
     def __init__(self, height, width, win):
@@ -36,9 +43,9 @@ class BaseTileMap(object):
         self.height = height  # Height of the tilemap
         self.width = width  # Width of the tilemap
         self.win = win  # DisplayWindow in use
-        self.scrollWin = None
+        #self.scrollWin = None
 
-        self.tilemap = None  # 3D array representing the screen
+        self.tilemap: list  # 3D array representing the screen
 
         # Create out tilemap:
 
@@ -427,6 +434,14 @@ class BaseTileMap(object):
 
         cords = self.find_object_type(EntityCharacter, findall=True)
 
+        # Check to see if there are any valid entities:
+
+        if not cords:
+
+            # No entities to work with! Let's return:
+
+            return
+
         # Sort them in order of priority:
 
         cords.sort(key=self._get_move_priority)
@@ -709,169 +724,6 @@ class BaseTileMap(object):
             yield self.get(x, y)
 
 
-class Camera(object):
-
-    def __init__(self, tilemap, win):
-
-        self.tilemap = tilemap  # Full tilemap
-        self.win = win  # DisplayWindow in use
-        self.displayArea = []  # Visual tilemap area will will display, based on full tilemap
-        self.focusObject = None  # Object that the camera is focused on
-        self.focusPoint = [0, 0]  # Coordinate point of the focused object
-        self.radius = 0  # Amount of tiles that we will be rendering around the focus object
-
-    def set_focus_object(self, obj):
-
-        """
-        Sets the focus point of the camera onto an object of Tile class in the tilemap
-
-        :param obj: Object being set as the focus point
-        :type obj : Tile
-        """
-
-        objTile = self.tilemap.find_object(obj)
-
-        self.focusObject = objTile
-        self.focusPoint = [objTile.x, objTile.y]
-
-    def refresh_focus_position(self):
-
-        """
-        Finds the focus object position in the tilemap and resets the focus point to its position
-        """
-
-        self.focusObject = self.tilemap.find_object(self.focusObject.obj)
-        self.focusPoint = [self.focusObject.x, self.focusObject.y]
-
-        # print("Camera self.tilemap: " + str(self.tilemap))
-        # print("Camera self.displayArea: " + str(self.displayArea))
-
-    def set_radius(self, radius):
-
-        """
-        Sets the radius of the display area
-
-        :param radius: New number of tiles to be displayed around the focus object
-        :type radius: Int
-        """
-
-        self.radius = radius
-
-    def update(self):
-
-        """
-        Fills the tilemap with fog to block the player's vision relative to walls
-        """
-        #playerTile = self.tilemap.find_object_type(Player)
-        #self.radius = playerTile.obj.radius
-
-        # TODO: Is the correct implementation?:
-
-        self.radius = self.focusObject.obj.radius
-
-        self.refresh_focus_position()
-        self.create_display()
-
-        #playerTile.obj.look(self.displayArea)
-
-        self.focusObject.obj.look(self.displayArea)
-
-    def create_display(self):
-
-        """
-        Creates the display area based on the radius, using our tilemap
-        """
-
-        if (self.radius * 2) + 1 >= self.tilemap.height:
-
-            height = self.tilemap.height
-
-        else:
-
-            height = (self.radius * 2) + 1
-
-        if (self.radius * 2) + 1 >= self.tilemap.width:
-
-            width = self.tilemap.width
-
-        else:
-
-            width = (self.radius * 2) + 1
-
-        # Clearing our displayArea
-        del self.displayArea
-        self.displayArea = BaseTileMap(height, width, self.win)
-
-        # Creating the starting x position of our display zone
-        startX = self.focusPoint[0] - self.radius
-
-        # Creating the ending x position of our display zone
-        if self.focusPoint[0] + self.radius > len(self.tilemap.tilemap[self.focusPoint[1]]) - 1:
-
-            endX = len(self.tilemap.tilemap[self.focusPoint[1]]) - 1
-            startX -= ((self.focusPoint[0] + 1) + self.radius) - len(self.tilemap.tilemap[self.focusPoint[1]])
-
-            if startX < 0:
-
-                startX = 0
-
-        else:
-
-            endX = self.focusPoint[0] + self.radius
-
-        if startX < 0:
-
-            endX += abs(startX)
-            if endX > len(self.tilemap.tilemap[self.focusPoint[1]]) - 1:
-
-                endX = len(self.tilemap.tilemap[self.focusPoint[1]]) - 1
-
-            startX = 0
-
-        # Creating the starting y position of our display zone
-        startY = self.focusPoint[1] - self.radius
-
-        # Creating the ending y position of our display zone
-        if self.focusPoint[1] + self.radius > len(self.tilemap.tilemap) - 1:
-
-            endY = len(self.tilemap.tilemap) - 1
-            startY -= ((self.focusPoint[1] + 1) + self.radius) - len(self.tilemap.tilemap)
-
-            if startY < 0:
-
-                startY = 0
-
-        else:
-
-            endY = self.focusPoint[1] + self.radius
-
-        if startY < 0:
-
-            endY += abs(startY)
-            if endY > len(self.tilemap.tilemap) - 1:
-
-                endY = len(self.tilemap.tilemap) - 1
-
-            startY = 0
-
-        yIndex = 0
-        xIndex = 0
-
-        # Adding Tiles to the displayArea tilemap from our main tilemap
-        while yIndex + startY <= endY:
-
-            while xIndex + startX <= endX:
-
-                for obj in self.tilemap.tilemap[yIndex + startY][xIndex + startX]:
-
-                    self.displayArea.add(obj, xIndex, yIndex, bind=False)
-
-                xIndex += 1
-
-            yIndex += 1
-            xIndex = 0
-
-
 class Tile:
 
     """
@@ -1003,8 +855,6 @@ class WalkingFunctions:
         :return: Tuple containing X and Y values of the step
         :rtype: tuple
         """
-
-        print(*args)
 
         return self.selection(self, *args)
 

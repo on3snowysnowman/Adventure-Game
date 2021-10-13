@@ -9,8 +9,176 @@ I will be fixing this at a later date.
 """
 
 # -----------------------
+# Camera
+# -----------------------
+
+class Camera(object):
+
+    def __init__(self, tilemap, win):
+
+        self.tilemap = tilemap  # Full tilemap
+        self.win = win  # DisplayWindow in use
+        self.displayArea = []  # Visual tilemap area will will display, based on full tilemap
+        self.focusObject = None  # Object that the camera is focused on
+        self.focusPoint = [0, 0]  # Coordinate point of the focused object
+        self.radius = 0  # Amount of tiles that we will be rendering around the focus object
+
+    def set_focus_object(self, obj):
+
+        """
+        Sets the focus point of the camera onto an object of Tile class in the tilemap
+
+        :param obj: Object being set as the focus point
+        :type obj : Tile
+        """
+
+        objTile = self.tilemap.find_object(obj)
+
+        self.focusObject = objTile
+        self.focusPoint = [objTile.x, objTile.y]
+
+    def refresh_focus_position(self):
+
+        """
+        Finds the focus object position in the tilemap and resets the focus point to its position
+        """
+
+        self.focusObject = self.tilemap.find_object(self.focusObject.obj)
+        self.focusPoint = [self.focusObject.x, self.focusObject.y]
+
+        # print("Camera self.tilemap: " + str(self.tilemap))
+        # print("Camera self.displayArea: " + str(self.displayArea))
+
+    def set_radius(self, radius):
+
+        """
+        Sets the radius of the display area
+
+        :param radius: New number of tiles to be displayed around the focus object
+        :type radius: Int
+        """
+
+        self.radius = radius
+
+    def update(self):
+
+        """
+        Fills the tilemap with fog to block the player's vision relative to walls
+        """
+        #playerTile = self.tilemap.find_object_type(Player)
+        #self.radius = playerTile.obj.radius
+
+        # TODO: Is the correct implementation?:
+
+        self.radius = self.focusObject.obj.radius
+
+        self.refresh_focus_position()
+        self.create_display()
+
+        #playerTile.obj.look(self.displayArea)
+
+        self.focusObject.obj.look(self.displayArea)
+
+    def create_display(self):
+
+        """
+        Creates the display area based on the radius, using our tilemap
+        """
+
+        if (self.radius * 2) + 1 >= self.tilemap.height:
+
+            height = self.tilemap.height
+
+        else:
+
+            height = (self.radius * 2) + 1
+
+        if (self.radius * 2) + 1 >= self.tilemap.width:
+
+            width = self.tilemap.width
+
+        else:
+
+            width = (self.radius * 2) + 1
+
+        # Clearing our displayArea
+        del self.displayArea
+        self.displayArea = BaseTileMap(height, width, self.win)
+
+        # Creating the starting x position of our display zone
+        startX = self.focusPoint[0] - self.radius
+
+        # Creating the ending x position of our display zone
+        if self.focusPoint[0] + self.radius > len(self.tilemap.tilemap[self.focusPoint[1]]) - 1:
+
+            endX = len(self.tilemap.tilemap[self.focusPoint[1]]) - 1
+            startX -= ((self.focusPoint[0] + 1) + self.radius) - len(self.tilemap.tilemap[self.focusPoint[1]])
+
+            if startX < 0:
+
+                startX = 0
+
+        else:
+
+            endX = self.focusPoint[0] + self.radius
+
+        if startX < 0:
+
+            endX += abs(startX)
+            if endX > len(self.tilemap.tilemap[self.focusPoint[1]]) - 1:
+
+                endX = len(self.tilemap.tilemap[self.focusPoint[1]]) - 1
+
+            startX = 0
+
+        # Creating the starting y position of our display zone
+        startY = self.focusPoint[1] - self.radius
+
+        # Creating the ending y position of our display zone
+        if self.focusPoint[1] + self.radius > len(self.tilemap.tilemap) - 1:
+
+            endY = len(self.tilemap.tilemap) - 1
+            startY -= ((self.focusPoint[1] + 1) + self.radius) - len(self.tilemap.tilemap)
+
+            if startY < 0:
+
+                startY = 0
+
+        else:
+
+            endY = self.focusPoint[1] + self.radius
+
+        if startY < 0:
+
+            endY += abs(startY)
+            if endY > len(self.tilemap.tilemap) - 1:
+
+                endY = len(self.tilemap.tilemap) - 1
+
+            startY = 0
+
+        yIndex = 0
+        xIndex = 0
+
+        # Adding Tiles to the displayArea tilemap from our main tilemap
+        while yIndex + startY <= endY:
+
+            while xIndex + startX <= endX:
+
+                for obj in self.tilemap.tilemap[yIndex + startY][xIndex + startX]:
+
+                    self.displayArea.add(obj, xIndex, yIndex, bind=False)
+
+                xIndex += 1
+
+            yIndex += 1
+            xIndex = 0
+
+
+# -----------------------
 # Pathfinding:
 # -----------------------
+
 
 def find_quickest_path(self, targObj, blocked=False):
 
@@ -2176,6 +2344,11 @@ def find_quickest_path(self, targObj, blocked=False):
             '''
 
 
+# -----------------------
+# Enemy Stuff
+# -----------------------
+
+
 class Enemy(EntityCharacter):
     
     """
@@ -2232,9 +2405,6 @@ class Enemy(EntityCharacter):
 
         targ.hp -= amountDamage
 
-# -----------------------
-# Enemy Stuff
-# -----------------------
 
 class RandomEnemy(Enemy):
 
@@ -3804,3 +3974,55 @@ def look(self, tilemap):
 
             xIt = 0
             yIt += 1
+
+# --------------------------
+# Old BaseWindow components
+# --------------------------
+
+def add_callback(self, key, call, pass_self=False, args=None):
+
+    """
+    Adds callback to be called when specified key is pressed.
+    We accept functions, and can optionally pass a collection of arguments.
+
+    :param key: Key to be pressed, can be string or list, special characters included
+    :param call: Function to be called
+    :param pass_self: Value determining if we should pass this object to the callback.
+    :param args: Args to be passed to the function
+        """
+
+    if args is None:
+        args = []
+
+    if pass_self:
+            args = [self] + args
+
+    # Convert key to string
+
+    if type(key) == list:
+
+        # Working with a list
+
+        for val in key:
+
+            if type(val) == str:
+                # Convert string into ascii value
+
+                val = ord(val)
+
+            self._calls[val] = {'call': call, 'args': args}
+
+        return
+
+    # Working with a single string here
+
+    if type(key) == str:
+        # Convert string into ascii value
+
+        key = ord(key)
+
+    # Add key/function/args to dictionary of keys to handle
+
+    self._calls[key] = {'call': call, 'args': args}
+
+    return

@@ -24,9 +24,6 @@ you could attach a Tracker autorun that will move the character in the direction
 """
 
 
-import random
-
-
 class BaseAutoRun(object):
 
     """

@@ -9,6 +9,8 @@ from engine.characters.auto.move import RandomMove, TrackerMove
 
 from engine.tilemaps import WalkingFunctions, BaseTileMap
 
+from engine.debug import clear_debug_log, debug_log
+
 import curses
 #from math import ceil
 import sys
@@ -29,6 +31,22 @@ class Skeleton(EntityCharacter):
         self.description = ""
 
         self.auto.add(TrackerMove(Player))
+
+
+class TestEnemy(EntityCharacter):
+    
+    """
+    Dummy enemy for testing purposes
+    """
+
+    def __init__(self):
+
+        super().__init__()
+
+        self.name = 'Enemy'
+        self.char = 'E'
+        self.attrib.append("red")
+        self.priority = 18
 
 
 def add(obj, x, y, win):
@@ -54,7 +72,7 @@ def callback_test(win):  # PASSED
 
         # Adding callback for the F1 key
 
-        chas.add_callback(curses.KEY_F1, dummy, pass_self=True, args=['testing!'])
+        chas.add_key(curses.KEY_F1, dummy, pass_self=True, args=['testing!'])
 
         # Getting input and printing input:
 
@@ -365,7 +383,7 @@ def map_window_test(win):
     # Tests the display window features
 
     map_win = DisplayWindow.create_subwin_at_pos(win, 11, 16)
-    map_win.add_callback('q', map_win.stop)
+    map_win.add_key('q', map_win.stop)
 
     curses.curs_set(0)
 
@@ -383,7 +401,7 @@ def map_window_test(win):
     map_win.tilemap.fill(Floor)
     map_win.tilemap.add(player, 1, 1)
     map_win.tilemap.add(wall, 0, 1)
-    map_win.tilemap.add(TrackerEnemy(), 6, 4)
+    map_win.tilemap.add(TestEnemy(), 6, 4)
 
     map_win.display()
 
@@ -409,7 +427,7 @@ def master_window_test(win):
 
     # Add stuff to DisplayWindow:
 
-    map_win.add_callback('f', map_win.stop)
+    map_win.add_key('f', map_win.stop)
 
     curses.curs_set(0)
 
@@ -422,8 +440,8 @@ def master_window_test(win):
     player = Player()
     ground = Floor()
     wall = Wall()
-    enemy1 = Enemy()
-    enemy2 = Enemy()
+    enemy1 = TestEnemy()
+    enemy2 = TestEnemy()
 
     map_win.tilemap.fill(Floor)
     map_win.tilemap.add(player, 0, 0)
@@ -466,7 +484,7 @@ def master_window_options_test(win):
 
     # Add stuff to DisplayWindow:
 
-    map_win.add_callback('f', map_win.stop)
+    map_win.add_key('f', map_win.stop)
 
     curses.curs_set(0)
 
@@ -477,8 +495,8 @@ def master_window_options_test(win):
 
     player = Player()
     wall = Wall()
-    enemy1 = Enemy()
-    enemy2 = Enemy()
+    enemy1 = TestEnemy()
+    enemy2 = TestEnemy()
 
     map_win.tilemap.fill(Floor)
     map_win.tilemap.add(player, 0, 0)
@@ -512,7 +530,7 @@ def trace_test(win):
 
     # Tests the trace capabilities of the tilemap:
 
-    display = DisplayWindow(win)
+    display = DisplayWindow.create_subwin_at_pos(win, 10, 30, position=DisplayWindow.TOP_LEFT)
 
     display.tilemap.fill(Floor)
     display.init_colors()
@@ -569,7 +587,7 @@ def trace_test(win):
 
         display.tilemap.add(Wall(), tile[0].x, tile[0].y)
 
-    display.add_callback('q', display.stop)
+    display.add_key('q', display.stop)
 
     display.display()
 
@@ -581,7 +599,7 @@ def look_test(win):
     map_win = DisplayWindow.create_subwin_at_pos(win, 21, 21)
     scroll_win = ScrollWindow.create_subwin_at_pos(win, master.max_y, int(master.max_x / 2), BaseWindow.TOP_RIGHT)
 
-    map_win.add_callback('f', map_win.stop)
+    map_win.add_key('f', map_win.stop)
     curses.curs_set(0)
 
     map_win.init_colors()
@@ -638,7 +656,7 @@ def look_test(win):
     player = Player()
     add(player, int(map_win.tilemap.get_width() / 2), int(map_win.tilemap.get_height() / 2), map_win)
     randomTile = random.choice(availableCoordinates)
-    add(TrackerEnemy(), randomTile[0], randomTile[1], map_win)
+    add(TestEnemy(), randomTile[0], randomTile[1], map_win)
 
     master.add_subwin(map_win)
 
@@ -660,7 +678,7 @@ def camera_test(win):
 
     map_win = DisplayWindow.create_subwin_at_pos(win, 50, 50)
 
-    map_win.add_callback('f', map_win.stop)
+    map_win.add_key('f', map_win.stop)
     curses.curs_set(0)
 
     map_win.init_colors()
@@ -756,7 +774,7 @@ def battle_test(win):
 
     map_win.tilemap.set_scroll_win(scroll_win)
 
-    map_win.add_callback('f', master.stop)
+    map_win.add_key('f', master.stop)
     curses.curs_set(0)
 
     map_win.init_colors()
@@ -867,7 +885,7 @@ def large_test(win):
 
     # Add stuff to DisplayWindow:
 
-    map_win.add_callback('f', map_win.stop)
+    map_win.add_key('f', map_win.stop)
 
     curses.curs_set(0)
     curses.delay_output(1)
@@ -880,8 +898,8 @@ def large_test(win):
 
     player = Player()
     wall = Wall()
-    enemy1 = TrackerEnemy()
-    enemy2 = Enemy()
+    enemy1 = TestEnemy()
+    enemy2 = TestEnemy()
 
     map_win.tilemap.fill(Floor)
     map_win.tilemap.add(player, 0, 0)
@@ -909,7 +927,7 @@ def curses_standard_test(win):
     tilemap.fill(Floor)
     player = Player()
     tilemap.add(player, 4, 13)
-    tilemap.add(TrackerEnemy(), 2, 2)
+    tilemap.add(TestEnemy(), 2, 2)
 
     curses.init_pair(1, curses.COLOR_BLUE, curses.COLOR_BLACK)
 
@@ -953,12 +971,10 @@ def autorun_test(win):
     master = MasterWindow(win)
 
     display = DisplayWindow.create_subwin_at_pos(win, 20, 20, DisplayWindow.TOP_LEFT)
-    scoll_win = ScrollWindow.create_subwin_at_pos(win, 10, 10, ScrollWindow.TOP_RIGHT)
 
     # Add them to the master window:
 
     master.add_subwin(display)
-    master.add_subwin(scoll_win)
 
     # Final window configuration:
 
@@ -966,13 +982,11 @@ def autorun_test(win):
 
     display.tilemap.fill(Floor)
 
-    display.tilemap.set_scroll_win(scoll_win)
-
-    display.add_callback('f', master.stop)
+    display.add_key('f', master.stop)
 
     # Create an entity:
 
-    enemy = EntityCharacter()
+    enemy = TestEnemy()
 
     # +==============================================+
     # Attach the RandomMove autorun to the character to enable random movement
@@ -987,9 +1001,6 @@ def autorun_test(win):
     # Add the random enemy:
 
     add(enemy, 1, 1, display)
-
-    display.camera.set_focus_object(enemy)
-    enemy.radius = 20
 
     # Run the windows:
 
@@ -1015,4 +1026,14 @@ def all_tests(win):
         win.erase()
 
 
-curses.wrapper(trace_test)
+# Enable log debuging:
+
+debug_log()
+
+# Clean the log:
+
+clear_debug_log()
+
+# Run the test:
+
+curses.wrapper(master_window_test)

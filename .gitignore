@@ -35,3 +35,7 @@ dist/
 # Sphinx build files
 
 docs/build/
+
+# Misc. Debug log files:
+
+engine_output.txt

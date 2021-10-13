@@ -15,6 +15,12 @@ import threading
 from math import ceil
 from queue import Queue
 
+# TEMPORARY IMPORT:
+
+import logging
+import traceback as tb
+
+
 
 class Color:
 
@@ -83,7 +89,7 @@ class BaseWindow:
 
         self.managed = False  # Value  determining if our input is handled
         self.input_queue = None  # Queue to store inputs - only relevant if we are managed!
-        self.master = None  # Instance of MasterWindow controlling us - only relevant if we are managed!
+        self.master: MasterWindow  # Instance of MasterWindow controlling us - only relevant if we are managed!
 
         max_y, max_x = win.getmaxyx()
 
@@ -124,7 +130,7 @@ class BaseWindow:
 
         # Allow hardware line editing facilities
 
-        # self.win.idlok(True)
+        self.win.idlok(True)
 
         curses.start_color()
         self.color = True
@@ -221,19 +227,33 @@ class BaseWindow:
 
         return self.win.derwin(nlines, ncols, begin_y, begein_x)
 
-    def add_callback(self, key, call, pass_self=False, args=None):
+    def add_key(self, key, call=None, pass_self=False, args=None):
 
         """
-        Adds callback to be called when specified key is pressed.
-        We accept functions, and can optionally pass a collection of arguments.
+        Adds a key that we are interested in to the window.
+        While not very helpful on it's own,
+        this tells MasterWindow what keys we require, if this window ever becomes managed.
+
+        Optionally, you can specify a callback.
+        When BaseWindow encounters the given key(s),
+        then it will call the callback specified when 'get_input()' is called.
+        You can specify a list of arguments to send to the callback,
+        and BaseWindow can optionally pass itself to this function if necessary
+        (self will the the first argument, if a list of arguments is specified).
+
+        The 'wildcard' is None.
+        If 'None' is specified, then ALL input will be directed to the specified callback.
+        MasterWindow will interpret 'None' similarly,
+        all input will be directed to this window if their are no other windows focused.
 
         :param key: Key to be pressed, can be string or list, special characters included
-        :param call: Function to be called
+        :param call: Function to be called, leave 'None' for no function call
         :param pass_self: Value determining if we should pass this object to the callback.
         :param args: Args to be passed to the function
         """
 
         if args is None:
+
             args = []
 
         if pass_self:
@@ -252,20 +272,32 @@ class BaseWindow:
 
                     val = ord(val)
 
-                self._calls[val] = {'call': call, 'args': args}
+                self._register_keybind(val, call, args)
 
-            return
+                return
 
         # Working with a single string here
 
-        if type(key) == str:
+        elif type(key) == str:
             # Convert string into ascii value
 
             key = ord(key)
 
         # Add key/function/args to dictionary of keys to handle
 
-        self._calls[key] = {'call': call, 'args': args}
+        self._register_keybind(key, call, args)
+
+        if key is None:
+
+            # This node requires ALL inputs, add a callback for the MasterWindow
+
+            self._calls[None] = {'call': None, 'args': []}
+
+            if self.managed:
+
+                # Attach ourselves to the master window:
+
+                self.master.bind_key(self, None)
 
         return
 
@@ -277,7 +309,7 @@ class BaseWindow:
         :param key: Key to be handled
         """
 
-        if key in self._calls:
+        if key in self._calls and self._calls[key]['call'] is not None:
 
             func = self._calls[key]['call']
             args = self._calls[key]['args']
@@ -356,9 +388,11 @@ class BaseWindow:
         for index, targ in enumerate(attrib):
 
             if type(targ) == str:
+
                 attrib[index] = self.colorPairs[targ]
 
             if isinstance(attrib[index], Color):
+
                 attrib[index] = attrib[index].resolvedColor
 
         if position != -1:
@@ -492,6 +526,10 @@ class BaseWindow:
 
         self.max_y, self.max_x = self.win.getmaxyx()
 
+        # Refresh the parent - Should be the only time we will have to:
+
+        self.parent.refresh()
+
     def clear(self):
 
         """
@@ -574,6 +612,9 @@ class BaseWindow:
         We offer the ability to automatically decode input characters to their ascii values.
         We also offer the ability to ignore special characters, returning False in their place.
 
+        If the user does not want keys passed though the callbacks,
+        then they can optionally disable this feature for this call only.
+
         :param return_ascii: Value determining if we should return the ascii number of the key
         :type return_ascii: bool
         :param ignore_special: Determines if we should ignore special characters(ASCII values > 255)
@@ -592,6 +633,7 @@ class BaseWindow:
 
         if key == curses.ERR:
             # Curses error value. Return False
+            # TODO: BETTER ERROR HANDLING!!!!!
 
             return False
 
@@ -632,6 +674,33 @@ class BaseWindow:
         self.register_color("white", white)
         self.register_color("gray_blue_one", gray_blue_one)
         self.register_color("gray_blue_two", gray_blue_two)
+
+    def _register_keybind(self, key, call, args):
+        """
+        Registers the given key to this object.
+
+        We determine if a callback is necessary to add.
+        We also check if we are managed,
+        and if this is the case then we update the MasterWindow we are attached to.
+
+        :param key: Key to register
+        :type key: int
+        :param call: Callback to register, if any
+        :type call: None, func
+        :param args: Arguments to pass to the callback at runtime
+        """
+
+        # Add the key:
+
+        self._calls[key] = {'call': call if call is not None else None, 'args': args}
+
+        # Check if we are managed:
+
+        if self.managed:
+
+            # Add this callback to the MasterWindow:
+
+            self.master.bind_key(self, key)
 
     @classmethod
     def create_subwin_at_pos(cls, win, y_len, x_len, position=0):
@@ -685,6 +754,9 @@ class MasterWindow(BaseWindow):
     We also handle the process of focusing windows.
     When a window(s) is focused, then we direct all input towards that specific window(s).
     Otherwise, we direct input to the windows that request it.
+    A window can request certain keys by providing them in the 'add_keys' method.
+    They can optionally provide a callback, this makes no difference to MasterWindow
+    as we only care about the keys.
 
     We also handle the process of refreshing windows,
     specifically physically updating the entire screen when a sub-window requests it.
@@ -708,7 +780,7 @@ class MasterWindow(BaseWindow):
 
         self.thread = None  # Threading object
         self.event_queue = Queue()  # Event queue
-        self._win_calls = {}  # Mapping inputs to windows
+        self._win_calls = {None: []}  # Mapping inputs to windows
 
         self.run = False  # Value determining if we are running
 
@@ -744,23 +816,46 @@ class MasterWindow(BaseWindow):
         Extracts the callbacks from a specified window,
         and adds it to our collection.
 
+        If a callback is specified as 'None', then all input will be directed to that window.
+        Great if multiple windows need multiple input sources.
+
         :param subwin: Subwidow to extract callbacks from
         :type subwin: BaseWindow
         """
 
         for key in subwin._calls:
 
-            if key in self._win_calls.keys():
+            # Bind the key:
 
-                # Key is present in window callbacks already, lets add it:
+            self.bind_key(subwin, key)
 
-                self._win_calls[key].append(subwin)
+    def bind_key(self, subwin, key):
+        """
+        Method used to bind a key to a window.
 
-            else:
+        THIS METHOD DOES NOT ALTER THE CALLBACKS/KEYBINDS OF THE SUBWINDOW!
 
-                # Key is NOT present, lets make a new entry:
+        Instead, we only alter our understanding of the keybindings.
+        This means that we will put the relevant key into the event queue
+        of the relevant sub-window when encountered.
 
-                self._win_calls[key] = [subwin]
+        :param subwin: Subwindow to bind the key to
+        :type subwin: BaseWindow
+        :param key: Key to bind
+        :type key: int
+        """
+
+        if key in self._win_calls.keys():
+
+            # Key is present in window callbacks already, lets add it:
+
+            self._win_calls[key].append(subwin)
+
+        else:
+
+            # Key is NOT present, lets make a new entry:
+
+            self._win_calls[key] = [subwin]
 
     def _start_thread(self):
 
@@ -832,9 +927,9 @@ class MasterWindow(BaseWindow):
 
         self._start_thread()
 
-        # Iterate over our event loop, cleans out the queue if full:
+        # Iterate over our event loop:
 
-        while self.run or not self.event_queue.empty():
+        while self.run:
 
             # Get input from our input queue:
 
@@ -868,13 +963,33 @@ class MasterWindow(BaseWindow):
 
                 # Send the input to relevant window only:
 
+                black = []  # Key blacklist - Used for adding window that we have already handled
+
                 if inp in self._win_calls.keys():
 
                     # Key is present, lets send it over:
 
                     for win in self._win_calls[inp]:
 
+                        # Append window to blacklist:
+
+                        black.append(win)
+
                         # Add the input to the specified window:
+
+                        win.add_input(inp)
+
+                        logging.info("Sent input {} to window: {}".format(inp, win))
+
+                # Iterate over the 'wildcard' windows:
+
+                for win in self._win_calls[None]:
+
+                    # Check if the window is blacklisted:
+
+                    if win not in black:
+
+                        # Add input to the window:
 
                         win.add_input(inp)
 
@@ -888,8 +1003,19 @@ class MasterWindow(BaseWindow):
         Stops all MasterWindow components,
         specifically the input loop and event loop.
 
+        We also stop all child windows,
+        so we can be absolutely sure that CURSES will be done upon exiting.
+
         We also request a refresh, so any changes made will carry over.
         """
+
+        # Stop all sub-windows:
+
+        for win in self.subwins:
+
+            # Stop the window:
+
+            win.stop()
 
         # Request a refresh:
 
@@ -907,4 +1033,17 @@ class MasterWindow(BaseWindow):
 
         while self.run:
 
-            self.event_queue.put(self.get_input(return_ascii=True, no_calls=True))
+            try:
+
+                logging.info("Master waiting for input...")
+
+                inp = self.get_input(return_ascii=True, no_calls=True)
+
+                self.event_queue.put(inp)
+
+                logging.info("Master input: {}".format(inp))
+
+            except Exception as e:
+
+                logging.info("Encountered exception: {}".format(e))
+                logging.info("Traceback: {}".format(tb.format_exception(None, e, e.__traceback__)))

@@ -18,7 +18,7 @@ from queue import Queue
 from math import ceil
 
 from engine.curses.base import BaseWindow
-from engine.tilemaps import BaseTileMap, Camera
+from engine.tilemaps import BaseTileMap
 from engine.characters.tiles import Fog
 
 
@@ -42,8 +42,8 @@ class DisplayWindow(BaseWindow):
         # as the DisplayWindow is not smart enough to handle anything different
 
         # self.tilemap = BaseTileMap(self.max_y, self.max_x, self)  # Tilemap storing game info
-        self.tilemap = BaseTileMap(5, 5, self)
-        self.camera = Camera(self.tilemap, self)
+        self.tilemap = BaseTileMap(self.max_y, self.max_x, self)
+        #self.camera = Camera(self.tilemap, self)
         self.run = True  # Value determining if we are running
 
         self.thread = None  # Treading instance of the input loop
@@ -96,11 +96,11 @@ class DisplayWindow(BaseWindow):
         while self.run:
 
             # Update the camera
-            self.camera.update()
+            #self.camera.update()
 
             self._render()
 
-            self.tilemap.scrollWin._render_content()
+            #self.tilemap.scrollWin._render_content()
 
             # Update the tilemap:
             self.tilemap.update()
@@ -184,10 +184,10 @@ class ScrollWindow(BaseWindow):
 
         # Adding callbacks:
 
-        self.add_callback(curses.KEY_DOWN, self._increment_scroll)
-        self.add_callback(curses.KEY_UP, self._decrement_scroll)
-        self.add_callback('r', self._render_content)
-        self.add_callback([curses.KEY_END, curses.KEY_EXIT, 'f'], self.stop)
+        self.add_key(curses.KEY_DOWN, self._increment_scroll)
+        self.add_key(curses.KEY_UP, self._decrement_scroll)
+        self.add_key('r', self._render_content)
+        self.add_key([curses.KEY_END, curses.KEY_EXIT, 'f'], self.stop)
 
     def get_key(self, block=True, timeout=None):
 

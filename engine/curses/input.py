@@ -56,12 +56,12 @@ class InputWindow(BaseWindow):
 
         # Adding the necessary callbacks
 
-        self.add_callback(curses.KEY_RIGHT, self._increment_cursor)
-        self.add_callback(curses.KEY_LEFT, self._decrement_cursor)
-        self.add_callback(curses.KEY_UP, self._decrement_cursor_line)
-        self.add_callback(curses.KEY_DOWN, self._increment_cursor_line)
-        self.add_callback([curses.KEY_BACKSPACE, 8], self._decrement_delete)
-        self.add_callback([curses.KEY_ENTER, 10, 13], self._stop)
+        self.add_key(curses.KEY_RIGHT, self._increment_cursor)
+        self.add_key(curses.KEY_LEFT, self._decrement_cursor)
+        self.add_key(curses.KEY_UP, self._decrement_cursor_line)
+        self.add_key(curses.KEY_DOWN, self._increment_cursor_line)
+        self.add_key([curses.KEY_BACKSPACE, 8], self._decrement_delete)
+        self.add_key([curses.KEY_ENTER, 10, 13], self._stop)
 
     def input(self, prompt="", add=''):
 
@@ -440,11 +440,11 @@ class OptionWindow(BaseWindow):
 
         # Adding necessary callbacks:
 
-        self.add_callback(['q', 'e'], self._stop)
-        self.add_callback(curses.KEY_UP, self._decrement_cursor)
-        self.add_callback(curses.KEY_DOWN, self._increment_cursor)
-        self.add_callback([curses.KEY_ENTER, 10, 13], self._handle_selection)
-        self.add_callback('r', self.refresh)
+        self.add_key(['q', 'e'], self._stop)
+        self.add_key(curses.KEY_UP, self._decrement_cursor)
+        self.add_key(curses.KEY_DOWN, self._increment_cursor)
+        self.add_key([curses.KEY_ENTER, 10, 13], self._handle_selection)
+        self.add_key('r', self.refresh)
 
     def display(self, no_return=False, title='Option Window'):
 
