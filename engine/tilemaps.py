@@ -13,6 +13,8 @@ import sys
 from itertools import count
 import math
 
+from engine.curses.base import BaseWindow
+
 
 class BaseTileMap(object):
 
@@ -42,12 +44,12 @@ class BaseTileMap(object):
 
         self.height = height  # Height of the tilemap
         self.width = width  # Width of the tilemap
-        self.win = win  # DisplayWindow in use
+        self.win: BaseWindow = win  # DisplayWindow in use
         #self.scrollWin = None
 
         self.tilemap: list  # 3D array representing the screen
 
-        # Create out tilemap:
+        # Create our tilemap:
 
         self._init_tilemap()
 
@@ -365,7 +367,7 @@ class BaseTileMap(object):
 
                 for key in obj.keys:
 
-                    self.win.add_callback(key, self.win._add_key, args=[key if type(key) == int else ord(key), obj])
+                    self.win.add_key(key, self.win._add_key, args=[key if type(key) == int else ord(key), obj])
 
         except AttributeError:
 
@@ -550,18 +552,6 @@ class BaseTileMap(object):
         """
 
         return tile.obj.move_priority
-
-    def toggle_enemy_movement(self):
-
-        for tile in self.get_all():
-
-            if isinstance(tile.obj, EntityCharacter):
-
-                tile.obj.debug_move_toggle()
-
-    def set_scroll_win(self, scrollWin):
-
-        self.scrollWin = scrollWin
 
     def traverse_function(self, start_x, start_y, func, num_steps=None, step_size=1, args=None, ignore_bounds=False,
                           par=False, discrete=True):

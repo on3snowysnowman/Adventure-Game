@@ -86,7 +86,7 @@ class Floor(BaseCharacter):
 
     def start(self):
 
-        self.char = '0'
+        self.char = '.'
         self.name = 'Floor'
         self.attrib.append(random.choice(["gray_blue_one", "gray_blue_two"]))
 

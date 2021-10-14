@@ -22,6 +22,7 @@ from engine.tilemaps import BaseTileMap
 from engine.characters.tiles import Fog
 
 
+
 class DisplayWindow(BaseWindow):
 
     """
@@ -41,8 +42,7 @@ class DisplayWindow(BaseWindow):
         # We simply create a tilemap with our width and height,
         # as the DisplayWindow is not smart enough to handle anything different
 
-        # self.tilemap = BaseTileMap(self.max_y, self.max_x, self)  # Tilemap storing game info
-        self.tilemap = BaseTileMap(self.max_y, self.max_x, self)
+        self.tilemap = BaseTileMap(self.max_y, self.max_x, self)  # Tilemap storing game info
         #self.camera = Camera(self.tilemap, self)
         self.run = True  # Value determining if we are running
 
@@ -62,13 +62,7 @@ class DisplayWindow(BaseWindow):
 
             self.tilemap.tilemap[y][x].sort(key=self.tilemap._get_priority)
 
-            if z == 0:
-
-                if isinstance(self.tilemap.tilemap[y][x][z], Fog):
-
-                    continue
-
-                self.addstr(obj.char, y, x, attrib=obj.attrib)
+            self.addstr(obj.char, y, x, attrib=obj.attrib)
 
             continue
 

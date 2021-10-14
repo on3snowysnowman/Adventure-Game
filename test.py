@@ -427,7 +427,7 @@ def master_window_test(win):
 
     # Add stuff to DisplayWindow:
 
-    map_win.add_key('f', map_win.stop)
+    map_win.add_key('f', master.stop)
 
     curses.curs_set(0)
 
@@ -438,12 +438,11 @@ def master_window_test(win):
     # Puts a player in top left corner of map:
 
     player = Player()
-    ground = Floor()
     wall = Wall()
     enemy1 = TestEnemy()
     enemy2 = TestEnemy()
 
-    map_win.tilemap.fill(Floor)
+    #map_win.tilemap.fill(Floor)
     map_win.tilemap.add(player, 0, 0)
     map_win.tilemap.add(wall, 0, 1)
     map_win.tilemap.add(enemy1, 2, 2)
@@ -484,7 +483,7 @@ def master_window_options_test(win):
 
     # Add stuff to DisplayWindow:
 
-    map_win.add_key('f', map_win.stop)
+    map_win.add_key('f', master.stop)
 
     curses.curs_set(0)
 
